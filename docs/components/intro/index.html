@@ -1,0 +1,25 @@
+<template id="intro-template">
+    <section id="intro">
+        <h1>{{ title }}</h1>
+        <p class="intro-lead">{{ lead }}</p>
+        <!--
+            卡片网格：每个 .intro-card-slot 是 YrySceneCard 的挂载点。
+            Vue 仅负责渲染容器骨架，由 index.js 的 mounted 钩子调用
+            window.YrySceneCard.mount(card, '#intro-card-N') 注入实际卡片内容。
+            使用 .card-grid 复用 styles/components.css 中已有的网格布局。
+        -->
+        <div class="card-grid">
+            <div v-for="(card, i) in cards"
+                 :key="i"
+                 :id="'intro-card-' + i"
+                 class="intro-card-slot"></div>
+        </div>
+        <div class="callout" v-if="callout">
+            <strong>{{ callout.icon }} {{ callout.strong }}</strong>
+            {{ callout.text }}<a :href="callout.linkHref">{{ callout.linkText }}</a>.
+        </div>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

@@ -1,0 +1,12 @@
+/* ─────────────────────────────────────────────────────
+ * Intro
+ * intro 组件专属样式：
+ *   - .intro-lead  引导段大字
+ * 跨 section 共享的 .card / .card-grid / .badge 等已统一收敛到
+ * docs/styles/base.css，不在此处重复。
+ * ───────────────────────────────────────────────────── */
+
+.vl-doc .intro-lead {
+    font-size: 17px;
+    color: var(--vl-doc-text);
+}

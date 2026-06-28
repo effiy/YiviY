@@ -1,0 +1,21 @@
+<!--
+    Code Activity · 独立组件
+    从 translations 组件中抽离，自身完成数据获取与 Chart.js 渲染。
+    模板只负责骨架：
+      - <h2> 文案由 data.js 的 labels.title 提供
+      - <canvas ref="canvas"> 由 index.js 在 mounted → $nextTick 中渲染
+      - 加载 / 错误状态由 v-if 控制，文案由 labels.loading / labels.error 提供
+-->
+<template id="code-activity-template">
+    <section class="code-activity">
+        <h2>{{ labels.title }}</h2>
+        <div class="code-activity-wrapper">
+            <canvas ref="canvas"></canvas>
+            <p v-if="loading" class="code-activity-loading">{{ labels.loading }}</p>
+            <p v-if="error"   class="code-activity-error">{{ labels.error }}</p>
+        </div>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

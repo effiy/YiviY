@@ -1,0 +1,31 @@
+<template id="quick-start-template">
+    <section id="quick-start">
+        <h2>🚀 Quick Start</h2>
+        <p>The fastest way to get VideoLingo running.</p>
+        <h3>Prerequisites</h3>
+        <ul>
+            <li v-for="req in prerequisites" :key="req.name">
+                <strong>{{ req.name }}</strong> — {{ req.desc }}
+            </li>
+        </ul>
+        <table>
+            <tr><th>OS</th><th>FFmpeg Install</th></tr>
+            <tr v-for="row in ffmpegInstalls" :key="row.os">
+                <td>{{ row.os }}</td>
+                <td>
+                    <code>{{ row.cmd }}</code>
+                    <template v-if="row.link"> (via <a :href="row.link.href" target="_blank">{{ row.link.label }}</a>)</template>
+                </td>
+            </tr>
+        </table>
+        <template v-for="opt in installOptions" :key="opt.label">
+            <h3>{{ opt.label }}</h3>
+            <p v-if="opt.body" v-html="opt.body"></p>
+            <pre><code>{{ opt.code }}</code></pre>
+            <p v-if="opt.extra" v-html="opt.extra"></p>
+        </template>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

@@ -1,0 +1,33 @@
+<template id="sidebar-template">
+    <div id="sidebar-root">
+        <aside class="sidebar" :class="{ open: isOpen }" id="sidebar" ref="sidebarRef">
+            <a class="sidebar-logo" href="#">
+                <span class="logo-icon">{{ logo.icon }}</span>
+                <span>
+                    <span class="logo-text">{{ logo.text }}</span><br>
+                    <span class="logo-ver">{{ logo.version }}</span>
+                </span>
+            </a>
+            <nav class="sidebar-nav">
+                <div class="nav-group" v-for="group in groups" :key="group.title">
+                    <span class="nav-group-title">{{ group.title }}</span>
+                    <a class="nav-link"
+                       v-for="item in group.items"
+                       :key="item.href"
+                       :class="{ active: item.active }"
+                       :href="item.href">{{ item.label }}</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <template v-for="(link, idx) in footerLinks" :key="link.href">
+                    <a :href="link.href" target="_blank">{{ link.label }}</a>
+                    <span v-if="idx < footerLinks.length - 1"> &middot; </span>
+                </template>
+            </div>
+        </aside>
+        <button id="mobile-menu-btn" @click="toggleMobileMenu">&#9776;</button>
+    </div>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

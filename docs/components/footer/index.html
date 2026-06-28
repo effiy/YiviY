@@ -1,0 +1,16 @@
+<template id="footer-template">
+    <div class="footer">
+        <p>{{ tagline }}</p>
+        <p>
+            <template v-for="(link, idx) in links" :key="link.href">
+                <a :href="link.href" target="_blank">{{ link.label }}</a>
+                <template v-if="idx < links.length - 1"> · </template>
+            </template>
+            · {{ license }}
+        </p>
+        <p class="footer-meta">{{ meta }}</p>
+    </div>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

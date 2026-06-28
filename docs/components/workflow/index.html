@@ -1,0 +1,20 @@
+<template id="workflow-template">
+    <section id="workflow">
+        <h2>🔄 Pipeline Steps</h2>
+        <p>VideoLingo's processing pipeline has two stages: <strong>Text Processing</strong> (subtitle generation) and <strong>Audio Processing</strong> (dubbing).</p>
+        <template v-for="(stage, sIdx) in stages" :key="stage.title">
+            <h3>{{ stage.title }}</h3>
+            <ol class="steps" :start="sIdx === 1 ? 6 : 1">
+                <li v-for="step in stage.steps" :key="step.title">
+                    <strong>{{ step.title }}</strong> — {{ step.desc }}
+                </li>
+            </ol>
+        </template>
+        <div class="callout callout-success">
+            <strong>✨ Pro tip:</strong> Enable <code>pause_before_translate: true</code> in config.yaml to manually review and edit terminology at <code>output/log/terminology.json</code> before translation begins.
+        </div>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

@@ -1,0 +1,36 @@
+<script type="text/x-template" id="yry-scene-card-tpl">
+    <div class="yry-scene-card">
+      <div class="yry-scene-card-body">
+        <div class="yry-scene-card-name">
+          <a v-if="nameHref" :href="nameHref" :target="nameTarget || null" :rel="nameTarget ? 'noopener noreferrer' : null">{{ name }}</a>
+          <span v-else>{{ name }}</span>
+          <span v-if="badge" class="yry-scene-card-name-badge">{{ badge }}</span>
+        </div>
+        <div v-if="desc" class="yry-scene-card-desc" v-html="desc"></div>
+        <div v-if="tags && tags.length" class="yry-scene-card-tags">
+          <yry-tag-chip
+            v-for="t in tags" :key="t.text"
+            :text="t.text"
+            :modifier="t.modifier || 'info'"
+            :href="t.href || ''" />
+        </div>
+        <div v-if="meta" class="yry-scene-card-meta">{{ meta }}</div>
+        <!--
+          底部链接区：完全由 resolvedLinks (计算属性) 驱动。
+          · props.links 非空时优先使用 props.links 覆盖;
+          · 否则回退到 data.js 配置的 defaultLinks (清单/架构/图谱/源码/测试/演示/审查 等全部可跳转);
+          · props.demo 非空时会作为 "演示" 入口追加入列 (去重)。
+        -->
+        <div v-if="resolvedLinks && resolvedLinks.length" class="yry-scene-card-links">
+            <template v-for="(l, idx) in resolvedLinks" :key="(l.label || l.href || 'link') + '-' + idx">
+                <a v-if="l.href" :href="l.href" :target="l.target || '_blank'" rel="noopener noreferrer">{{ l.icon }} {{ l.label }}</a>
+                <span v-else>{{ l.icon }} {{ l.label }}</span>
+            </template>
+        </div>
+      </div>
+    </div>
+</script>
+
+<script src="index.js"></script>
+
+<script src="../yry-tag-chip/index.js"></script>

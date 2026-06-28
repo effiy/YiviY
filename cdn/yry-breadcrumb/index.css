@@ -1,0 +1,52 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   YrY CDN — YryBreadcrumb · Vue 3 面包屑组件 样式
+
+   适用: 审查 · 测试面板 · 演示 · 计划清单 · 架构图 · 知识图谱
+
+   模板结构 (来自 index.html 中 <script type="text/x-template" id="yry-breadcrumb-tpl">):
+     <nav class="breadcrumb" :aria-label="ariaLabel">
+       <a v-if="item.href" :href="item.href">{{ item.label }}</a>
+       <span v-else>{{ item.label }}</span>
+       <span class="bc-sep">{{ separator }}</span>
+       <span class="bc-current">{{ ... }}</span>
+     </nav>
+
+   本文件由 index.js 自动注入 <link>,宿主页面无需手动引入。
+
+   Design tokens (--yry-color-text-1 / --yry-color-text-2 / --yry-color-text-3 /
+   --yry-color-accent / --yry-ease-out) 由宿主页面提供,本文件所有颜色都带
+   fallback,即使页面未加载主题也能正常显示。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+  font-size: .76rem;
+  line-height: 1.4;
+}
+
+.breadcrumb a {
+  color: var(--yry-color-text-2, var(--yry-gray-soft));
+  text-decoration: none;
+  transition: color .15s var(--yry-ease-out, ease);
+}
+
+.breadcrumb a:hover {
+  color: var(--yry-color-accent, var(--yry-amber));
+  text-decoration: underline;
+}
+
+.bc-sep {
+  color: var(--yry-color-text-3, var(--yry-gray));
+  opacity: .4;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.bc-current {
+  color: var(--yry-color-text-1, var(--yry-gray-pale));
+  font-weight: 500;
+}

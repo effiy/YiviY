@@ -1,0 +1,35 @@
+<template id="transcription-template">
+    <section id="transcription">
+        <h2>🎙️ Transcription (WhisperX)</h2>
+        <p>VideoLingo uses <strong>WhisperX</strong> for word-level transcription with forced alignment, providing timestamp-accurate subtitles.</p>
+        <h3>Whisper Models</h3>
+        <table>
+            <tr><th>Model</th><th>Speed</th><th>Accuracy</th><th>VRAM</th></tr>
+            <tr v-for="m in whisperModels" :key="m.name">
+                <td><code>{{ m.name }}</code></td>
+                <td>{{ m.speed }}</td>
+                <td>{{ m.accuracy }}</td>
+                <td>{{ m.vram }}</td>
+            </tr>
+        </table>
+        <h3>Runtime Options</h3>
+        <table>
+            <tr><th>Runtime</th><th>Requirement</th><th>Cost</th></tr>
+            <tr v-for="rt in runtimes" :key="rt.name">
+                <td><code>{{ rt.name }}</code></td>
+                <td>{{ rt.requirement }}</td>
+                <td>{{ rt.cost }}</td>
+            </tr>
+        </table>
+        <h3>Vocal Separation (Demucs)</h3>
+        <p>Enable <code>demucs: true</code> when your video has loud background music. The htdemucs model separates vocals before transcription for cleaner results. <strong>Cost:</strong> adds ~2-5 minutes processing time.</p>
+        <h3>Supported Recognition Languages</h3>
+        <p>{{ languages }}</p>
+        <div class="callout callout-warning">
+            <strong>⚠️</strong> For Chinese, VideoLingo auto-switches to the <code>Belle/large-v3</code> punctuation-enhanced model. Multi-language videos will only retain the primary language in transcription.
+        </div>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

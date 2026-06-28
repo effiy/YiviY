@@ -1,0 +1,17 @@
+<template id="youtube-settings-template">
+    <section id="youtube-settings">
+        <h2>🔐 YouTube Settings</h2>
+        <p>Configure authentication and network access for YouTube downloads.</p>
+        <h3>Cookies (for age-restricted / private videos)</h3>
+        <ol>
+            <li v-for="step in cookieSteps" :key="step" v-html="step"></li>
+        </ol>
+        <h3>Proxy (for geo-restricted access)</h3>
+        <pre><code>{{ proxyCode }}</code></pre>
+        <h3>Default Settings</h3>
+        <pre><code>{{ defaultCode }}</code></pre>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

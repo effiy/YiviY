@@ -1,0 +1,23 @@
+/* ─────────────────────────────────────────────────────
+ * VideoLingo Docs — Stylesheet Entry
+ * ----------------------------------------------------------------------
+ * 入口文件：仅做模块串联，不写具体样式。
+ *
+ * 加载顺序：
+ *   1. tokens       —— 设计变量（颜色 / 字体 / 尺寸 / 阴影）
+ *   2. base         —— reset + 基础排版 + 文档根容器 + 跨 section
+ *                     共享 UI 原子（code / pre / table / card /
+ *                     callout / badge / tabs）
+ *   3. layout       —— 侧栏 + 主内容区 + 标题/段落/链接等结构样式
+ *   4. responsive   —— 媒体查询（仅 layout 维度）
+ *
+ * 组件专属样式（.footer / .steps / .lang-switcher / .code-activity-* 等）
+ * 随各组件的 index.css 走，由 docs/assets/mount-component.js 在
+ * mountDocComponent() 入口幂等注入 <link>，不再在此处显式声明。
+ * docs/styles/components.css 已废弃并删除。
+ * ───────────────────────────────────────────────────── */
+
+@import url('styles/tokens.css');
+@import url('styles/base.css');
+@import url('styles/layout.css');
+@import url('styles/responsive.css');

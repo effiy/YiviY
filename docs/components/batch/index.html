@@ -1,0 +1,79 @@
+<template id="batch-template">
+    <section id="batch">
+        <h2>{{ overview.emoji }} {{ overview.title }}</h2>
+        <p class="intro-lead">{{ overview.description }}</p>
+
+        <h3>Directory Structure</h3>
+        <pre><code>{{ overview.dirTree }}</code></pre>
+
+        <h3>Usage Guide</h3>
+        <p v-html="guide.prerequisite.html"></p>
+
+        <template v-for="step in steps" :key="step.id">
+            <h4>{{ step.title }}</h4>
+
+            <!-- Step: Task Configuration (intro + fields table + example table) -->
+            <template v-if="step.fields">
+                <p v-if="step.intro" v-html="step.intro.html"></p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Description</th>
+                            <th>Acceptable Values</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="field in step.fields" :key="field.key">
+                            <td><code>{{ field.label }}</code></td>
+                            <td v-html="field.description.html"></td>
+                            <td v-html="field.constraints.html"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <template v-if="step.example">
+                    <p>{{ step.example.title }}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th v-for="col in step.example.columns" :key="col">{{ col }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(row, idx) in step.example.rows" :key="idx">
+                                <td v-for="(cell, cidx) in row" :key="cidx">{{ cell }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </template>
+            </template>
+
+            <!-- Step: simple bullet list -->
+            <ul v-else>
+                <li v-for="(item, iIdx) in step.instructions" :key="iIdx" v-html="item.html"></li>
+            </ul>
+        </template>
+
+        <div v-if="guide.warning" class="callout" :class="'callout-' + guide.warning.severity">
+            <strong>⚠️ Note:</strong> <span v-html="guide.warning.html"></span>
+        </div>
+
+        <h3>Important Considerations</h3>
+        <template v-for="note in considerations" :key="note.id">
+            <h4>{{ note.title }}</h4>
+            <p v-if="note.description" v-html="note.description.html"></p>
+            <ul v-if="note.behaviors">
+                <li v-for="(item, bIdx) in note.behaviors" :key="bIdx" v-html="item.html"></li>
+            </ul>
+            <template v-if="note.recovery">
+                <p>{{ note.recovery.title }}</p>
+                <ol>
+                    <li v-for="(item, rIdx) in note.recovery.steps" :key="rIdx" v-html="item.html"></li>
+                </ol>
+            </template>
+        </template>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

@@ -1,0 +1,14 @@
+<template id="tts-methods-template">
+    <section id="tts-methods">
+        <h2>🎤 TTS Method Configuration</h2>
+        <p>Each TTS method has provider-specific settings. Below are the configuration blocks for each.</p>
+        <template v-for="m in methods" :key="m.name">
+            <h3><code>{{ m.name }}</code><template v-if="m.badge"> ({{ m.badge }})</template></h3>
+            <pre v-if="m.code"><code>{{ m.code }}</code></pre>
+            <p v-if="m.note" v-html="m.note"></p>
+        </template>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

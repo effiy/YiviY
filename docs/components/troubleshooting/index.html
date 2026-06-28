@@ -1,0 +1,21 @@
+<template id="troubleshooting-template">
+    <section id="troubleshooting">
+        <h2>🩺 Troubleshooting</h2>
+        <h3>Common Issues</h3>
+        <div class="card" v-for="issue in issues" :key="issue.title">
+            <h4>{{ issue.icon }} {{ issue.title }}</h4>
+            <p><strong>Fix:</strong> <span v-html="issue.fix"></span></p>
+        </div>
+        <h3>Debug Logs</h3>
+        <p>Check <code>output/log/</code> for detailed processing logs. Each step logs its inputs and outputs for debugging.</p>
+        <h3>Getting Help</h3>
+        <ul>
+            <li v-for="link in helpLinks" :key="link.href">
+                {{ link.icon }} <a :href="link.href" target="_blank">{{ link.label }}</a>
+            </li>
+        </ul>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

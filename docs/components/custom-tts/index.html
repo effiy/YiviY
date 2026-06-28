@@ -1,0 +1,18 @@
+<template id="custom-tts-template">
+    <section id="custom-tts">
+        <h2>🛠️ Custom TTS Integration</h2>
+        <p>Need a TTS engine not listed? Edit <code>core/tts_backend/custom_tts.py</code>.</p>
+        <h3>Interface</h3>
+        <p>Your custom TTS function receives:</p>
+        <ul>
+            <li v-for="p in params" :key="p.name">
+                <code>{{ p.name }}</code> — {{ p.desc }}
+            </li>
+        </ul>
+        <p>It should return the path to the generated audio file.</p>
+        <pre><code>{{ code }}</code></pre>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

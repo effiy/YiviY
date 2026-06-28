@@ -1,0 +1,31 @@
+/* ─────────────────────────────────────────────────────
+ * Workflow
+ * workflow 组件专属样式：
+ *   - .steps / .steps li / .steps li::before
+ *     仅 workflow section 使用，原归属 docs/styles/components.css，
+ *     现迁入本组件实现「样式随组件走」。
+ * 跨 section 共享的原子样式（code / pre / table / callout 等）已在
+ * docs/styles/base.css 一处维护，本组件不重复。
+ * ───────────────────────────────────────────────────── */
+
+.vl-doc .steps {
+    counter-reset: vl-doc-step;
+    list-style: none;
+    padding: 0;
+}
+.vl-doc .steps li {
+    counter-increment: vl-doc-step;
+    padding: 10px 0 10px 40px;
+    position: relative;
+}
+.vl-doc .steps li::before {
+    content: counter(vl-doc-step);
+    position: absolute;
+    left: 0; top: 8px;
+    width: 26px; height: 26px;
+    background: var(--vl-doc-primary);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}

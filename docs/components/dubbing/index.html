@@ -1,0 +1,39 @@
+<template id="dubbing-template">
+    <section id="dubbing">
+        <h2>🗣️ Dubbing</h2>
+        <p>VideoLingo supports <strong>9 TTS engines</strong> for generating dubbed audio tracks.</p>
+        <h3>TTS Methods Comparison</h3>
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Quality</th>
+                <th>Speed</th>
+                <th>Cost</th>
+                <th>Voice Clone</th>
+            </tr>
+            <tr v-for="m in ttsMethods" :key="m.method">
+                <td><code>{{ m.method }}</code></td>
+                <td>{{ m.quality }}</td>
+                <td>{{ m.speed }}</td>
+                <td>{{ m.cost }}</td>
+                <td>{{ m.voiceClone ? '✅' : '❌' }}</td>
+            </tr>
+        </table>
+        <div class="callout callout-success">
+            <strong>💰 Budget-friendly combo:</strong> Use <code>edage_tts</code> for free, high-quality dubbing with no API key required. Pair with a local Ollama LLM for a completely free pipeline.
+        </div>
+        <h3>Speed Factor Tuning</h3>
+        <p>VideoLingo automatically adjusts TTS speed to fit subtitle duration:</p>
+        <table>
+            <tr><th>Setting</th><th>Default</th><th>Meaning</th></tr>
+            <tr v-for="row in speedFactors" :key="row.key">
+                <td><code>{{ row.key }}</code></td>
+                <td>{{ row.defaultValue }}</td>
+                <td>{{ row.meaning }}</td>
+            </tr>
+        </table>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

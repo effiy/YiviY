@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VideoLingo 架构报告</title>
+<style>
+:root {
+    --bg: #ffffff; --bg-soft: #f8f9fa; --bg-code: #f1f5f9;
+    --text: #1a1a2e; --text-soft: #555555; --text-muted: #94a3b8;
+    --primary: #1a56db; --primary-strong: #1648b3; --accent: #3b82f6;
+    --success: #059669; --warning: #d97706; --danger: #dc2626;
+    --border: #e2e8f0; --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --shadow-lift: 0 10px 25px rgba(0,0,0,.08);
+    --font-sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+    --font-mono: 'SF Mono','Fira Code','Cascadia Code','Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--text);background:var(--bg-soft);line-height:1.7}
+.report{max-width:1100px;margin:0 auto;padding:48px 32px 96px}
+
+/* ── Header ── */
+.report-header{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 40%,#1a56db 100%);color:#fff;padding:56px 52px 44px;border-radius:16px;margin-bottom:40px;box-shadow:var(--shadow-lift);position:relative;overflow:hidden}
+.report-header::after{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;background:rgba(255,255,255,.03);border-radius:50%}
+.report-header h1{font-size:2.3rem;font-weight:800;margin-bottom:10px;letter-spacing:-0.5px;position:relative;z-index:1}
+.report-header .subtitle{font-size:1.05rem;opacity:.8;margin-bottom:20px;position:relative;z-index:1}
+.report-header .meta{font-size:.85rem;opacity:.7;display:flex;gap:28px;flex-wrap:wrap;position:relative;z-index:1}
+
+/* ── TOC ── */
+.toc{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:32px 36px;margin-bottom:40px;box-shadow:var(--shadow)}
+.toc h2{font-size:1.05rem;margin-bottom:16px;color:var(--primary);text-transform:uppercase;letter-spacing:.5px}
+.toc ol{padding-left:20px;columns:2;column-gap:40px}
+.toc li{margin-bottom:6px;break-inside:avoid;font-size:.88rem}
+.toc a{color:var(--accent);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+/* ── Section ── */
+section{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:40px 44px;margin-bottom:28px;box-shadow:var(--shadow)}
+section h2{font-size:1.5rem;color:var(--primary-strong);border-bottom:2px solid var(--border);padding-bottom:14px;margin-bottom:28px;display:flex;align-items:center;gap:10px}
+section h3{font-size:1.15rem;color:var(--text);margin:32px 0 14px}
+section h3:first-of-type{margin-top:0}
+section h4{font-size:1rem;color:var(--text-soft);margin:20px 0 10px}
+section p{color:var(--text-soft);margin-bottom:14px}
+section ul,section ol{color:var(--text-soft);margin:8px 0 14px 24px;font-size:.92rem}
+section li{margin-bottom:6px}
+
+/* ── Diagram ── */
+.diagram{background:var(--bg-code);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin:20px 0;overflow-x:auto}
+.diagram pre{font-family:var(--font-mono);font-size:.8rem;line-height:1.6;white-space:pre;color:var(--text)}
+
+/* ── Table ── */
+table{width:100%;border-collapse:collapse;margin:16px 0 20px;font-size:.88rem}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--bg-code);font-weight:600;color:var(--primary-strong);font-size:.76rem;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+tr:hover td{background:#fafbfc}
+
+/* ── Badge ── */
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.72rem;font-weight:600;letter-spacing:.3px}
+.badge-good{background:#d1fae5;color:#065f46}
+.badge-bad{background:#fee2e2;color:#991b1b}
+.badge-warn{background:#fef3c7;color:#92400e}
+.badge-info{background:#dbeafe;color:#1e40af}
+
+/* ── Code ── */
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:var(--radius);padding:20px 24px;margin:14px 0;overflow-x:auto}
+.code-block pre{font-family:var(--font-mono);font-size:.78rem;line-height:1.65;white-space:pre}
+.c-kw{color:#c792ea}.c-fn{color:#82aaff}.c-str{color:#c3e88d}.c-cmt{color:#546e7a;font-style:italic}.c-cls{color:#ffcb6b}
+
+/* ── Cards ── */
+.example-card{border:1px solid var(--border);border-radius:var(--radius);margin:16px 0;overflow:hidden}
+.example-card__header{padding:10px 18px;font-weight:600;font-size:.86rem;display:flex;align-items:center;gap:8px}
+.example-card__header--good{background:#d1fae5;color:#065f46}
+.example-card__header--bad{background:#fee2e2;color:#991b1b}
+.example-card__body{padding:18px 20px}
+.example-card__body p{font-size:.9rem}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:20px 0}
+.metric{background:var(--bg-code);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center}
+.metric__value{font-size:1.6rem;font-weight:700;color:var(--primary-strong)}
+.metric__label{font-size:.74rem;color:var(--text-muted);margin-top:4px}
+
+/* ── Radar / Score visual ── */
+.score-hero{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0}
+.score-big{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-code);border:2px solid var(--border);border-radius:16px;padding:32px}
+.score-big__num{font-size:5rem;font-weight:900;line-height:1;background:linear-gradient(135deg,#dc2626,#d97706,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.score-big__label{font-size:.9rem;color:var(--text-muted);margin-top:8px}
+.score-bars{display:flex;flex-direction:column;gap:10px}
+.score-bar{display:flex;align-items:center;gap:10px;font-size:.82rem}
+.score-bar__label{width:90px;text-align:right;color:var(--text-soft);white-space:nowrap}
+.score-bar__track{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.score-bar__fill{height:100%;border-radius:5px;transition:width .3s}
+.score-bar__val{width:32px;font-weight:600;font-size:.8rem;color:var(--text)}
+.sb--a{background:linear-gradient(90deg,#059669,#10b981)}.sb--b{background:linear-gradient(90deg,#2563eb,#3b82f6)}
+.sb--c{background:linear-gradient(90deg,#d97706,#f59e0b)}.sb--d{background:linear-gradient(90deg,#dc2626,#ef4444)}
+
+/* ── Gauge ── */
+.gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:20px 0}
+.gauge{background:var(--bg-code);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.gauge__ring{width:80px;height:80px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800}
+.gauge__label{font-size:.8rem;color:var(--text-muted)}
+.gauge__note{font-size:.72rem;color:var(--text-muted);margin-top:4px}
+.gr--good{border:4px solid #059669;color:#059669}
+.gr--warn{border:4px solid #d97706;color:#d97706}
+.gr--bad{border:4px solid #dc2626;color:#dc2626}
+
+/* ── Timeline ── */
+.tl{position:relative;padding-left:32px;margin:20px 0}
+.tl::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:24px}
+.tl-item::before{content:'';position:absolute;left:-26px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 2px var(--accent)}
+.tl-item--done::before{background:#059669;box-shadow:0 0 0 2px #059669}
+.tl-item--wip::before{background:#d97706;box-shadow:0 0 0 2px #d97706}
+.tl-item h4{font-size:.92rem;margin-bottom:4px}
+.tl-item p{font-size:.82rem;color:var(--text-muted);margin:0}
+
+/* ── Footer ── */
+.report-footer{text-align:center;color:var(--text-muted);font-size:.82rem;margin-top:48px;padding-top:28px;border-top:1px solid var(--border)}
+
+@media(max-width:768px){
+    .report{padding:16px 10px 40px}
+    .report-header{padding:28px 20px 24px}
+    .report-header h1{font-size:1.4rem}
+    section{padding:22px 18px}
+    .toc ol{columns:1}
+    .metrics{grid-template-columns:repeat(2,1fr)}
+    .score-hero{grid-template-columns:1fr}
+    .gauges{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<article class="report">
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="report-header">
+    <h1>🏗️ VideoLingo 架构分析报告</h1>
+    <p class="subtitle">评分 → 分析 → 可视化 · 面向可演进性的全栈架构审计</p>
+    <div class="meta">
+        <span>📅 2026-06-28</span>
+        <span>📦 v3.0.0 → v3.1.0</span>
+        <span>📐 ATAM 方法</span>
+        <span>📋 10 行动项 · 5 周落地</span>
+    </div>
+</header>
+
+<!-- ═══════════════ TOC ═══════════════ -->
+<nav class="toc">
+    <h2>📑 目录</h2>
+    <ol>
+        <li><a href="#s1">综合评分卡</a></li>
+        <li><a href="#s2">KPI 仪表盘</a></li>
+        <li><a href="#s3">背景与评估目标</a></li>
+        <li><a href="#s4">架构现状总览</a></li>
+        <li><a href="#s5">分层架构深度分析</a></li>
+        <li><a href="#s6">数据流与管道</a></li>
+        <li><a href="#s7">服务后端可插拔性</a></li>
+        <li><a href="#s8">配置 · i18n · 文档站</a></li>
+        <li><a href="#s9">问题根因分析</a></li>
+        <li><a href="#s10">改进方案</a></li>
+        <li><a href="#s11">架构对比图</a></li>
+        <li><a href="#s12">行动项 + 排期图</a></li>
+    </ol>
+</nav>
+
+<!-- ═══════════════ PART 1: 评分 ═══════════════ -->
+
+<!-- ═══════════════ S1. 综合评分卡 ═══════════════ -->
+<section id="s1">
+    <h2>📊 1. 综合评分卡</h2>
+
+    <p>基于<strong>8 维度加权评分体系</strong>，权重分配反映各维度对项目长期演进的影响程度。当前综合得分 <strong style="color:#dc2626;">5.6 / 10</strong>，目标 <strong style="color:#059669;">7.9 / 10</strong>，差距 <strong>-2.3</strong>。</p>
+
+    <div class="score-hero">
+        <div class="score-big">
+            <div class="score-big__num">5.6</div>
+            <div class="score-big__label">当前综合评分 / 10</div>
+        </div>
+        <div class="score-bars">
+            <div class="score-bar">
+                <span class="score-bar__label">分层合规性</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--a" style="width:80%"></span></span>
+                <span class="score-bar__val">8.0</span>
+            </div>
+            <div class="score-bar">
+                <span class="score-bar__label">模块内聚度</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--b" style="width:70%"></span></span>
+                <span class="score-bar__val">7.0</span>
+            </div>
+            <div class="score-bar">
+                <span class="score-bar__label">可扩展性</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--d" style="width:50%"></span></span>
+                <span class="score-bar__val">5.0</span>
+            </div>
+            <div class="score-bar">
+                <span class="score-bar__label">健壮性</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--b" style="width:70%"></span></span>
+                <span class="score-bar__val">7.0</span>
+            </div>
+            <div class="score-bar">
+                <span class="score-bar__label">可测试性</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--d" style="width:20%"></span></span>
+                <span class="score-bar__val">2.0</span>
+            </div>
+            <div class="score-bar">
+                <span class="score-bar__label">性能</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--c" style="width:60%"></span></span>
+                <span class="score-bar__val">6.0</span>
+            </div>
+            <div class="score-bar">
+                <span class="score-bar__label">可维护性</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--c" style="width:60%"></span></span>
+                <span class="score-bar__val">6.0</span>
+            </div>
+            <div class="score-bar">
+                <span class="score-bar__label">安全性</span>
+                <span class="score-bar__track"><span class="score-bar__fill sb--d" style="width:40%"></span></span>
+                <span class="score-bar__val">4.0</span>
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <tr><th>维度</th><th>权重</th><th>当前</th><th>目标</th><th>差距</th><th>关键判断依据</th></tr>
+        <tr><td>🏗️ 分层合规性</td><td>15%</td><td>8</td><td>9</td><td>-1</td><td>依赖方向一致向下，仅 1 处轻微违规（领域层含 Rich 进度条）</td></tr>
+        <tr><td>🧩 模块内聚度</td><td>15%</td><td>7</td><td>8</td><td>-1</td><td>文件级模块化良好；全局路径常量导致隐式耦合</td></tr>
+        <tr><td>🔌 可扩展性</td><td>15%</td><td>5</td><td>8</td><td><strong>-3</strong></td><td>新增 TTS 后端需改 4 文件；数字前缀命名阻碍步骤插入</td></tr>
+        <tr><td>🛡️ 健壮性</td><td>10%</td><td>7</td><td>8</td><td>-1</td><td>断点续跑 + 重试 + TTS 降级链覆盖好；输入验证欠缺</td></tr>
+        <tr><td>🧪 可测试性</td><td>15%</td><td>2</td><td>7</td><td><strong>-5</strong></td><td>零测试文件；全局文件路径 + 外部 API 耦合使 mock 困难</td></tr>
+        <tr><td>⚡ 性能</td><td>10%</td><td>6</td><td>8</td><td>-2</td><td>翻译并行好；配置/翻译无缓存；批处理任务级串行</td></tr>
+        <tr><td>📖 可维护性</td><td>10%</td><td>6</td><td>8</td><td>-2</td><td>注释充分；无测试安全网；数字前缀命名降低可读性</td></tr>
+        <tr><td>🔒 安全性</td><td>10%</td><td>4</td><td>7</td><td>-3</td><td>API Key 明文存 YAML；无环境变量 fallback；无认证层</td></tr>
+    </table>
+
+    <div class="gauges">
+        <div class="gauge">
+            <div class="gauge__ring gr--bad">2.0</div>
+            <div class="gauge__label">🧪 可测试性</div>
+            <div class="gauge__note">最大短板 · -5 分</div>
+        </div>
+        <div class="gauge">
+            <div class="gauge__ring gr--bad">5.0</div>
+            <div class="gauge__label">🔌 可扩展性</div>
+            <div class="gauge__note">第二大短板 · -3 分</div>
+        </div>
+        <div class="gauge">
+            <div class="gauge__ring gr--bad">4.0</div>
+            <div class="gauge__label">🔒 安全性</div>
+            <div class="gauge__note">第三大短板 · -3 分</div>
+        </div>
+        <div class="gauge">
+            <div class="gauge__ring gr--warn">5.6</div>
+            <div class="gauge__label">📊 加权综合</div>
+            <div class="gauge__note">中等风险 · 距目标 -2.3</div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════ S2. KPI 仪表盘 ═══════════════ -->
+<section id="s2">
+    <h2>📈 2. KPI 仪表盘</h2>
+
+    <p>以下 20 个可量化指标覆盖可扩展性、测试、性能、安全四个关键领域，作为改进效果的衡量基线。</p>
+
+    <div class="gauges" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+        <div class="gauge"><div class="gauge__ring gr--bad">4</div><div class="gauge__label">新增 TTS 需改文件数</div><div class="gauge__note">目标 ≤1 · P1</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">2-N</div><div class="gauge__label">新增管道步需改文件数</div><div class="gauge__note">目标 ≤1 · P2</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">否</div><div class="gauge__label">TTS 注册表模式</div><div class="gauge__note">目标 是 · P1</div></div>
+        <div class="gauge"><div class="gauge__ring gr--warn">2 vs 4</div><div class="gauge__label">TTS 函数参数一致性</div><div class="gauge__note">目标 统一 · P1</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">0</div><div class="gauge__label">单元测试文件数</div><div class="gauge__note">目标 ≥5 · P1</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">0</div><div class="gauge__label">集成测试文件数</div><div class="gauge__note">目标 ≥2 · P2</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">0%</div><div class="gauge__label">核心模块覆盖率</div><div class="gauge__note">目标 ≥60% · P1</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">无</div><div class="gauge__label">CI/CD 流水线</div><div class="gauge__note">目标 有 · P2</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">0%</div><div class="gauge__label">load_key 缓存命中率</div><div class="gauge__note">目标 ≥90% · P0</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">无</div><div class="gauge__label">t() 翻译查找缓存</div><div class="gauge__note">目标 有 · P0</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">串行</div><div class="gauge__label">批处理任务级并行</div><div class="gauge__note">目标 ≥4 并发 · P2</div></div>
+        <div class="gauge"><div class="gauge__ring gr--good">有</div><div class="gauge__label">LLM 响应缓存</div><div class="gauge__note">✅ 已实现</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">明文 YAML</div><div class="gauge__label">API Key 存储方式</div><div class="gauge__note">目标 env var · P0</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">无</div><div class="gauge__label">环境变量 Fallback</div><div class="gauge__note">目标 有 · P0</div></div>
+        <div class="gauge"><div class="gauge__ring gr--bad">无</div><div class="gauge__label">Streamlit 认证</div><div class="gauge__note">目标 基础认证 · P2</div></div>
+        <div class="gauge"><div class="gauge__ring gr--good">已覆盖</div><div class="gauge__label">.gitignore 覆盖 config</div><div class="gauge__note">✅ 已实现</div></div>
+    </div>
+</section>
+
+<!-- ═══════════════ PART 2: 分析 ═══════════════ -->
+
+<!-- ═══════════════ S3. 背景与评估目标 ═══════════════ -->
+<section id="s3">
+    <h2>📋 3. 背景与评估目标</h2>
+
+    <h3>3.1 项目简介</h3>
+    <p>VideoLingo 是一款开源的<strong>视频翻译与配音自动化工具</strong>（Apache-2.0），由 <code>Huanshere</code> 发起，现已迭代至 v3.0.0。核心能力是将任意语言视频转录为文本、翻译为目标语言、并生成目标语言配音 — 覆盖从 YouTube 下载到最终配音视频输出的完整 15 步链路。技术栈以 Python 为核心，Streamlit 做 UI，WhisperX 做 ASR，8 种 TTS 后端可选，通过 OpenAI SDK 统一调用 LLM。</p>
+
+    <h3>3.2 审计触发因素</h3>
+    <table>
+        <tr><th>#</th><th>因素</th><th>症状</th></tr>
+        <tr><td>1</td><td>📈 功能膨胀</td><td>管道 5→15 步，TTS 2→8 后端，模块持续增长但无架构治理</td></tr>
+        <tr><td>2</td><td>👥 社区增长</td><td>新贡献者理解代码库需 ~4h，缺少架构文档指引</td></tr>
+        <tr><td>3</td><td>🔧 维护瓶颈</td><td>新增 TTS 后端需改 4 个文件；插入管道步需重命名后续全部模块</td></tr>
+        <tr><td>4</td><td>🐛 质量风险</td><td>零测试覆盖，重构完全依赖人工端到端验证</td></tr>
+        <tr><td>5</td><td>🚀 演进需求</td><td>计划支持 CLI / REST API / 多任务并发，当前架构需适度重构</td></tr>
+    </table>
+
+    <h3>3.3 战略目标</h3>
+    <table>
+        <tr><th>ID</th><th>目标</th><th>衡量标准</th><th>当前 → 目标</th></tr>
+        <tr><td>G1</td><td>降低新功能集成成本</td><td>新增 TTS 后端需修改的文件数</td><td>4 → <strong>1</strong></td></tr>
+        <tr><td>G2</td><td>建立回归防护网</td><td>核心模块测试覆盖率</td><td>0% → <strong>≥60%</strong></td></tr>
+        <tr><td>G3</td><td>支持多任务并发</td><td>同时处理视频数</td><td>1 → <strong>≥4</strong></td></tr>
+        <tr><td>G4</td><td>提升代码可读性</td><td>新贡献者上手时间</td><td>~4h → <strong>~1h</strong></td></tr>
+        <tr><td>G5</td><td>消除高频性能瓶颈</td><td>配置/翻译查找耗时</td><td>每次 I/O → <strong>缓存命中 ≥90%</strong></td></tr>
+    </table>
+</section>
+
+<!-- ═══════════════ S4. 架构现状总览 ═══════════════ -->
+<section id="s4">
+    <h2>🔍 4. 架构现状总览</h2>
+
+    <h3>4.1 项目规模</h3>
+    <div class="metrics">
+        <div class="metric"><div class="metric__value">8,787</div><div class="metric__label">Python 代码行</div></div>
+        <div class="metric"><div class="metric__value">52</div><div class="metric__label">.py 文件</div></div>
+        <div class="metric"><div class="metric__value">15</div><div class="metric__label">管道步骤</div></div>
+        <div class="metric"><div class="metric__value">8</div><div class="metric__label">TTS 后端</div></div>
+        <div class="metric"><div class="metric__value">3</div><div class="metric__label">ASR 后端</div></div>
+        <div class="metric"><div class="metric__value">7</div><div class="metric__label">i18n 语言</div></div>
+        <div class="metric"><div class="metric__value">18</div><div class="metric__label">文档组件</div></div>
+        <div class="metric"><div class="metric__value">0</div><div class="metric__label">测试文件</div></div>
+    </div>
+
+    <h3>4.2 架构风格判断</h3>
+    <p>VideoLingo 是<strong>管道-过滤器 + 分层架构</strong>的混合体：15 步串联数据流通过文件系统中间产物传递状态；展示/应用/领域/基础设施/后端五层自上而下单向依赖。</p>
+
+    <div class="diagram"><pre>
+┌──────────────────────────────────────────────────────────────┐
+│             🎨 展示层       st.py / docs/                    │
+│             ⚙️ 应用层       TaskRunner / batch/               │
+│             🧩 领域层       _1_ ～ _12_ / prompts.py          │
+│             🔧 基础设施层   utils/ / spacy_utils/             │
+│             🔌 后端层       asr_backend/ / tts_backend/       │
+└──────────────────────────────────────────────────────────────┘</pre></div>
+
+    <h3>4.3 技术栈矩阵</h3>
+    <table>
+        <tr><th>层级</th><th>选型</th><th>版本</th><th>角色</th></tr>
+        <tr><td>🎨 UI</td><td>Streamlit</td><td>1.49.1</td><td>Web 界面 + 后台任务调度</td></tr>
+        <tr><td>🧠 LLM</td><td>OpenAI SDK</td><td>≥1.55.3</td><td>统一 LLM 网关 (DeepSeek/OpenAI/火山)</td></tr>
+        <tr><td>🎤 ASR</td><td>WhisperX</td><td>≥3.8.1</td><td>词级时间戳转录</td></tr>
+        <tr><td>🗣️ TTS</td><td>多后端 8 种</td><td>—</td><td>Azure/Edge/OpenAI/FishTTS/SoVITS/CosyVoice2</td></tr>
+        <tr><td>🔊 音源分离</td><td>Demucs</td><td>—</td><td>人声/背景音分离</td></tr>
+        <tr><td>📝 NLP</td><td>spaCy</td><td>3.8.11</td><td>8 语言句子分割</td></tr>
+        <tr><td>🎬 视频</td><td>moviepy+ffmpeg</td><td>1.0.3</td><td>字幕嵌入、音视频合轨</td></tr>
+        <tr><td>📊 数据</td><td>pandas+openpyxl</td><td>≥2.2.3</td><td>Excel 中间产物</td></tr>
+        <tr><td>🌐 文档</td><td>Vue 3 CDN</td><td>3.x</td><td>18 组件文档站点</td></tr>
+        <tr><td>📥 下载</td><td>yt-dlp</td><td>latest</td><td>YouTube/多平台</td></tr>
+        <tr><td>⚙️ 配置</td><td>ruamel.yaml</td><td>—</td><td>YAML 读写 (线程安全+保留注释)</td></tr>
+    </table>
+</section>
+
+<!-- ═══════════════ S5. 分层架构深度分析 ═══════════════ -->
+<section id="s5">
+    <h2>🏛️ 5. 分层架构深度分析</h2>
+
+    <h3>5.1 五层完整架构图</h3>
+    <div class="diagram"><pre>
+┌──────────────────────────────────────────────────────────────────────┐
+│                        🎨 展示层 (Presentation)                        │
+│                                                                       │
+│  st.py                         docs/                                 │
+│  ├─ Streamlit 入口 + UI 布局    ├─ index.html (Vue 3 单页)            │
+│  ├─ 管道步骤注册 (_get_steps)   ├─ 18 组件 (三元组: html+data+js)     │
+│  ├─ 进度控制面板 (TaskRunner)   ├─ CDN Web Components (yry-*)         │
+│  └─ @st.fragment(run_every=1)   └─ 设计令牌 (--vl-doc-* CSS vars)    │
+│                                                                       │
+│  依赖 → core.*, translations                                         │
+├──────────────────────────────────────────────────────────────────────┤
+│                        ⚙️ 应用层 (Application)                         │
+│                                                                       │
+│  core/st_utils/task_runner.py      batch/                            │
+│  ├─ TaskRunner (dataclass)         ├─ batch_processor.py (任务调度)    │
+│  ├─ 后台线程 + threading.Event     ├─ video_processor.py (处理封装)    │
+│  ├─ 状态机: idle→running⇄paused    ├─ settings_check.py (配置校验)    │
+│  │         →completed/stopped/error └─ tasks_setting.xlsx (任务定义)  │
+│  └─ 自定义 StopTask 异常                                            │
+│                                                                       │
+│  依赖 → core.* (不含展示层)                                            │
+├──────────────────────────────────────────────────────────────────────┤
+│                        🧩 领域层 (Domain)                              │
+│                                                                       │
+│  ┌─ 文本管道 ────────────────────────┐  ┌─ 音频管道 ─────────────────┐ │
+│  │ _1_ytdlp.py      视频下载         │  │ _8_1_audio_task  音频任务  │ │
+│  │ _2_asr.py        ASR 编排         │  │ _8_2_dub_chunks  配音块    │ │
+│  │ _3_1_split_nlp   spaCy 断句      │  │ _9_refer_audio   参考音频  │ │
+│  │ _3_2_split_meaning LLM 语义断句  │  │ _10_gen_audio    TTS 生成  │ │
+│  │ _4_1_summarize   LLM 摘要+术语   │  │ _11_merge_audio  音频合并  │ │
+│  │ _4_2_translate   LLM 并行翻译    │  │ _12_dub_to_vid   配音合轨  │ │
+│  │ _5_split_sub     字幕切割        │  └────────────────────────────┘ │
+│  │ _6_gen_sub       时间轴对齐      │                                 │
+│  │ _7_sub_into_vid  字幕嵌入        │  prompts.py — LLM 提示词模板库  │
+│  └──────────────────────────────────┘  translate_lines.py — 翻译工具  │
+│                                                                       │
+│  依赖 → utils/*, spacy_utils/*, asr_backend/*, tts_backend/*          │
+├──────────────────────────────────────────────────────────────────────┤
+│                      🔧 基础设施层 (Infrastructure)                    │
+│                                                                       │
+│  utils/ask_gpt.py        OpenAI SDK 封装 + JSON repair + 磁盘缓存     │
+│  utils/config_utils.py   YAML 线程安全读写 + dot-notation 访问        │
+│  utils/decorator.py      @except_handler(重试) / @check_file_exists   │
+│  utils/models.py         中间产物文件路径常量 (全局状态)               │
+│  spacy_utils/            多语言句子分割 (标点/连接词/长句/逗号)        │
+│                                                                       │
+│  依赖 → 无业务依赖 (纯工具层)                                          │
+├──────────────────────────────────────────────────────────────────────┤
+│                       🔌 服务后端层 (Backends)                         │
+│                                                                       │
+│  asr_backend/                  tts_backend/                          │
+│  ├─ whisperX_local.py          ├─ azure_tts.py      ├─ edge_tts.py   │
+│  ├─ whisperX_302.py            ├─ openai_tts.py     ├─ fish_tts.py   │
+│  ├─ elevenlabs_asr.py          ├─ sf_fishtts.py     ├─ gpt_sovits.py │
+│  ├─ demucs_vl.py               ├─ sf_cosyvoice2.py  ├─ custom_tts.py │
+│  └─ audio_preprocess.py        ├─ _302_f5tts.py     └─ tts_main.py   │
+│                                  └─ estimate_duration.py              │
+│                                                                       │
+│  依赖 → utils/* (仅配置文件读取)                                        │
+└──────────────────────────────────────────────────────────────────────┘</pre></div>
+
+    <h3>5.2 层次合规性检查</h3>
+    <table>
+        <tr><th>检查项</th><th>结果</th><th>详情</th></tr>
+        <tr><td>依赖方向一致向下？</td><td><span class="badge badge-good">✅</span></td><td>st.py→core.*, 领域层→utils/backends, 无向上引用</td></tr>
+        <tr><td>存在循环依赖？</td><td><span class="badge badge-good">✅</span></td><td>未发现循环导入</td></tr>
+        <tr><td>领域层含 UI 代码？</td><td><span class="badge badge-warn">⚠️</span></td><td>_4_2_translate.py 包含 Rich 进度条渲染（应在应用层）</td></tr>
+        <tr><td>跨层调用？</td><td><span class="badge badge-good">✅</span></td><td>展示层不直接调后端，通过领域层间接调用</td></tr>
+    </table>
+
+    <h3>5.3 模块耦合度热力图</h3>
+    <table>
+        <tr><th>模块</th><th>被引用次数</th><th>引用外部数</th><th>耦合等级</th><th>趋势</th></tr>
+        <tr><td>models.py (路径常量)</td><td>20+</td><td>0</td><td>🟡 高入向</td><td>需重构为 Workspace</td></tr>
+        <tr><td>config_utils.py</td><td>20+</td><td>1</td><td>🟢 低</td><td>需加缓存</td></tr>
+        <tr><td>decorator.py</td><td>15+</td><td>1</td><td>🟢 低</td><td>稳定</td></tr>
+        <tr><td>ask_gpt.py</td><td>10+</td><td>4</td><td>🟢 低</td><td>稳定</td></tr>
+        <tr><td>prompts.py</td><td>5</td><td>1</td><td>🟢 低</td><td>稳定</td></tr>
+        <tr><td>task_runner.py</td><td>1</td><td>1</td><td>🟢 零耦合</td><td>稳定 — 最佳设计</td></tr>
+        <tr><td>tts_main.py</td><td>1</td><td>8</td><td>🟡 高出向</td><td>需注册表模式</td></tr>
+    </table>
+</section>
+
+<!-- ═══════════════ S6. 数据流与管道 ═══════════════ -->
+<section id="s6">
+    <h2>🔄 6. 数据流与管道分析</h2>
+
+    <h3>6.1 完整管道数据流</h3>
+    <div class="diagram"><pre>
+┌────────────────── 阶段 A: 文本管道 ──────────────────┐
+│                                                       │
+│  URL ──→ [1] yt-dlp ──→ .mp4                         │
+│  .mp4 ──→ [2] ASR ──→ cleaned_chunks.xlsx             │
+│           (Demucs 人声分离 ─ 可选)                    │
+│  .xlsx ──→ [3.1] spaCy NLP ──→ split_by_nlp.txt      │
+│  .txt ───→ [3.2] LLM 语义 ──→ split_by_meaning.txt   │
+│  .txt ───→ [4.1] LLM 摘要 ──→ terminology.json        │
+│  .txt+json→[4.2] LLM 翻译 ──→ translation_results.xlsx│
+│           (ThreadPoolExecutor 并行)                   │
+│  .xlsx ──→ [5] 字幕切割 ──→ for_subtitles.xlsx        │
+│  .xlsx ──→ [6] 时间对齐 ──→ *.srt                     │
+│  .mp4+srt→[7] 字幕嵌入 ──→ output_sub.mp4            │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+                        │
+                        ▼
+┌────────────────── 阶段 B: 音频管道 ──────────────────┐
+│                                                       │
+│  .xlsx ──→ [8.1] 音频任务计划 ──→ tts_tasks.xlsx     │
+│  .xlsx ──→ [8.2] 配音块生成 ──→ dub_chunks.xlsx      │
+│  .mp4 ───→ [9] 参考音频提取 ──→ refers/*.wav         │
+│  .xlsx+ref→[10] TTS 批量生成 ─→ segs/*.wav           │
+│           (8 后端策略分发 + 三级降级)                  │
+│  segs/ ──→ [11] 音频合并 ──→ audio.wav               │
+│           (变速适配: 1.0x ~ 1.4x)                     │
+│  .mp4+wav→[12] 配音合轨 ──→ output_dub.mp4           │
+│                                                       │
+└───────────────────────────────────────────────────────┘</pre></div>
+
+    <h3>6.2 管道质量评估</h3>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--good">
+            ✅ 优秀：断点续跑 — @check_file_exists 装饰器实现幂等
+        </div>
+        <div class="example-card__body">
+            <p>每个管道步骤退出前将产物写入文件，下次运行时装饰器自动跳过已完成步骤。若 LLM API 中途失败，修复后重跑零浪费。<strong>仅 10 行代码，效果显著。</strong></p>
+            <div class="code-block"><pre>
+<span class="c-cmt"># core/utils/decorator.py — 核心机制</span>
+<span class="c-kw">def</span> <span class="c-fn">check_file_exists</span>(file_path):
+    <span class="c-kw">def</span> <span class="c-fn">decorator</span>(func):
+        <span class="c-kw">def</span> <span class="c-fn">wrapper</span>(*args, **kwargs):
+            <span class="c-kw">if</span> os.path.exists(file_path):
+                <span class="c-fn">rprint</span>(<span class="c-str">f"⚠️ skip &lt;{func.__name__}&gt;"</span>)
+                <span class="c-kw">return</span>          <span class="c-cmt"># ← 幂等跳过</span>
+            <span class="c-kw">return</span> func(*args, **kwargs)</pre></div>
+        </div>
+    </div>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--good">
+            ✅ 优秀：LLM 响应缓存 — Prompt 级去重节省费用
+        </div>
+        <div class="example-card__body">
+            <p><code>ask_gpt.py</code> 将每次 LLM 调用的 prompt+response 持久化到 <code>output/gpt_log/{title}.json</code>。调试和重跑时直接命中缓存，同时便于审查 LLM 输出质量。配合 <code>json_repair</code> 库修复不合规 JSON，提高解析成功率。</p>
+        </div>
+    </div>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--good">
+            ✅ 优秀：翻译两阶段流水线 — 忠实度→表现力
+        </div>
+        <div class="example-card__body">
+            <p>翻译不采用单次 "翻译+优化" prompt，而是分两阶段：第一阶段严格忠实原文 (<code>get_prompt_faithfulness</code>)，第二阶段在忠实译文上优化表达自然度 (<code>get_prompt_expressiveness</code>)。分阶段策略比单次 prompt 产出质量更高。</p>
+        </div>
+    </div>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--bad">
+            ❌ 缺陷：全局 output/ 单例 — 多任务互斥
+        </div>
+        <div class="example-card__body">
+            <p><code>models.py</code> 定义硬编码路径常量 (<code>_4_2_TRANSLATION = "output/log/translation_results.xlsx"</code>)，全部 15 步共享同一目录。后果：两个任务无法并发（后者覆盖前者中间文件）；测试需 mock 完整文件系统；模块签名不声明数据依赖。</p>
+        </div>
+    </div>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--bad">
+            ❌ 缺陷：数字前缀模块命名 — 阻碍管道演进
+        </div>
+        <div class="example-card__body">
+            <p><code>_3_1_split_nlp.py</code>、<code>_8_2_dub_chunks.py</code> 等命名编码了管道顺序，但插入新步骤需重命名后续所有文件（如第 4 步后插入 → <code>_5</code> ~ <code>_12</code> 全部改名），且数字不传达模块职责。</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════ S7. 服务后端可插拔性 ═══════════════ -->
+<section id="s7">
+    <h2>🔌 7. 服务后端可插拔性分析</h2>
+
+    <h3>7.1 TTS 后端全景</h3>
+    <table>
+        <tr><th>后端</th><th>文件</th><th>协议</th><th>参数数</th><th>特点</th></tr>
+        <tr><td>Azure TTS</td><td>azure_tts.py</td><td>302.ai API</td><td>2</td><td>微软神经网络语音</td></tr>
+        <tr><td>Edge TTS</td><td>edge_tts.py</td><td>edge-tts 库</td><td>2</td><td>免费、无需 Key</td></tr>
+        <tr><td>OpenAI TTS</td><td>openai_tts.py</td><td>302.ai API</td><td>2</td><td>TTS-1 模型</td></tr>
+        <tr><td>FishTTS</td><td>fish_tts.py</td><td>302.ai API</td><td>2</td><td>角色克隆</td></tr>
+        <tr><td>SF FishTTS</td><td>sf_fishtts.py</td><td>SiliconFlow</td><td>4</td><td>硅基流动版</td></tr>
+        <tr><td>SoVITS</td><td>gpt_sovits_tts.py</td><td>本地/远程</td><td>4</td><td>GPT-SoVITS 克隆</td></tr>
+        <tr><td>CosyVoice2</td><td>sf_cosyvoice2.py</td><td>SiliconFlow</td><td>4</td><td>CosyVoice 克隆</td></tr>
+        <tr><td>F5-TTS</td><td>_302_f5tts.py</td><td>302.ai API</td><td>4</td><td>F5 模型</td></tr>
+        <tr><td>Custom</td><td>custom_tts.py</td><td>用户自定义</td><td>2</td><td>回调扩展</td></tr>
+    </table>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--good">
+            ✅ 优秀：TTS 三级降级链 — 失败→重试→GPT 修正→重试→静默占位
+        </div>
+        <div class="example-card__body">
+            <p><code>tts_main.py</code> 实现了完整的失败处理：前 2 次直接重试 TTS，第 3 次调用 GPT 修正文本（去除 &amp;®™© 等 TTS 不友好字符）后重试，全部失败生成 100ms 静默音频占位。<strong>管道不因单个音频生成失败而中断。</strong></p>
+        </div>
+    </div>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--bad">
+            ❌ 缺陷：if-elif 分发 + 签名不一致 → 违反开闭原则
+        </div>
+        <div class="example-card__body">
+            <p>新增 TTS 后端需修改 <strong>4 个文件</strong>：新 TTS 文件 + tts_main.py (if-elif) + config.yaml (配置段) + sidebar_setting.py (UI 选项)。部分后端函数签名 2 参数，部分 4 参数。应使用注册表模式统一接口。</p>
+            <div class="code-block"><pre>
+<span class="c-cmt">// 现状: 长 if-elif 链</span>
+<span class="c-kw">if</span> TTS_METHOD == <span class="c-str">'azure_tts'</span>:      <span class="c-fn">azure_tts</span>(text, save_as)
+<span class="c-kw">elif</span> TTS_METHOD == <span class="c-str">'sf_fish_tts'</span>:  <span class="c-fn">sf_fish_tts</span>(text, save_as, number, task_df)
+<span class="c-kw">elif</span> ... <span class="c-cmt">// 8 个分支，且签名不统一</span></pre></div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════ S8. 配置 · i18n · 文档站 ═══════════════ -->
+<section id="s8">
+    <h2>⚙️ 8. 配置 · i18n · 文档站</h2>
+
+    <h3>8.1 配置体系</h3>
+    <div class="diagram"><pre>
+config.yaml  ←── 唯一配置源 (~140 行 YAML)
+    │
+    ├── load_key("api.key")         → 点号路径嵌套读取 (线程安全 Lock)
+    ├── update_key("api.key", v)    → Streamlit 侧边栏动态写入
+    └── 问题: 每次调用都 open() → yaml.load() → 遍历字典 (无缓存)</pre></div>
+
+    <h3>8.2 i18n 体系</h3>
+    <div class="diagram"><pre>
+translations/
+├── translations.py     ← t("key") 查找 (无缓存，每次 json.load)
+├── en.json (fallback) / zh-CN.json / zh-HK.json
+├── ja.json / es.json / ru.json / fr.json</pre></div>
+
+    <h3>8.3 文档站架构</h3>
+    <p>文档站采用 <strong>Vue 3 CDN + data-include 声明式组件</strong> 架构。18 个组件遵循三元组模式 (index.html + data.js + index.js)，通过 CSS 变量 (--vl-doc-*) 统一设计语言。</p>
+
+    <table>
+        <tr><th>方面</th><th>评价</th><th>说明</th></tr>
+        <tr><td>三元组模式</td><td><span class="badge badge-good">✅</span></td><td>每组件独立 HTML/JS/Data，职责清晰</td></tr>
+        <tr><td>设计令牌</td><td><span class="badge badge-good">✅</span></td><td>20+ CSS 变量统一设计语言</td></tr>
+        <tr><td>Vue 3 CDN</td><td><span class="badge badge-warn">⚠️</span></td><td>无编译时检查、无 tree-shaking、无 TypeScript</td></tr>
+        <tr><td>错误处理</td><td><span class="badge badge-bad">❌</span></td><td>组件 fetch 失败只显示红色文本，无骨架屏/重试</td></tr>
+    </table>
+
+    <div class="example-card">
+        <div class="example-card__header example-card__header--bad">
+            ❌ 共同缺陷：load_key() / t() 每次调用都读磁盘
+        </div>
+        <div class="example-card__body">
+            <p><code>load_key()</code> 每次调用都 <code>open() → yaml.load() → 遍历嵌套字典</code>，<code>t()</code> 每次调用都 <code>open() → json.load() → dict.get()</code>。翻译 500 句场景下，仅此两项就产生 500+ 次冗余磁盘 I/O。需引入进程内缓存（TTL 2s + 写失效）。</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════ S9. 问题根因分析 ═══════════════ -->
+<section id="s9">
+    <h2>🔴 9. 问题根因分析</h2>
+
+    <table>
+        <tr><th>ID</th><th>优先级</th><th>问题</th><th>影响</th><th>根因</th></tr>
+        <tr>
+            <td>I01</td><td><span class="badge" style="background:#fee2e2;color:#991b1b">P0</span></td>
+            <td>load_key() / t() 每次读磁盘</td>
+            <td>高频场景 100-500 次冗余 I/O</td>
+            <td>无进程内缓存层</td>
+        </tr>
+        <tr>
+            <td>I02</td><td><span class="badge" style="background:#fee2e2;color:#991b1b">P0</span></td>
+            <td>裸 except 静默吞异常</td>
+            <td>错误被隐藏，排查困难</td>
+            <td>防御性编程，无日志规范</td>
+        </tr>
+        <tr>
+            <td>I03</td><td><span class="badge" style="background:#fef3c7;color:#92400e">P1</span></td>
+            <td>零测试覆盖</td>
+            <td>重构无安全网</td>
+            <td>早期侧重功能交付</td>
+        </tr>
+        <tr>
+            <td>I04</td><td><span class="badge" style="background:#fef3c7;color:#92400e">P1</span></td>
+            <td>TTS if-elif + 签名不一</td>
+            <td>新增后端触达 4 文件</td>
+            <td>未使用注册表抽象</td>
+        </tr>
+        <tr>
+            <td>I05</td><td><span class="badge" style="background:#fef3c7;color:#92400e">P1</span></td>
+            <td>output/ 单例目录</td>
+            <td>多任务无法并发</td>
+            <td>全局文件路径常量</td>
+        </tr>
+        <tr>
+            <td>I06</td><td><span class="badge" style="background:#dbeafe;color:#1e40af">P2</span></td>
+            <td>管道编排与 Streamlit 耦合</td>
+            <td>无法支持 CLI/API</td>
+            <td>st.py 混合 UI+编排</td>
+        </tr>
+        <tr>
+            <td>I07</td><td><span class="badge" style="background:#dbeafe;color:#1e40af">P2</span></td>
+            <td>数字前缀模块命名</td>
+            <td>不传达职责，阻碍插入</td>
+            <td>早期命名习惯</td>
+        </tr>
+        <tr>
+            <td>I08</td><td><span class="badge" style="background:#dbeafe;color:#1e40af">P2</span></td>
+            <td>文档站无构建工具 + 无错误边界</td>
+            <td>开发体验 + 用户体验差</td>
+            <td>零依赖 CDN 策略</td>
+        </tr>
+    </table>
+
+    <h3>根因总结</h3>
+    <div class="diagram"><pre>
+                          ┌─────────────────────┐
+                          │   项目生命周期阶段    │
+                          │ "个人工具 → 社区产品" │
+                          └──────────┬──────────┘
+                                     │
+              ┌──────────────────────┼──────────────────────┐
+              ▼                      ▼                      ▼
+    ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+    │ 早期速度优先      │   │ 功能持续膨胀      │   │ 缺少架构治理      │
+    │ · 全局路径简单    │   │ · 15 步管道       │   │ · 无测试要求      │
+    │ · if-elif 够用    │   │ · 8 种 TTS        │   │ · 无代码审查      │
+    │ · 零测试可接受    │   │ · 18 个文档组件    │   │ · 无 CI/CD        │
+    └────────┬────────┘   └────────┬────────┘   └────────┬────────┘
+             │                     │                     │
+             └─────────────────────┼─────────────────────┘
+                                   ▼
+                      ┌─────────────────────────┐
+                      │     当前：技术债务显现    │
+                      │  扩展成本↑ 质量风险↑      │
+                      │  交付速度↓ 上手成本↑      │
+                      └─────────────────────────┘
+                                   │
+                                   ▼
+                      ┌─────────────────────────┐
+                      │   本次审计目标：有序清偿   │
+                      │  止血(P0) → 筑基(P1)      │
+                      │  → 演进(P2)              │
+                      └─────────────────────────┘</pre></div>
+</section>
+
+<!-- ═══════════════ S10. 改进方案 ═══════════════ -->
+<section id="s10">
+    <h2>💡 10. 改进方案</h2>
+
+    <h3>方案 1：配置/翻译缓存层 <span class="badge" style="background:#fee2e2;color:#991b1b">P0</span></h3>
+    <div class="code-block"><pre>
+<span class="c-cmt"># config_utils.py — mtime 驱动的智能缓存</span>
+_config_cache = <span class="c-kw">None</span>; _cache_mtime = 0; _CACHE_TTL = 2.0
+
+<span class="c-kw">def</span> <span class="c-fn">load_key</span>(key):
+    <span class="c-kw">global</span> _config_cache, _cache_mtime
+    <span class="c-kw">with</span> _lock:
+        mtime = os.path.getmtime(CONFIG_PATH)
+        <span class="c-kw">if</span> _config_cache <span class="c-kw">is</span> <span class="c-kw">None</span> <span class="c-kw">or</span> \
+           (time.time() - _cache_mtime > _CACHE_TTL <span class="c-kw">and</span> mtime != _cache_mtime):
+            <span class="c-kw">with</span> open(CONFIG_PATH) <span class="c-kw">as</span> f: _config_cache = yaml.load(f)
+            _cache_mtime = mtime
+    <span class="c-kw">return</span> _config_cache[key]
+
+<span class="c-kw">def</span> <span class="c-fn">update_key</span>(key, v):          <span class="c-cmt">// 写入时清缓存</span>
+    <span class="c-kw">global</span> _config_cache; _config_cache = <span class="c-kw">None</span>; ...</pre></div>
+
+    <h3>方案 2：TTS 注册表 <span class="badge" style="background:#fef3c7;color:#92400e">P1</span></h3>
+    <div class="code-block"><pre>
+<span class="c-cmt"># tts_backend/registry.py (新增)</span>
+TTS_REGISTRY = {}
+<span class="c-kw">def</span> <span class="c-fn">register</span>(name): <span class="c-cmt"># 装饰器注册</span>
+    <span class="c-kw">def</span> <span class="c-fn">d</span>(fn): TTS_REGISTRY[name] = fn; <span class="c-kw">return</span> fn
+    <span class="c-kw">return</span> d
+
+<span class="c-cmt"># 各后端文件 — 自注册 (不修改 tts_main.py)</span>
+<span class="c-kw">@register</span>(<span class="c-str">"azure_tts"</span>)
+<span class="c-kw">def</span> <span class="c-fn">generate</span>(text, save_as, **kwargs): ...
+
+<span class="c-cmt"># tts_main.py — 一行调用</span>
+TTS_REGISTRY[load_key(<span class="c-str">"tts_method"</span>)](text, save_as, **extra)</pre></div>
+
+    <h3>方案 3：Workspace 任务隔离 <span class="badge" style="background:#fef3c7;color:#92400e">P1</span></h3>
+    <div class="code-block"><pre>
+<span class="c-kw">@dataclass</span>
+<span class="c-kw">class</span> <span class="c-cls">Workspace</span>:
+    task_id: str = uuid.uuid4().hex[:8]
+    root: Path = Path(<span class="c-str">"output"</span>)
+    <span class="c-kw">def</span> <span class="c-fn">path_for</span>(self, step): <span class="c-kw">return</span> self.root / PATTERN[step]
+
+    <span class="c-kw">@staticmethod</span>
+    <span class="c-kw">def</span> <span class="c-fn">default</span>(): <span class="c-cmt"># 向后兼容: output/ 路径</span>
+        <span class="c-kw">return</span> Workspace(task_id=<span class="c-str">"default"</span>, root=Path(<span class="c-str">"output"</span>))</pre></div>
+
+    <h3>方案 4：Pipeline 编排层抽取 <span class="badge" style="background:#dbeafe;color:#1e40af">P2</span></h3>
+    <div class="code-block"><pre>
+<span class="c-kw">class</span> <span class="c-cls">Pipeline</span>:
+    steps: List[Step]
+    <span class="c-kw">def</span> <span class="c-fn">text_pipeline</span>(ws) → Pipeline: ...  <span class="c-cmt">// 文本阶段标准步骤</span>
+    <span class="c-kw">def</span> <span class="c-fn">audio_pipeline</span>(ws) → Pipeline: ... <span class="c-cmt">// 音频阶段标准步骤</span>
+    <span class="c-cmt">// st.py / CLI / API 均可消费同一个 Pipeline</span></pre></div>
+</section>
+
+<!-- ═══════════════ PART 3: 图表达 ═══════════════ -->
+
+<!-- ═══════════════ S11. 架构对比图 ═══════════════ -->
+<section id="s11">
+    <h2>🖼️ 11. 架构对比图 — 现状 vs 目标</h2>
+
+    <h3>11.1 TTS 分发机制：现状 vs 目标</h3>
+    <div class="diagram"><pre>
+┌── 现状: if-elif 链 (新增需改 4 文件) ──┐    ┌── 目标: 注册表模式 (新增仅 1 文件) ──┐
+│                                         │    │                                      │
+│  tts_main.py                            │    │  registry.py (新增)                  │
+│  ┌─────────────────────────────┐        │    │  ┌──────────────────────────┐        │
+│  │ if method == "azure": ...   │        │    │  │ TTS_REGISTRY = {}        │        │
+│  │ elif method == "edge": ...  │        │    │  │ @register(name) → 自注册  │        │
+│  │ elif method == "openai": ...│        │    │  └──────────────────────────┘        │
+│  │ elif ... × 8               │        │    │                                      │
+│  └─────────────────────────────┘        │    │  azure_tts.py                        │
+│                                         │    │  @register("azure_tts")              │
+│  config.yaml                            │    │  def generate(text, path, **kw)      │
+│  ┌──────────────────────────┐           │    │                                      │
+│  │ azure_tts: { ... }       │           │    │  tts_main.py                         │
+│  │ edge_tts: { ... }  × 8   │           │    │  TTS_REGISTRY[method](text, path, **)│
+│  └──────────────────────────┘           │    │                                      │
+│                                         │    │  ✅ 开闭原则: 只新增，不修改已有一行    │
+│  sidebar_setting.py                     │    │  ✅ 统一签名: (text, save_as, **kwargs)│
+│  ┌──────────────────────────┐           │    │  ✅ 配置简化: 后端自行读取自己配置段    │
+│  │ radio("azure") × 8       │           │    │                                      │
+│  └──────────────────────────┘           │    │                                      │
+│                                         │    │                                      │
+│  ❌ 新增需改 4 文件                      │    │                                      │
+│  ❌ 签名不统一 (2 vs 4 参数)             │    │                                      │
+└─────────────────────────────────────────┘    └──────────────────────────────────────┘</pre></div>
+
+    <h3>11.2 任务隔离：现状 vs 目标</h3>
+    <div class="diagram"><pre>
+┌── 现状: 全局单例 output/ ────────────────┐    ┌── 目标: Workspace 隔离 ──────────────────┐
+│                                           │    │                                          │
+│  models.py                                │    │  workspace.py (新增)                     │
+│  _4_2_TRANSLATION =                       │    │  @dataclass                              │
+│    "output/log/translation_results.xlsx"  │    │  class Workspace:                        │
+│                                           │    │    task_id: str                          │
+│  _8_1_AUDIO_TASK =                        │    │    root: Path                            │
+│    "output/audio/tts_tasks.xlsx"          │    │    def path_for(step) → Path             │
+│                                           │    │                                          │
+│  所有任务 → 同一个 output/                 │    │  任务 A → output/task_a1b2c3d4/          │
+│                                           │    │           ├── log/                       │
+│  output/                                  │    │           └── audio/                     │
+│  ├── log/                                │    │  任务 B → output/task_e5f6g7h8/          │
+│  │   ├── translation_results.xlsx  (共享!)│    │           ├── log/                       │
+│  │   └── terminology.json          (共享!)│    │           └── audio/                     │
+│  └── audio/                              │    │                                          │
+│      ├── tts_tasks.xlsx            (共享!)│    │  ✅ 任务完全隔离，支持并发                  │
+│      └── segs/                     (共享!)│    │  ✅ 路径由 Workspace 管理，非全局常量       │
+│                                           │    │  ✅ Workspace.default() 向后兼容          │
+│  ❌ 多任务互相覆盖                         │    │                                          │
+│  ❌ 测试需 mock 文件系统                   │    │                                          │
+└───────────────────────────────────────────┘    └──────────────────────────────────────────┘</pre></div>
+
+    <h3>11.3 质量雷达图 — 8 维当前 vs 目标</h3>
+    <div class="diagram"><pre>
+                    分层合规性 (8→9)
+                          ▲
+                         /|\
+                        / | \
+                       /  |  \
+          安全性       /   |   \      模块内聚度
+         (4→7)       /    |    \     (7→8)
+                    /     |     \
+                   /      |      \
+                  /       |       \
+                 /        |        \
+                /         |         \
+               /     📊 5.6→7.9  \    \
+              /           |           \
+             /            |            \
+            /             |             \
+           /              |              \
+    性能 ─────────────────○───────────────── 可扩展性
+   (6→8)                  |                (5→8)
+           \              |              /
+            \             |             /
+             \            |            /
+              \           |           /
+               \          |          /
+                \         |         /
+                 \        |        /
+                  \       |       /
+                   \      |      /
+      可维护性       \    |     /       健壮性
+      (6→8)          \   |    /       (7→8)
+                      \  |   /
+                       \ |  /
+                         \|/
+                          ▼
+                     可测试性
+                      (2→7)
+
+              图例:  ─── 现状 (5.6)    ─ ─ ─ 目标 (7.9)
+              最大短板: 可测试性 (-5)  可扩展性 (-3)  安全性 (-3)</pre></div>
+
+    <h3>11.4 三阶段演进路线图</h3>
+    <div class="diagram"><pre>
+Week 1-2: 止血 (P0)          Week 3-4: 筑基 (P1)          Week 5-6: 演进 (P2)
+═══════════════════════     ═══════════════════════     ═══════════════════════
+                           │                           │
+A1 ████████ 配置缓存       │ A4 ████████████ 单元测试  │ A7 ██████████████ Workspace 迁移
+A2 ████     异常日志       │ A5 ████████████ TTS注册表 │ A8 ████████     Pipeline 抽取
+A3 ████     Key环境变量    │ A6 ████████████ Workspace │ A9 ██████       模块重命名
+                           │                           │ A10██████       文档错误边界
+───────────────────────────│──────────────────────────│──────────────────────────
+M1: P0 清零    🎯          │ M2: 测试框架就绪  🎯     │ M3: 多任务并发    🎯
+性能回归通过   ✅          │ M3: TTS注册表上线 🎯     │ M5: 架构升级完成  🏁
+                           │                           │
+风险: 极低                  │ 风险: 中                   │ 风险: 中-高
+改动: 3 文件 · ~5h          │ 改动: 12 文件 · ~23h       │ 改动: 20+ 文件 · ~18h
+</pre></div>
+</section>
+
+<!-- ═══════════════ S12. 行动项 + 排期图 ═══════════════ -->
+<section id="s12">
+    <h2>📅 12. 行动项与落地排期</h2>
+
+    <h3>12.1 行动项清单</h3>
+    <table>
+        <tr><th>#</th><th>优先级</th><th>行动项</th><th>关联</th><th>工时</th><th>验收标准</th></tr>
+        <tr><td>A1</td><td><span class="badge" style="background:#fee2e2;color:#991b1b">P0</span></td><td>load_key() / t() 添加进程内缓存</td><td>I01</td><td>2h</td><td>100 次连续调用耗时减少 ≥80%</td></tr>
+        <tr><td>A2</td><td><span class="badge" style="background:#fee2e2;color:#991b1b">P0</span></td><td>消除裸 except，添加结构化日志</td><td>I02</td><td>1.5h</td><td>所有 except 块捕获具体异常类型或记录 warning</td></tr>
+        <tr><td>A3</td><td><span class="badge" style="background:#fee2e2;color:#991b1b">P0</span></td><td>API Key 支持环境变量读取</td><td>I01</td><td>1h</td><td>不修改 config.yaml 即可通过 env var 设置</td></tr>
+        <tr><td>A4</td><td><span class="badge" style="background:#fef3c7;color:#92400e">P1</span></td><td>核心工具模块单元测试</td><td>I03</td><td>6h</td><td>config_utils / decorator / models 覆盖率 ≥80%</td></tr>
+        <tr><td>A5</td><td><span class="badge" style="background:#fef3c7;color:#92400e">P1</span></td><td>TTS 注册表 + 统一接口</td><td>I04</td><td>5h</td><td>新增 TTS 后端只需 1 文件 + @register</td></tr>
+        <tr><td>A6</td><td><span class="badge" style="background:#fef3c7;color:#92400e">P1</span></td><td>Workspace 上下文对象</td><td>I05</td><td>4h</td><td>两独立 Workspace 可并存互不影响</td></tr>
+        <tr><td>A7</td><td><span class="badge" style="background:#fef3c7;color:#92400e">P1</span></td><td>管道步骤迁移到 Workspace</td><td>I05</td><td>8h</td><td>15 步全部通过 Workspace 获取路径</td></tr>
+        <tr><td>A8</td><td><span class="badge" style="background:#dbeafe;color:#1e40af">P2</span></td><td>抽取 Pipeline 对象（UI 无关）</td><td>I06</td><td>4h</td><td>可从非 Streamlit 环境创建并运行</td></tr>
+        <tr><td>A9</td><td><span class="badge" style="background:#dbeafe;color:#1e40af">P2</span></td><td>模块语义化重命名</td><td>I07</td><td>3h</td><td>核心模块使用描述性名称 + 保持兼容</td></tr>
+        <tr><td>A10</td><td><span class="badge" style="background:#dbeafe;color:#1e40af">P2</span></td><td>文档站组件错误边界 + 骨架屏</td><td>I08</td><td>3h</td><td>加载失败显示骨架屏 + 重试按钮</td></tr>
+    </table>
+
+    <h3>12.2 甘特图 — 5 周落地排期</h3>
+    <div class="diagram"><pre>
+          W1              W2              W3              W4              W5
+   M  T  W  T  F  M  T  W  T  F  M  T  W  T  F  M  T  W  T  F  M  T  W  T  F
+   ├──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┤
+P0 │██████████████│              │              │              │              │
+   │ A1 ████████  │              │              │              │              │
+   │ A2 ████      │              │              │              │              │
+   │ A3 ████      │              │              │              │              │
+   ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+P1 │              │█████████████████████████████│              │              │
+   │              │ A4 ████████████████████████ │              │              │
+   │              │ A5 ████████████████████     │              │              │
+   │              │     A6 ████████████████████ │              │              │
+   │              │              │ A7 ██████████████████████████              │
+   ├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+P2 │              │              │              │██████████████████████████████│
+   │              │              │              │ A8 ████████████████████      │
+   │              │              │              │ A9 ██████████████            │
+   │              │              │              │ A10████████████████          │
+   ├──────────────┴──────────────┴──────────────┴──────────────┴──────────────┤
+   │  🎯 M1      │  🎯 M2      │  🎯 M3      │              │  🏁 M5         │
+   │  P0 清零     │  测试就绪    │  TTS注册表   │              │  架构升级完成   │
+   └──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+   图例:  ████ 开发    ···· 缓冲/评审    🎯 里程碑    🏁 终点</pre></div>
+
+    <h3>12.3 里程碑定义</h3>
+    <div class="tl">
+        <div class="tl-item tl-item--done">
+            <h4>M0 · Day 0 — 审计完成</h4>
+            <p>本报告交付，团队对齐问题清单和优先级</p>
+        </div>
+        <div class="tl-item">
+            <h4>M1 · Week 1 末 — P0 止血完成</h4>
+            <p>配置缓存上线，异常日志规范化，API Key 环境变量支持。验收：性能回归测试通过，无功能回退。</p>
+        </div>
+        <div class="tl-item">
+            <h4>M2 · Week 3 中 — 测试框架就绪</h4>
+            <p>pytest 框架搭建完成，config_utils/decorator/models 单元测试覆盖率 ≥80%。</p>
+        </div>
+        <div class="tl-item">
+            <h4>M3 · Week 4 初 — TTS 注册表上线</h4>
+            <p>全部 8 后端迁移至注册表模式，tts_main.py 消除 if-elif 链。新增后端仅需 1 文件。</p>
+        </div>
+        <div class="tl-item">
+            <h4>M4 · Week 5 末 — Workspace 多任务验证</h4>
+            <p>两个独立任务并行运行验证通过，Workspace 隔离机制生效。</p>
+        </div>
+        <div class="tl-item">
+            <h4>M5 · Week 6 初 — 架构升级完成 🏁</h4>
+            <p>Pipeline 对象抽取完成，模块重命名完成，文档站错误边界上线。综合评分 ≥7.0。</p>
+        </div>
+    </div>
+
+    <h3>12.4 风险与回滚</h3>
+    <table>
+        <tr><th>风险</th><th>概率</th><th>缓解措施</th><th>回滚方案</th></tr>
+        <tr><td>TTS 注册表迁移引入回归</td><td>中</td><td>逐个后端迁移，每个迁移后运行完整管道验证</td><td>保留 if-elif 分支，feature flag 切换</td></tr>
+        <tr><td>Workspace 迁移破坏现有流程</td><td>中</td><td>Workspace.default() 维持 output/ 回退；渐进迁移</td><td>workspace 参数设默认值 None → 自动回退旧路径</td></tr>
+        <tr><td>测试编写耗时超预期</td><td>低</td><td>仅测试核心工具模块，不测试 LLM/音视频</td><td>降低覆盖率目标至 60%</td></tr>
+        <tr><td>社区 PR merge conflict</td><td>低</td><td>冻结重构期间社区 PR 合并（提前公告）</td><td>为社区 PR 提供 rebase 协助</td></tr>
+    </table>
+</section>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="report-footer">
+    <p><strong>VideoLingo 架构报告</strong> · 2026-06-28 · v3.0.0 → v3.1.0</p>
+    <p>Repository: <a href="https://github.com/Huanshere/VideoLingo" style="color:var(--accent)">github.com/Huanshere/VideoLingo</a></p>
+    <p style="margin-top:8px;font-size:.78rem">本报告基于 ATAM 简化方法 + 全量代码静态分析生成。所有改进方案遵循「渐进演进、向下兼容、可分批落地」原则。</p>
+</footer>
+
+</article>
+
+</body>
+</html>

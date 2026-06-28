@@ -1,0 +1,30 @@
+<template id="download-template">
+    <section id="download">
+        <h2>🎥 Video Download</h2>
+        <p>VideoLingo uses <code>yt-dlp</code> to download YouTube videos. Configure download behavior via the Streamlit UI or config.yaml.</p>
+        <h3>Resolution Options</h3>
+        <table>
+            <tr><th>Option</th><th>Height</th><th>Use Case</th></tr>
+            <tr v-for="row in resolutions" :key="row.option">
+                <td>{{ row.option }}</td>
+                <td>{{ row.height }}</td>
+                <td>{{ row.useCase }}</td>
+            </tr>
+        </table>
+        <h3>Download Format</h3>
+        <table>
+            <tr><th>Format</th><th>Description</th></tr>
+            <tr v-for="row in formats" :key="row.name">
+                <td>{{ row.icon }} {{ row.name }}</td>
+                <td>{{ row.desc }}</td>
+            </tr>
+        </table>
+        <h3>Subtitle Download</h3>
+        <p>Enable in Advanced Options to fetch YouTube's own subtitles/CC alongside the video. Useful as a baseline reference. Supports multiple language codes: <code>en,zh-CN,ja</code>.</p>
+        <h3>Video Preview</h3>
+        <p>Click <strong>"Preview Info"</strong> before downloading to see the video title, uploader, duration, and view count — helpful to confirm you're downloading the right video.</p>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

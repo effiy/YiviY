@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoLingo Documentation Center</title>
+    <meta name="description" content="VideoLingo 文档中心，提供视频处理和分析的详细指南。">
+    <meta name="keywords" content="VideoLingo, 视频处理, 视频分析, 视频转录, 视频翻译, 视频配音, 视频字幕, 视频配置, 视频API, 视频批量处理, 视频自定义TTS, 视频故障排除">
+    <meta name="author" content="YrY">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body class="vl-doc">
+
+<!-- Sidebar（占位） -->
+<div data-include="components/sidebar/index.html"></div>
+
+<!-- Main -->
+<main class="main">
+    <!-- Sections（占位） -->
+    <div data-include="components/intro/index.html"></div>
+    <div data-include="components/quick-start/index.html"></div>
+    <div data-include="components/installation/index.html"></div>
+    <div data-include="components/workflow/index.html"></div>
+    <div data-include="components/download/index.html"></div>
+    <div data-include="components/transcription/index.html"></div>
+    <div data-include="components/translation/index.html"></div>
+    <div data-include="components/dubbing/index.html"></div>
+    <div data-include="components/config/index.html"></div>
+    <div data-include="components/api-config/index.html"></div>
+    <div data-include="components/tts-methods/index.html"></div>
+    <div data-include="components/youtube-settings/index.html"></div>
+    <div data-include="components/docker/index.html"></div>
+    <div data-include="components/batch/index.html"></div>
+    <div data-include="components/custom-tts/index.html"></div>
+    <div data-include="components/troubleshooting/index.html"></div>
+    <div data-include="components/translations/index.html"></div>
+    <div data-include="components/code-activity/index.html"></div>
+    <!-- Footer（占位） -->
+    <div data-include="components/footer/index.html"></div>
+
+</main>
+
+<!-- CDN components (intro 卡片依赖 YrySceneCard，进而依赖 YryTagChip，须提前加载) -->
+<script src="../cdn/yry-tag-chip/index.js"></script>
+<script src="../cdn/yry-scene-card/index.js"></script>
+<script src="assets/mount-component.js"></script>
+<script src="assets/include.js"></script>
+<script src="assets/main.js"></script>
+
+</body>
+</html>

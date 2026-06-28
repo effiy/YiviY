@@ -1,0 +1,16 @@
+<template id="docker-template">
+    <section id="docker">
+        <h2>🐳 Docker</h2>
+        <p>VideoLingo ships with a <code>Dockerfile</code> for containerized deployment.</p>
+        <pre><code>{{ runCommand }}</code></pre>
+        <h3>Requirements</h3>
+        <ul>
+            <li v-for="req in requirements" :key="req">{{ req }}</li>
+        </ul>
+        <h3>Docker Compose (Example)</h3>
+        <pre><code>{{ composeCode }}</code></pre>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

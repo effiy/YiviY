@@ -1,0 +1,48 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Code Activity · 独立组件样式
+   ─────────────────────────────────────────────────────────────────────────
+   原归属 docs/styles/components.css (lines 374-396)，抽离后随组件走，
+   便于独立维护与跨页面复用。
+
+   命名约定:
+     - 类名 .code-activity-* (kebab-case, 与 Vue 模板一一对应)
+     - 自有变量前缀 --vl-ca-* (Code Activity 缩写), 与全局 --vl-doc-* 区分
+     - 所有变量名禁止含数字 (遵循 user profile 偏好), 使用语义化命名
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.vl-doc .code-activity {
+    /* ── 局部令牌 (无数字 / 语义化) ─────────────────────── */
+    --vl-ca-radius:        var(--vl-doc-radius, 8px);
+    --vl-ca-border:        var(--vl-doc-border, #e2e8f0);
+    --vl-ca-surface-soft:  rgba(255, 255, 255, 0.02);
+    --vl-ca-text-muted:    var(--vl-doc-muted, #94a3b8);
+    --vl-ca-text-danger:   #f87171;
+}
+
+/* ── Canvas 容器 ─────────────────────────────────────────── */
+.vl-doc .code-activity-wrapper {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.vl-doc .code-activity-wrapper canvas {
+    display: block;
+    border-radius: var(--vl-ca-radius);
+    border: 1px solid var(--vl-ca-border);
+    background: var(--vl-ca-surface-soft);
+}
+
+/* ── 状态文本 (loading / error 共用基础样式) ──────────────── */
+.vl-doc .code-activity-loading,
+.vl-doc .code-activity-error {
+    text-align: center;
+    color: var(--vl-ca-text-muted);
+    font-size: 0.9em;
+    margin-top: 1em;
+}
+
+/* ── 错误态独立着色 ──────────────────────────────────────── */
+.vl-doc .code-activity-error {
+    color: var(--vl-ca-text-danger);
+}

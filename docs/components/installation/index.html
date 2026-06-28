@@ -1,0 +1,30 @@
+<template id="installation-template">
+    <section id="installation">
+        <h2>📦 Installation Details</h2>
+        <h3>System Requirements</h3>
+        <table>
+            <tr><th>Component</th><th>Minimum</th><th>Recommended</th></tr>
+            <tr v-for="row in systemRequirements" :key="row.component">
+                <td>{{ row.component }}</td>
+                <td>{{ row.min }}</td>
+                <td v-if="row.colspan" colspan="2">{{ row.recommended }}</td>
+                <td v-else>{{ row.recommended }}</td>
+            </tr>
+        </table>
+        <div class="callout callout-warning">
+            <strong>⚠️ Mac users:</strong> WhisperX transcription will be slower on CPU. Consider using <code>whisper.runtime: cloud</code> with 302.ai for faster results.
+        </div>
+        <h3>Dependencies Overview</h3>
+        <table>
+            <tr><th>Package</th><th>Purpose</th></tr>
+            <tr v-for="dep in dependencies" :key="dep.name">
+                <td><code>{{ dep.name }}</code></td>
+                <td>{{ dep.purpose }}</td>
+            </tr>
+        </table>
+        <p>All dependencies are installed automatically by <code>python setup_env.py</code> or <code>python install.py</code>.</p>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

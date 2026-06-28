@@ -1,0 +1,18 @@
+/* ─────────────────────────────────────────────────────
+ * Responsive
+ * 媒体查询：移动端布局调整。
+ * 仅负责 layout（侧栏位移、主内容留白）。组件自身
+ * （如 #mobile-menu-btn）的响应式样式随组件走。
+ * ───────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .vl-doc .sidebar {
+        transform: translateX(-100%);
+        transition: transform .3s;
+    }
+    .vl-doc .sidebar.open { transform: translateX(0); }
+    .vl-doc .main {
+        margin-left: 0;
+        padding: 64px 20px 40px;
+    }
+}

@@ -1,0 +1,49 @@
+/* ─────────────────────────────────────────────────────
+ * Sidebar
+ * sidebar 专属样式：
+ *   - #mobile-menu-btn  （移动端菜单按钮，默认隐藏，
+ *                        @media 启用）
+ *   - .lang-switch      （语言切换按钮组，预期放在 sidebar）
+ * 侧栏容器 / 导航 / footer 等基础结构样式在 styles/layout.css
+ * 中定义。
+ * ───────────────────────────────────────────────────── */
+
+/* ── Mobile Menu Button ── */
+.vl-doc #mobile-menu-btn { display: none; }
+
+@media (max-width: 768px) {
+    .vl-doc #mobile-menu-btn {
+        display: block;
+        position: fixed;
+        top: 12px; left: 12px;
+        z-index: 200;
+        width: 40px; height: 40px;
+        font-size: 22px;
+        background: var(--vl-doc-bg);
+        border: 1px solid var(--vl-doc-border);
+        border-radius: var(--vl-doc-radius);
+        cursor: pointer;
+        box-shadow: var(--vl-doc-shadow);
+    }
+}
+
+/* ── Language Switch ── */
+.vl-doc .lang-switch {
+    display: flex; gap: 6px;
+    margin-bottom: 16px;
+}
+.vl-doc .lang-switch button {
+    padding: 4px 12px;
+    border: 1px solid var(--vl-doc-border);
+    border-radius: 6px;
+    background: var(--vl-doc-bg);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--vl-doc-text-soft);
+    transition: all .15s;
+}
+.vl-doc .lang-switch button.active {
+    background: var(--vl-doc-primary);
+    color: #fff;
+    border-color: var(--vl-doc-primary);
+}

@@ -1,0 +1,123 @@
+/* ─────────────────────────────────────────────────────
+ * Layout
+ * 侧栏（.sidebar）与主内容区（.main）的结构样式。
+ * ───────────────────────────────────────────────────── */
+
+/* ── Sidebar ── */
+.vl-doc .sidebar {
+    width: var(--vl-doc-sidebar-width);
+    height: 100vh;
+    position: fixed;
+    left: 0; top: 0;
+    background: var(--vl-doc-bg);
+    border-right: 1px solid var(--vl-doc-border);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.vl-doc .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--vl-doc-border);
+    margin-bottom: 16px;
+    text-decoration: none;
+    color: var(--vl-doc-text);
+}
+
+.vl-doc .sidebar-logo .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; font-weight: 800;
+    flex-shrink: 0;
+}
+
+.vl-doc .sidebar-logo .logo-text {
+    font-size: 18px; font-weight: 700; letter-spacing: -.3px;
+}
+.vl-doc .sidebar-logo .logo-ver {
+    font-size: 11px; color: var(--vl-doc-text-soft); font-weight: 400;
+}
+
+.vl-doc .sidebar-nav { flex: 1; }
+
+.vl-doc .nav-group {
+    margin-bottom: 20px;
+}
+
+.vl-doc .nav-group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--vl-doc-text-muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-left: 8px;
+}
+
+.vl-doc .nav-link {
+    display: block;
+    padding: 7px 12px;
+    border-radius: 6px;
+    color: var(--vl-doc-text-soft);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all .15s;
+    cursor: pointer;
+}
+.vl-doc .nav-link:hover { background: var(--vl-doc-bg-soft); color: var(--vl-doc-text); }
+.vl-doc .nav-link.active {
+    background: #eff6ff;
+    color: var(--vl-doc-primary);
+    font-weight: 600;
+}
+
+.vl-doc .sidebar-footer {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--vl-doc-border);
+    font-size: 12px;
+    color: var(--vl-doc-text-muted);
+}
+
+.vl-doc .sidebar-footer a { color: var(--vl-doc-primary); text-decoration: none; }
+.vl-doc .sidebar-footer a:hover { text-decoration: underline; }
+
+/* ── Main Content ── */
+.vl-doc .main {
+    margin-left: var(--vl-doc-sidebar-width);
+    flex: 1;
+    max-width: 900px;
+    padding: 48px 56px 80px;
+}
+
+.vl-doc section { margin-bottom: 56px; }
+.vl-doc section:target { scroll-margin-top: 24px; }
+
+.vl-doc h1 {
+    font-size: 32px; font-weight: 800; letter-spacing: -.6px;
+    margin-bottom: 8px; color: var(--vl-doc-text);
+}
+.vl-doc h2 {
+    font-size: 24px; font-weight: 700; letter-spacing: -.3px;
+    margin: 40px 0 16px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--vl-doc-border);
+}
+.vl-doc h3 {
+    font-size: 18px; font-weight: 600;
+    margin: 28px 0 12px; color: var(--vl-doc-text-heading);
+}
+.vl-doc h4 {
+    font-size: 15px; font-weight: 600;
+    margin: 20px 0 8px;
+}
+.vl-doc p { margin-bottom: 14px; color: var(--vl-doc-text-soft); }
+
+.vl-doc a { color: var(--vl-doc-primary); text-decoration: none; }
+.vl-doc a:hover { text-decoration: underline; }
