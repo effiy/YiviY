@@ -55,11 +55,14 @@ function loadIncludedScriptsSequentially(container, baseDir) {
                     .then(function (code) {
                         // 内联注入，浏览器同步执行，与下一个脚本串行
                         newScript.textContent = code;
-                        /* 把 include 文件所在目录写到 script 节点上,
+                        /* 把脚本源码所在目录写到 script 节点上，
                            供 index.js 内 mountDocComponent 推导自己的
-                           SELF_DIR (用于自动注入 index.css 等同目录资源)。
-                           见 docs/assets/mount-component.js。 */
-                        newScript.setAttribute('data-cs-dir', baseDir);
+                           SELF_DIR（用于自动注入 index.css 等同目录资源）。
+                           注意：必须是脚本自己的目录，而非引入方 HTML 所在目录——
+                           跨目录引用（如 intro/index.html 内嵌 code-activity/index.js）
+                           时两者不同。见 docs/assets/mount-component.js。 */
+                        var scriptSelfDir = absSrc.substring(0, absSrc.lastIndexOf('/') + 1);
+                        newScript.setAttribute('data-cs-dir', scriptSelfDir);
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
             }
