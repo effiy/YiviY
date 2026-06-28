@@ -1,0 +1,81 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   YrY CDN Theme — Arctic Frost
+   Mode: light
+   Generated from theme-factory palette by generate-themes.py.
+
+   Colors:
+     Background   #fafafa
+     Accent       #4a6fa5
+     Secondary    #d4e4f7
+     Text         #4a6fa5
+
+   Fonts:
+     Headers  DejaVu Sans Bold
+     Body     DejaVu Sans
+
+   This file is self-contained — all values are static hex.
+   Load it on any page to set --yry-* design tokens on :root.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Surface ──────────────────────────────────────── */
+    --yry-bg-card:        #fafafa;
+    --yry-bg-flat:        #f2f2f2;
+    --yry-bg-raised:      #fdfdfd;
+    --yry-bg-overlay:     #ffffff;
+
+    /* ── Text ─────────────────────────────────────────── */
+    --yry-text:           #4a6fa5;
+    --yry-text-soft:      #7692ba;
+    --yry-text-muted:     #99aecb;
+    --yry-text-heading:   #4a6fa5;
+
+    /* ── Accent ───────────────────────────────────────── */
+    --yry-accent:         #4a6fa5;
+    --yry-accent-rgb:     74, 111, 165;
+    --yry-accent-soft:    #dae1eb;
+
+    /* ── Semantic ─────────────────────────────────────── */
+    --yry-pass:           #16a34a;
+    --yry-pass-rgb:       22, 163, 74;
+    --yry-fail:           #dc2626;
+    --yry-fail-rgb:       220, 38, 38;
+    --yry-warn:           #d97706;
+    --yry-warn-rgb:       217, 119, 6;
+    --yry-cyan:           #0891b2;
+    --yry-cyan-rgb:       8, 145, 178;
+    --yry-violet:         #7c3aed;
+    --yry-violet-rgb:     124, 58, 237;
+    --yry-blue:           #2563eb;
+    --yry-amber:          #d97706;
+    --yry-purple:         #7c3aed;
+    --yry-info:           #99aecb;
+
+    /* ── Grays ────────────────────────────────────────── */
+    --yry-gray-pale:      #7692ba;
+    --yry-gray-soft:      #99aecb;
+    --yry-gray:           #abbbd4;
+
+    /* ── Border & Shadow ──────────────────────────────── */
+    --yry-border-color:   #dbdbdb;
+    --yry-border:         1px solid #dbdbdb;
+    --yry-shadow:         0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --yry-shadow-lg:      0 10px 25px rgba(0, 0, 0, 0.08);
+
+    /* ── Shape ────────────────────────────────────────── */
+    --yry-radius:         8px;
+    --yry-radius-sm:      6px;
+    --yry-radius-lg:      12px;
+    --yry-radius-full:    9999px;
+
+    /* ── Animation ────────────────────────────────────── */
+    --yry-ease-out:       cubic-bezier(0, 0, 0.2, 1);
+    --yry-ease-in:        cubic-bezier(0.4, 0, 1, 1);
+    --yry-duration-fast:  150ms;
+    --yry-duration-normal: 200ms;
+    --yry-duration-slow:  300ms;
+
+    /* ── Fonts ────────────────────────────────────────── */
+    --yry-font-sans:      'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+    --yry-font-mono:      'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Source Code Pro', monospace;
+}

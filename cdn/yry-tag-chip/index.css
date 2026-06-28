@@ -19,7 +19,7 @@
 
    依赖 design tokens (来自 cdn/theme/index.css 或页面 :root):
      --yry-accent / --yry-cyan / --yry-pass / --yry-warn / --yry-info / --yry-purple
-     --yry-bg-flat / --yry-text
+     --yry-bg-flat / --yry-text / --yry-text-soft
 
    所有颜色都带 fallback,即使页面未加载主题也能正常显示。
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -63,7 +63,7 @@ a.tag-chip:focus-visible {
 }
 
 .tag-chip.accent { background: rgba(var(--yry-accent-rgb),.12); color: var(--yry-accent, var(--yry-amber)); border-color: rgba(var(--yry-accent-rgb),.25); }
-.tag-chip.info   { background: rgba(160,160,164,.10); color: var(--yry-text2, var(--yry-gray-soft)); border-color: rgba(160,160,164,.18); }
+.tag-chip.info   { background: rgba(160,160,164,.10); color: var(--yry-text-soft, var(--yry-gray-soft)); border-color: rgba(160,160,164,.18); }
 .tag-chip.cyan   { background: rgba(var(--yry-cyan-rgb),.10); color: var(--yry-cyan, var(--yry-cyan-bright)); border-color: rgba(var(--yry-cyan-rgb),.22); }
 .tag-chip.green  { background: rgba(var(--yry-pass-rgb),.12);  color: var(--yry-pass, var(--yry-pass)); border-color: rgba(var(--yry-pass-rgb),.25); }
 .tag-chip.purple { background: rgba(var(--yry-violet-rgb),.12); color: var(--yry-violet);            border-color: rgba(var(--yry-violet-rgb),.25); }

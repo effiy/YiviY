@@ -13,8 +13,8 @@
 
    本文件由 index.js 自动注入 <link>,宿主页面无需手动引入。
 
-   Design tokens (--yry-color-text-1 / --yry-color-text-2 / --yry-color-text-3 /
-   --yry-color-accent / --yry-ease-out) 由宿主页面提供,本文件所有颜色都带
+   Design tokens (--yry-text / --yry-text-soft / --yry-text-muted /
+   --yry-accent / --yry-ease-out) 由宿主页面提供,本文件所有颜色都带
    fallback,即使页面未加载主题也能正常显示。
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -29,36 +29,36 @@
 }
 
 .breadcrumb a {
-  color: var(--yry-color-text-2, var(--yry-gray-soft));
+  color: var(--yry-text-soft, var(--yry-gray-soft));
   text-decoration: none;
   transition: color .15s var(--yry-ease-out, ease);
 }
 
 .breadcrumb a:hover {
-  color: var(--yry-color-accent, var(--yry-amber));
+  color: var(--yry-accent, var(--yry-amber));
   text-decoration: underline;
 }
 .breadcrumb a:focus-visible {
-  outline: 2px solid var(--yry-color-accent, var(--yry-amber));
+  outline: 2px solid var(--yry-accent, var(--yry-amber));
   outline-offset: 2px;
   border-radius: 2px;
 }
 @supports not selector(:focus-visible) {
   .breadcrumb a:focus {
-    outline: 2px solid var(--yry-color-accent, var(--yry-amber));
+    outline: 2px solid var(--yry-accent, var(--yry-amber));
     outline-offset: 2px;
     border-radius: 2px;
   }
 }
 
 .bc-sep {
-  color: var(--yry-color-text-3, var(--yry-gray));
+  color: var(--yry-text-muted, var(--yry-gray));
   opacity: .4;
   -webkit-user-select: none;
   user-select: none;
 }
 
 .bc-current {
-  color: var(--yry-color-text-1, var(--yry-gray-pale));
+  color: var(--yry-text, var(--yry-gray-pale));
   font-weight: 500;
 }

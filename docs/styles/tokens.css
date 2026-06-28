@@ -1,55 +1,73 @@
 /* ─────────────────────────────────────────────────────
- * Design Tokens
- * 仅定义 :root 级变量（颜色 / 字体 / 尺寸 / 阴影 / 圆角）。
+ * VideoLingo Docs — Design Tokens
  *
- * v2 改进（ui-ux-pro-max 审计）：
- *   - text-muted 对比度从 2.8:1 提升至 4.79:1（WCAG AA）
- *   - 新增 spacing scale（4pt 节奏）
- *   - 新增 focus-ring 令牌
- *   - 新增动效持续时间与缓动令牌
- *   - 字体栈加入 IBM Plex Sans / JetBrains Mono（font-display: swap）
+ * 两层架构：
+ *   1. CDN 主题 CSS（cdn/theme/*.css）定义 --yry-* 颜色令牌
+ *   2. 本文件将 docs 专属的 --vl-doc-* 令牌桥接至 --yry-*
+ *
+ * 加载顺序：CDN 主题 CSS → 本文件（tokens.css）→ base → layout → responsive
+ *
+ * v3 改进（theme-factory 重构）：
+ *   - 颜色令牌全部桥接自 --yry-*（CDN 主题），不再硬编码
+ *   - 旧的 YrY CDN Token Bridge 已移除，方向反转
+ *   - 布局/间距/动画/字体令牌保留为 docs 专属
  * ───────────────────────────────────────────────────── */
 
 :root,
 .vl-doc {
+    /* ══════════════════════════════════════════════════════
+     * Section A: Color Bridge
+     * 所有 --vl-doc-* 颜色令牌从 --yry-*（CDN 主题）桥接
+     * ══════════════════════════════════════════════════════ */
+
     /* ── Surface ──────────────────────────────────────── */
-    --vl-doc-bg: #ffffff;
-    --vl-doc-bg-soft: #f8f9fa;
-    --vl-doc-bg-raised: #ffffff;
+    --vl-doc-bg:        var(--yry-bg-card);
+    --vl-doc-bg-soft:   var(--yry-bg-flat);
+    --vl-doc-bg-raised: var(--yry-bg-raised);
 
     /* ── Text ─────────────────────────────────────────── */
-    --vl-doc-text: #0f172a;
-    --vl-doc-text-soft: #475569;
-    --vl-doc-text-muted: #64748b;
-    --vl-doc-text-heading: #0f172a;
+    --vl-doc-text:         var(--yry-text);
+    --vl-doc-text-soft:    var(--yry-text-soft);
+    --vl-doc-text-muted:   var(--yry-text-muted);
+    --vl-doc-text-heading: var(--yry-text-heading, var(--yry-text));
 
     /* ── Brand / Accent ──────────────────────────────── */
-    --vl-doc-primary: #2563eb;
-    --vl-doc-primary-strong: #1d4ed8;
-    --vl-doc-accent: #3b82f6;
+    --vl-doc-primary:        var(--yry-accent);
+    --vl-doc-primary-strong: var(--yry-accent);
+    --vl-doc-accent:         var(--yry-cyan);
 
     /* ── Status ───────────────────────────────────────── */
-    --vl-doc-success: #059669;
-    --vl-doc-warning: #d97706;
+    --vl-doc-success: var(--yry-pass);
+    --vl-doc-warning: var(--yry-warn);
 
     /* ── Border ───────────────────────────────────────── */
-    --vl-doc-border: #e2e8f0;
+    --vl-doc-border: var(--yry-border-color, #e2e8f0);
 
     /* ── Code ─────────────────────────────────────────── */
-    --vl-doc-code-bg: #f1f5f9;
+    --vl-doc-code-bg: var(--yry-bg-flat);
 
     /* ── Focus ring ───────────────────────────────────── */
-    --vl-doc-focus-ring: rgba(37, 99, 235, 0.4);
+    --vl-doc-focus-ring: rgba(var(--yry-accent-rgb, 37, 99, 235), 0.4);
     --vl-doc-focus-ring-width: 3px;
+
+    /* ── Shadow ───────────────────────────────────────── */
+    --vl-doc-shadow:       var(--yry-shadow);
+    --vl-doc-shadow-lift:  var(--yry-shadow-lg);
+    --vl-doc-shadow-modal: var(--yry-shadow-lg);
+
+    /* ══════════════════════════════════════════════════════
+     * Section B: Docs-Specific Tokens
+     * 布局 / 间距 / 字体 / 动画 — CDN 主题不包含这些
+     * ══════════════════════════════════════════════════════ */
 
     /* ── Font stacks ────────────────────────────────────
        IBM Plex Sans → 系统回退 → CJK 字体
        JetBrains Mono → 等宽回退 */
     --vl-doc-font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-                       'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-                       'Noto Sans CJK SC', sans-serif;
+                        'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+                        'Noto Sans CJK SC', sans-serif;
     --vl-doc-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code',
-                       'Consolas', 'Source Code Pro', monospace;
+                        'Consolas', 'Source Code Pro', monospace;
 
     /* ── Layout sizing ────────────────────────────────── */
     --vl-doc-sidebar-width: 280px;
@@ -71,11 +89,6 @@
     --vl-doc-radius-lg: 12px;
     --vl-doc-radius-full: 9999px;
 
-    /* ── Elevation ────────────────────────────────────── */
-    --vl-doc-shadow: 0 1px 3px rgba(0, 0, 0, .06), 0 1px 2px rgba(0, 0, 0, .04);
-    --vl-doc-shadow-lift: 0 10px 25px rgba(0, 0, 0, .08);
-    --vl-doc-shadow-modal: 0 20px 60px rgba(0, 0, 0, .15);
-
     /* ── Animation ──────────────────────────────────────
        duration: 150-300ms 范围（ui-ux-pro-max §7 推荐）
        easing: ease-out 入场 / ease-in 退场             */
@@ -84,56 +97,4 @@
     --vl-doc-duration-fast: 150ms;
     --vl-doc-duration-normal: 200ms;
     --vl-doc-duration-slow: 300ms;
-
-    /* ══════════════════════════════════════════════════════
-     * YrY CDN Token Bridge
-     *
-     * CDN 组件默认假定暗色主题（--yry-* 变量），此处桥接至
-     * docs 的浅色设计令牌，使 CDN 组件在 docs 中正确渲染。
-     * 组件自身的 fallback 值在暗色页面上生效；docs 通过
-     * 显式定义这些变量覆盖 fallback。
-     *
-     * 组件使用的 color-mix(in srgb, var(--yry-*-rgb), …)
-     * 需要单独定义 RGB 通道值（不含 rgb() 包裹）。
-     * ══════════════════════════════════════════════════════ */
-
-    /* ── Surface ──────────────────────────────────────── */
-    --yry-bg-card:   var(--vl-doc-bg);
-    --yry-bg-raised: var(--vl-doc-bg);
-    --yry-bg-flat:   var(--vl-doc-bg-soft);
-
-    /* ── Text ─────────────────────────────────────────── */
-    --yry-text:  var(--vl-doc-text);
-    --yry-text2: var(--vl-doc-text-soft);
-    --yry-text3: var(--vl-doc-text-muted);
-
-    /* ── Border / Shadow ──────────────────────────────── */
-    --yry-border:   1px solid var(--vl-doc-border);
-    --yry-shadow:   var(--vl-doc-shadow);
-    --yry-shadow-lg: var(--vl-doc-shadow-lift);
-    --yry-radius:   var(--vl-doc-radius);
-    --yry-ease-out: var(--vl-doc-ease-out);
-
-    /* ── Accent (映射 blue → docs 主色) ──────────────── */
-    --yry-accent:    var(--vl-doc-primary);
-    --yry-accent-rgb: 37, 99, 235;  /* #2563eb */
-
-    /* ── Semantic colors ──────────────────────────────── */
-    --yry-cyan:       #0891b2;
-    --yry-cyan-rgb:   8, 145, 178;
-    --yry-pass:       #059669;
-    --yry-pass-rgb:   5, 150, 105;
-    --yry-fail:       #dc2626;
-    --yry-fail-rgb:   220, 38, 38;
-    --yry-warn:       #d97706;
-    --yry-warn-rgb:   217, 119, 6;
-    --yry-violet:     #7c3aed;
-    --yry-violet-rgb: 124, 58, 237;
-    --yry-blue:       #2563eb;
-    --yry-amber:      #d97706;
-    --yry-info:       var(--vl-doc-text-muted);
-    --yry-purple:     #7c3aed;
-    --yry-gray-pale:  var(--vl-doc-text-soft);
-    --yry-gray-soft:  var(--vl-doc-text-muted);
-    --yry-gray:       var(--vl-doc-text-muted);
 }

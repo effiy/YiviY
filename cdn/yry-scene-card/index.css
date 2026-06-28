@@ -16,7 +16,7 @@
    依赖 design tokens (来自 cdn/theme/index.css 或页面 :root):
      --yry-bg-card / --yry-border / --yry-radius
      --yry-shadow / --yry-shadow-lg / --yry-ease-out
-     --yry-text / --yry-text2 / --yry-text3
+     --yry-text / --yry-text-soft / --yry-text-muted
      --yry-cyan / --yry-violet / --yry-accent / --yry-pass / --yry-fail
 
    所有颜色都带 fallback, 即使页面未加载主题也能正常显示。
@@ -88,7 +88,7 @@
 /* ── Desc: 描述 ────────────────────────────────────────────────────── */
 .yry-scene-card-desc {
   font-size: .76rem;
-  color: var(--yry-text2, #d4d4d4);
+  color: var(--yry-text-soft, #d4d4d4);
   line-height: 1.55;
   margin-bottom: 8px;
 }
@@ -104,7 +104,7 @@
 /* ── Meta: 底部元信息 ──────────────────────────────────────────────── */
 .yry-scene-card-meta {
   font-size: .68rem;
-  color: var(--yry-text3, #888);
+  color: var(--yry-text-muted, #888);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
@@ -115,7 +115,7 @@
   font-size: .72rem;
 }
 .yry-scene-card-links a {
-  color: var(--yry-text2, #d4d4d4);
+  color: var(--yry-text-soft, #d4d4d4);
   text-decoration: none;
   white-space: nowrap;
   transition: color .15s var(--yry-ease-out, ease);
@@ -150,7 +150,7 @@
   }
 }
 .yry-scene-card-links span {
-  color: var(--yry-text3, #888);
+  color: var(--yry-text-muted, #888);
   white-space: nowrap;
 }
 

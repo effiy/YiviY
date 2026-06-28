@@ -1,0 +1,81 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   YrY CDN Theme — Desert Rose
+   Mode: light
+   Generated from theme-factory palette by generate-themes.py.
+
+   Colors:
+     Background   #e8d5c4
+     Accent       #d4a5a5
+     Secondary    #b87d6d
+     Text         #5d2e46
+
+   Fonts:
+     Headers  FreeSans Bold
+     Body     FreeSans
+
+   This file is self-contained — all values are static hex.
+   Load it on any page to set --yry-* design tokens on :root.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Surface ──────────────────────────────────────── */
+    --yry-bg-card:        #e8d5c4;
+    --yry-bg-flat:        #e4cdb9;
+    --yry-bg-raised:      #e9d8c8;
+    --yry-bg-overlay:     #ecddcf;
+
+    /* ── Text ─────────────────────────────────────────── */
+    --yry-text:           #5d2e46;
+    --yry-text-soft:      #805866;
+    --yry-text-muted:     #9c797f;
+    --yry-text-heading:   #5d2e46;
+
+    /* ── Accent ───────────────────────────────────────── */
+    --yry-accent:         #d4a5a5;
+    --yry-accent-rgb:     212, 165, 165;
+    --yry-accent-soft:    #e4ccbe;
+
+    /* ── Semantic ─────────────────────────────────────── */
+    --yry-pass:           #16a34a;
+    --yry-pass-rgb:       22, 163, 74;
+    --yry-fail:           #dc2626;
+    --yry-fail-rgb:       220, 38, 38;
+    --yry-warn:           #d97706;
+    --yry-warn-rgb:       217, 119, 6;
+    --yry-cyan:           #0891b2;
+    --yry-cyan-rgb:       8, 145, 178;
+    --yry-violet:         #7c3aed;
+    --yry-violet-rgb:     124, 58, 237;
+    --yry-blue:           #2563eb;
+    --yry-amber:          #d97706;
+    --yry-purple:         #7c3aed;
+    --yry-info:           #9c797f;
+
+    /* ── Grays ────────────────────────────────────────── */
+    --yry-gray-pale:      #805866;
+    --yry-gray-soft:      #9c797f;
+    --yry-gray:           #a98a8b;
+
+    /* ── Border & Shadow ──────────────────────────────── */
+    --yry-border-color:   #d7b698;
+    --yry-border:         1px solid #d7b698;
+    --yry-shadow:         0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --yry-shadow-lg:      0 10px 25px rgba(0, 0, 0, 0.08);
+
+    /* ── Shape ────────────────────────────────────────── */
+    --yry-radius:         8px;
+    --yry-radius-sm:      6px;
+    --yry-radius-lg:      12px;
+    --yry-radius-full:    9999px;
+
+    /* ── Animation ────────────────────────────────────── */
+    --yry-ease-out:       cubic-bezier(0, 0, 0.2, 1);
+    --yry-ease-in:        cubic-bezier(0.4, 0, 1, 1);
+    --yry-duration-fast:  150ms;
+    --yry-duration-normal: 200ms;
+    --yry-duration-slow:  300ms;
+
+    /* ── Fonts ────────────────────────────────────────── */
+    --yry-font-sans:      'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+    --yry-font-mono:      'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Source Code Pro', monospace;
+}
