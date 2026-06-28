@@ -1,6 +1,6 @@
 <template id="download-template">
     <section id="download">
-        <h2>🎥 Video Download</h2>
+        <h2>Video Download</h2>
         <p>VideoLingo uses <code>yt-dlp</code> to download YouTube videos. Configure download behavior via the Streamlit UI or config.yaml.</p>
         <h3>Resolution Options</h3>
         <table>
@@ -15,7 +15,7 @@
         <table>
             <tr><th>Format</th><th>Description</th></tr>
             <tr v-for="row in formats" :key="row.name">
-                <td>{{ row.icon }} {{ row.name }}</td>
+                <td>{{ row.name }}</td>
                 <td>{{ row.desc }}</td>
             </tr>
         </table>

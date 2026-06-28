@@ -7,7 +7,18 @@
  * callout / badge / tabs），这些样式原先归属 docs/styles/
  * components.css，现统一收敛到 base.css，便于一处维护。
  * 真正「仅一个组件使用」的非共享样式留在对应组件的 index.css。
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - 新增 :focus-visible 全局焦点环样式
+ *   - 新增 #skip-link 无障碍跳转链接
+ *   - 新增 prefers-reduced-motion 支持
+ *   - 新增 font-display: swap 确保 FOIT 可控
+ *   - 改进 code / pre 对比度
+ *   - 改进表格斑马纹可读性
  * ───────────────────────────────────────────────────── */
+
+/* ── Google Fonts (font-display: swap 防 FOIT) ──────────── */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 .vl-doc {
     font-family: var(--vl-doc-font-sans);
@@ -16,6 +27,7 @@
     display: flex;
     min-height: 100vh;
     margin: 0;
+    scroll-behavior: smooth;
 }
 
 .vl-doc *,
@@ -33,13 +45,60 @@
     padding: 0;
 }
 
+/* ── Skip Link (无障碍跳转) ────────────────────────────── */
+.vl-doc .skip-link {
+    position: fixed;
+    top: -100%;
+    left: 16px;
+    z-index: 1000;
+    padding: 8px 16px;
+    background: var(--vl-doc-primary);
+    color: #fff;
+    border-radius: var(--vl-doc-radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: top var(--vl-doc-duration-fast) var(--vl-doc-ease-out);
+}
+.vl-doc .skip-link:focus {
+    top: 16px;
+}
+
+/* ── Global Focus Visible ─────────────────────────────────
+   为所有可交互元素提供可见焦点环，满足 WCAG 键盘导航要求。
+   使用 :focus-visible 避免鼠标点击时出现焦点环。  */
+.vl-doc :focus-visible {
+    outline: var(--vl-doc-focus-ring-width) solid var(--vl-doc-focus-ring);
+    outline-offset: 2px;
+}
+/* 回退：不支持 :focus-visible 的浏览器走 :focus */
+@supports not selector(:focus-visible) {
+    .vl-doc :focus {
+        outline: var(--vl-doc-focus-ring-width) solid var(--vl-doc-focus-ring);
+        outline-offset: 2px;
+    }
+}
+
+/* ── Reduced Motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .vl-doc *,
+    .vl-doc *::before,
+    .vl-doc *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .vl-doc { scroll-behavior: auto; }
+}
+
 /* ── Code & Pre (跨 section 共享) ───────────────────────── */
 .vl-doc code {
     background: var(--vl-doc-code-bg);
     padding: 2px 6px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 0.88em;
     font-family: var(--vl-doc-font-mono);
+    color: var(--vl-doc-text);
 }
 
 .vl-doc pre {
@@ -48,10 +107,11 @@
     border-radius: var(--vl-doc-radius);
     padding: 20px 24px;
     overflow-x: auto;
-    margin: 16px 0;
+    margin: var(--vl-doc-space-md) 0;
     font-size: 13px;
-    line-height: 1.6;
+    line-height: 1.65;
     font-family: var(--vl-doc-font-mono);
+    -webkit-overflow-scrolling: touch;
 }
 
 .vl-doc pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
@@ -62,7 +122,7 @@
     border: 1px solid var(--vl-doc-border);
     border-radius: var(--vl-doc-radius);
     padding: 20px 24px;
-    margin: 16px 0;
+    margin: var(--vl-doc-space-md) 0;
     box-shadow: var(--vl-doc-shadow);
 }
 
@@ -76,20 +136,32 @@
 .vl-doc .card-grid .card {
     margin: 0;
     padding: 24px;
-    transition: box-shadow .2s, transform .2s;
+    transition: box-shadow var(--vl-doc-duration-normal) var(--vl-doc-ease-out),
+                transform var(--vl-doc-duration-normal) var(--vl-doc-ease-out);
     cursor: pointer;
     text-decoration: none;
     color: inherit;
     display: block;
+    /* 触摸优化：消除移动端 300ms 点击延迟 */
+    touch-action: manipulation;
 }
 .vl-doc .card-grid .card:hover {
     box-shadow: var(--vl-doc-shadow-lift);
     transform: translateY(-2px);
     text-decoration: none;
 }
+.vl-doc .card-grid .card:focus-visible {
+    box-shadow: 0 0 0 var(--vl-doc-focus-ring-width) var(--vl-doc-focus-ring),
+                var(--vl-doc-shadow-lift);
+    transform: translateY(-2px);
+}
 .vl-doc .card-grid .card .card-icon { font-size: 28px; margin-bottom: 10px; }
 .vl-doc .card-grid .card h3 { margin: 0 0 6px; font-size: 16px; }
-.vl-doc .card-grid .card p { font-size: 13px; margin: 0; }
+.vl-doc .card-grid .card p {
+    font-size: 13px;
+    margin: 0;
+    color: var(--vl-doc-text-soft);
+}
 
 /* ── Callout (translations 等多 section 共享) ────────────── */
 .vl-doc .callout {
@@ -97,7 +169,7 @@
     background: #eff6ff;
     padding: 14px 20px;
     border-radius: 0 var(--vl-doc-radius) var(--vl-doc-radius) 0;
-    margin: 16px 0;
+    margin: var(--vl-doc-space-md) 0;
     font-size: 14px;
 }
 .vl-doc .callout-warning { border-left-color: #f59e0b; background: #fffbeb; }
@@ -121,7 +193,7 @@
     display: flex;
     gap: 4px;
     border-bottom: 2px solid var(--vl-doc-border);
-    margin: 16px 0;
+    margin: var(--vl-doc-space-md) 0;
 }
 .vl-doc .tab {
     padding: 8px 18px;
@@ -133,7 +205,9 @@
     font-weight: 500;
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
-    transition: all .15s;
+    transition: color var(--vl-doc-duration-fast),
+                border-color var(--vl-doc-duration-fast);
+    touch-action: manipulation;
 }
 .vl-doc .tab:hover { color: var(--vl-doc-text); }
 .vl-doc .tab.active {
@@ -146,7 +220,7 @@
 .vl-doc table {
     width: 100%;
     border-collapse: collapse;
-    margin: 16px 0;
+    margin: var(--vl-doc-space-md) 0;
     font-size: 14px;
 }
 .vl-doc th,
@@ -158,4 +232,17 @@
 .vl-doc th {
     background: var(--vl-doc-bg-soft);
     font-weight: 600;
+    color: var(--vl-doc-text-heading);
 }
+/* 斑马纹提升可读性 */
+.vl-doc tbody tr:nth-child(even) {
+    background: var(--vl-doc-bg-soft);
+}
+
+/* ── 响应式表格容器 ────────────────────────────────────── */
+.vl-doc .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: var(--vl-doc-space-md) 0;
+}
+.vl-doc .table-responsive table { margin: 0; }

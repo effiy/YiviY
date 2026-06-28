@@ -3,17 +3,20 @@
  * ----------------------------------------------------------------------
  * 抽离 api-config 的展示数据（推荐模型 + 一键 Provider 卡片），
  * 便于统一维护。通过 window 暴露，供 Vue 组件读取。
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - 移除 tier 字段中 emoji（🏆🥈），改用 badge 样式
+ *   - 移除 provider icon 中的 emoji（🔗🧠🆓）
  */
 
 window.API_CONFIG_DATA = {
     recommendedModels: [
-        { tier: '🏆 Best',   models: 'claude-sonnet-4-6, gpt-5.4, gemini-3.1-pro' },
-        { tier: '🥈 Great',  models: 'deepseek-v4-pro, grok-4.1' },
-        { tier: '💰 Budget', models: 'gemini-3-flash, gpt-5.4-mini, deepseek-chat' }
+        { tier: 'Best',   models: 'claude-sonnet-4-6, gpt-5.4, gemini-3.1-pro' },
+        { tier: 'Great',  models: 'deepseek-v4-pro, grok-4.1' },
+        { tier: 'Budget', models: 'gemini-3-flash, gpt-5.4-mini, deepseek-chat' }
     ],
     providers: [
         {
-            icon: '🔗',
             name: '302.ai — Unified API',
             desc: 'One API key covers LLM + WhisperX + TTS.',
             link: { label: 'Get key →', href: 'https://gpt302.saaslink.net/C2oHR9' },
@@ -21,7 +24,6 @@ window.API_CONFIG_DATA = {
             code: null
         },
         {
-            icon: '🧠',
             name: 'DeepSeek',
             desc: 'Good balance of quality and price.',
             link: { label: 'Get key →', href: 'https://platform.deepseek.com/' },
@@ -29,7 +31,6 @@ window.API_CONFIG_DATA = {
             code: "api:\n  key: 'sk-...'\n  base_url: 'https://api.deepseek.com'\n  model: 'deepseek-v4-pro'"
         },
         {
-            icon: '🆓',
             name: 'Free: Ollama + Edge-TTS',
             desc: 'Run LLM locally with Ollama + edage_tts for a completely free pipeline.',
             link: { label: 'Ollama', href: 'https://ollama.com/' },

@@ -1,6 +1,12 @@
 /* ─────────────────────────────────────────────────────
  * Layout
  * 侧栏（.sidebar）与主内容区（.main）的结构样式。
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - 导航链接 padding 增大以满足 44×44pt 触摸目标
+ *   - 标题增加 scroll-margin-top 确保锚点跳转不被遮挡
+ *   - 导航间距统一使用 spacing scale 令牌
+ *   - 侧栏滚动条在支持的系统上自动隐藏
  * ───────────────────────────────────────────────────── */
 
 /* ── Sidebar ── */
@@ -13,9 +19,17 @@
     border-right: 1px solid var(--vl-doc-border);
     overflow-y: auto;
     z-index: 100;
-    padding: 24px 20px;
+    padding: var(--vl-doc-space-lg) 20px;
     display: flex;
     flex-direction: column;
+    /* 在支持的浏览器上自动隐藏滚动条 */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color var(--vl-doc-duration-normal);
+}
+.vl-doc .sidebar:hover,
+.vl-doc .sidebar:focus-within {
+    scrollbar-color: var(--vl-doc-border) transparent;
 }
 
 .vl-doc .sidebar-logo {
@@ -24,9 +38,13 @@
     gap: 12px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--vl-doc-border);
-    margin-bottom: 16px;
+    margin-bottom: var(--vl-doc-space-md);
     text-decoration: none;
     color: var(--vl-doc-text);
+    border-radius: var(--vl-doc-radius-sm);
+    /* 增大点击区域 */
+    padding: 12px;
+    margin: -4px -4px 16px -4px;
 }
 
 .vl-doc .sidebar-logo .logo-icon {
@@ -57,19 +75,23 @@
     letter-spacing: 1.5px;
     color: var(--vl-doc-text-muted);
     font-weight: 600;
-    margin-bottom: 8px;
-    padding-left: 8px;
+    margin-bottom: var(--vl-doc-space-sm);
+    padding-left: var(--vl-doc-space-sm);
 }
 
 .vl-doc .nav-link {
     display: block;
-    padding: 7px 12px;
-    border-radius: 6px;
+    /* 44px 最小触摸目标：7+7+行高≈30 = 44 */
+    padding: 9px 12px;
+    border-radius: var(--vl-doc-radius-sm);
     color: var(--vl-doc-text-soft);
     text-decoration: none;
     font-size: 14px;
-    transition: all .15s;
+    font-weight: 500;
+    transition: background var(--vl-doc-duration-fast),
+                color var(--vl-doc-duration-fast);
     cursor: pointer;
+    touch-action: manipulation;
 }
 .vl-doc .nav-link:hover { background: var(--vl-doc-bg-soft); color: var(--vl-doc-text); }
 .vl-doc .nav-link.active {
@@ -80,7 +102,7 @@
 
 .vl-doc .sidebar-footer {
     margin-top: auto;
-    padding-top: 16px;
+    padding-top: var(--vl-doc-space-md);
     border-top: 1px solid var(--vl-doc-border);
     font-size: 12px;
     color: var(--vl-doc-text-muted);
@@ -93,20 +115,29 @@
 .vl-doc .main {
     margin-left: var(--vl-doc-sidebar-width);
     flex: 1;
-    max-width: 900px;
-    padding: 48px 56px 80px;
+    max-width: var(--vl-doc-content-max-width);
+    padding: var(--vl-doc-space-2xl) 56px 80px;
 }
 
 .vl-doc section { margin-bottom: 56px; }
-.vl-doc section:target { scroll-margin-top: 24px; }
+
+/* 锚点跳转时留出上方空间（避免被固定元素遮挡） */
+.vl-doc section:target {
+    scroll-margin-top: 24px;
+}
+/* 所有标题也加 scroll-margin，以防 :target 遗漏 */
+.vl-doc h1, .vl-doc h2, .vl-doc h3, .vl-doc h4 {
+    scroll-margin-top: 24px;
+}
 
 .vl-doc h1 {
     font-size: 32px; font-weight: 800; letter-spacing: -.6px;
-    margin-bottom: 8px; color: var(--vl-doc-text);
+    margin-bottom: var(--vl-doc-space-sm); color: var(--vl-doc-text);
 }
 .vl-doc h2 {
     font-size: 24px; font-weight: 700; letter-spacing: -.3px;
-    margin: 40px 0 16px; padding-bottom: 8px;
+    margin: 40px 0 var(--vl-doc-space-md);
+    padding-bottom: var(--vl-doc-space-sm);
     border-bottom: 2px solid var(--vl-doc-border);
 }
 .vl-doc h3 {
@@ -115,9 +146,17 @@
 }
 .vl-doc h4 {
     font-size: 15px; font-weight: 600;
-    margin: 20px 0 8px;
+    margin: 20px 0 var(--vl-doc-space-sm);
 }
 .vl-doc p { margin-bottom: 14px; color: var(--vl-doc-text-soft); }
 
 .vl-doc a { color: var(--vl-doc-primary); text-decoration: none; }
 .vl-doc a:hover { text-decoration: underline; }
+
+/* ── 主内容区域链接 hover 动画 ────────────────────────── */
+.vl-doc .main a:not(.card):not(.nav-link):not(.tab):not(.badge):not(.skip-link) {
+    transition: color var(--vl-doc-duration-fast) var(--vl-doc-ease-out);
+}
+.vl-doc .main a:not(.card):not(.nav-link):not(.tab):not(.badge):not(.skip-link):hover {
+    color: var(--vl-doc-primary-strong);
+}

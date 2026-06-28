@@ -3,6 +3,9 @@
  * ----------------------------------------------------------------------
  * 抽离 download 的展示数据（分辨率选项 + 下载格式），
  * 便于统一维护。通过 window 暴露，供 Vue 组件读取。
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - 移除 format icon 字段中的 emoji（🎬🎵）
  */
 
 window.DOWNLOAD_CONFIG = {
@@ -16,7 +19,7 @@ window.DOWNLOAD_CONFIG = {
         { option: 'Best',        height: '—',    useCase: 'Highest available' }
     ],
     formats: [
-        { icon: '🎬', name: 'Video + Audio', desc: 'Full video with merged audio track, MP4 output' },
-        { icon: '🎵', name: 'Audio Only',    desc: 'Best audio quality, no video. Useful for podcast-style content' }
+        { name: 'Video + Audio', desc: 'Full video with merged audio track, MP4 output' },
+        { name: 'Audio Only',    desc: 'Best audio quality, no video. Useful for podcast-style content' }
     ]
 };

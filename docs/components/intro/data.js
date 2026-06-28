@@ -5,8 +5,6 @@
  * 通过 window 暴露，供 Vue 组件读取。
  *
  * cards 字段对齐 YrySceneCard props：
- *   - icon          卡片图标/字符（占位，当前 YrySceneCard 模板未渲染）
- *   - iconModifier  skill | agent | rule | ref · 占位字段，保留以保持卡片视觉风格约定
  *   - name          卡片主标题
  *   - nameHref      标题点击跳转（站内 #fragment 或 views/* 相对路径）
  *   - nameTarget    链接打开方式，'' 表示当前窗口（避免 _blank 把片段链接丢到新标签页）
@@ -22,6 +20,10 @@
  *       - 站内锚点  → nameHref = '#workflow' 等（同窗口跳转）
  *       - 项目报告  → nameHref = 'views/<报告目录>/index.html'（同窗口跳转）
  *                     当前已挂载：views/健康报告  views/架构报告
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - 移除未使用的 icon / iconModifier 字段（YrySceneCard 模板未渲染图标）
+ *   - callout 改用纯文本标记替代 emoji（💡 → "Tip:" 文本前缀）
  */
 
 window.INTRO_TITLE = 'VideoLingo Documentation Center';
@@ -30,48 +32,36 @@ window.INTRO_LEAD = 'All-in-one video translation, localization, and dubbing —
 
 window.INTRO_CARDS = [
     {
-        icon: '🚀',
-        iconModifier: 'skill',
         name: 'Quick Start',
         nameHref: '#quick-start',
         nameTarget: '',
         desc: 'Get running in 3 minutes with uv or Docker'
     },
     {
-        icon: '⚙️',
-        iconModifier: 'rule',
         name: 'Configuration',
         nameHref: '#config',
         nameTarget: '',
         desc: 'Understand every knob in config.yaml'
     },
     {
-        icon: '🔑',
-        iconModifier: 'agent',
         name: 'API Setup',
         nameHref: '#api-config',
         nameTarget: '',
         desc: 'LLM, Whisper, TTS — all API providers explained'
     },
     {
-        icon: '🎤',
-        iconModifier: 'ref',
         name: 'Dubbing Guide',
         nameHref: '#dubbing',
         nameTarget: '',
         desc: '9 TTS engines compared with pro tips'
     },
     {
-        icon: '🩺',
-        iconModifier: 'rule',
         name: 'Troubleshooting',
         nameHref: '#troubleshooting',
         nameTarget: '',
         desc: 'Common issues and their solutions'
     },
     {
-        icon: '🔄',
-        iconModifier: 'skill',
         name: 'Pipeline Deep Dive',
         nameHref: '#workflow',
         nameTarget: '',
@@ -79,8 +69,6 @@ window.INTRO_CARDS = [
     },
     /* ── 项目评估报告 · 独立 views/* 页面 · 同窗口跳转 ────────────── */
     {
-        icon: '🩺',
-        iconModifier: 'rule',
         name: '代码健康报告',
         nameHref: 'views/健康报告/index.html',
         nameTarget: '',
@@ -94,8 +82,6 @@ window.INTRO_CARDS = [
         meta: '评估日期 2026-06-28 · Technical Due Diligence'
     },
     {
-        icon: '🏗️',
-        iconModifier: 'skill',
         name: '架构分析报告',
         nameHref: 'views/架构报告/index.html',
         nameTarget: '',
@@ -111,8 +97,7 @@ window.INTRO_CARDS = [
 ];
 
 window.INTRO_CALLOUT = {
-    icon: '💡',
-    strong: 'New here?',
+    strong: 'Tip:',
     text: 'VideoLingo takes a YouTube URL and turns it into a perfectly subtitled + dubbed video in your target language. Jump to ',
     linkText: 'Quick Start',
     linkHref: '#quick-start'

@@ -140,6 +140,20 @@
 .yry-toast-close:hover {
   opacity: 1;
 }
+.yry-toast-close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+  border-radius: 2px;
+  opacity: 1;
+}
+@supports not selector(:focus-visible) {
+  .yry-toast-close:focus {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+    border-radius: 2px;
+    opacity: 1;
+  }
+}
 
 /* ── Vue <transition-group> animations ──────────────────────────────── */
 .yry-toast-anim-enter-active,

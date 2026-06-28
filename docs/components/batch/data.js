@@ -11,6 +11,9 @@
  *   4. 表格列与示例列分离，避免渲染时再拆分。
  *
  * 数据来源：原 batch/README.md（已迁移至 docs 单入口管理）。
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - 移除 overview.emoji 字段（📊），标题由 CSS 处理
  */
 
 window.BATCH_CONFIG = {
@@ -23,7 +26,6 @@ window.BATCH_CONFIG = {
     /* ── 总览 ────────────────────────────────────────── */
     overview: {
         title: 'Batch Processing',
-        emoji: '📊',
         description: 'Batch mode is designed for processing video playlists or local video directories in sequence. Each video goes through the full text+dubbing pipeline automatically.',
         dirTree: [
             'batch/',
@@ -39,7 +41,7 @@ window.BATCH_CONFIG = {
     guide: {
         prerequisite: { html: 'Before utilizing the batch mode, ensure you have used the Streamlit mode and properly configured the parameters in <code>config.yaml</code>.' },
         warning: {
-            severity: 'warning', // 对应 docs/styles/components.css 中的 .callout-{severity}
+            severity: 'warning', // 对应 docs/styles/base.css 中的 .callout-{severity}
             html: 'Keep <code>tasks_setting.xlsx</code> closed during execution to prevent interruptions due to file access conflicts.'
         }
     },

@@ -98,7 +98,7 @@
                     });
                     var demo = this.demo;
                     if (demo && !arr.some(function (l) { return l.label === '演示'; })) {
-                        arr.push({ icon: '💡', label: '演示', href: demo, target: '_blank' });
+                        arr.push({ label: '演示', href: demo, target: '_blank' });
                     }
                     return arr;
                 }

@@ -28,14 +28,14 @@ window.YRY_SCENE_CARD_CONFIG = {
     defaults: {
         nameTarget:   '_blank',
         defaultLinks: [
-            /* ── 7 个通用入口 · 默认全部可跳转 ─────────────────── */
-            { icon: '📋', label: '清单', href: 'https://github.com/Huanshere/VideoLingo/blob/main/README.md',           target: '_blank' },
-            { icon: '📐', label: '架构', href: 'docs/components/workflow/index.html',                                  target: '_blank' },
-            { icon: '🔗', label: '图谱', href: 'https://github.com/Huanshere/VideoLingo/network/dependents',            target: '_blank' },
-            { icon: '🧪', label: '测试', href: 'https://github.com/Huanshere/VideoLingo/actions',                       target: '_blank' },
-            { icon: '📄', label: '源码', href: 'https://github.com/Huanshere/VideoLingo',                                target: '_blank' },
-            { icon: '💡', label: '演示', href: 'https://videolingo.io',                                                 target: '_blank' },
-            { icon: '📝', label: '审查', href: 'https://github.com/Huanshere/VideoLingo/pulls',                         target: '_blank' }
+            /* ── 7 个通用入口 · 默认全部可跳转 · 仅保留文本标签 ── */
+            { label: '清单', href: 'https://github.com/Huanshere/VideoLingo/blob/main/README.md',           target: '_blank' },
+            { label: '架构', href: 'docs/components/workflow/index.html',                                  target: '_blank' },
+            { label: '图谱', href: 'https://github.com/Huanshere/VideoLingo/network/dependents',            target: '_blank' },
+            { label: '测试', href: 'https://github.com/Huanshere/VideoLingo/actions',                       target: '_blank' },
+            { label: '源码', href: 'https://github.com/Huanshere/VideoLingo',                                target: '_blank' },
+            { label: '演示', href: 'https://videolingo.io',                                                 target: '_blank' },
+            { label: '审查', href: 'https://github.com/Huanshere/VideoLingo/pulls',                         target: '_blank' }
         ]
     }
 };

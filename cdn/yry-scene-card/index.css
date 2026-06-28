@@ -123,6 +123,32 @@
 .yry-scene-card-links a:hover {
   color: var(--yry-accent, #ffc107);
 }
+.yry-scene-card-links a:focus-visible {
+  outline: 2px solid var(--yry-accent, #ffc107);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+@supports not selector(:focus-visible) {
+  .yry-scene-card-links a:focus {
+    outline: 2px solid var(--yry-accent, #ffc107);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* ── 确保卡片内所有链接有焦点样式 ────────────────────── */
+.yry-scene-card-name a:focus-visible {
+  outline: 2px solid var(--yry-cyan, #22d3ee);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+@supports not selector(:focus-visible) {
+  .yry-scene-card-name a:focus {
+    outline: 2px solid var(--yry-cyan, #22d3ee);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
 .yry-scene-card-links span {
   color: var(--yry-text3, #888);
   white-space: nowrap;

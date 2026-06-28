@@ -38,6 +38,18 @@
   color: var(--yry-color-accent, var(--yry-amber));
   text-decoration: underline;
 }
+.breadcrumb a:focus-visible {
+  outline: 2px solid var(--yry-color-accent, var(--yry-amber));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+@supports not selector(:focus-visible) {
+  .breadcrumb a:focus {
+    outline: 2px solid var(--yry-color-accent, var(--yry-amber));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
 
 .bc-sep {
   color: var(--yry-color-text-3, var(--yry-gray));

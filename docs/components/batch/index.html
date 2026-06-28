@@ -1,6 +1,6 @@
 <template id="batch-template">
     <section id="batch">
-        <h2>{{ overview.emoji }} {{ overview.title }}</h2>
+        <h2>{{ overview.title }}</h2>
         <p class="intro-lead">{{ overview.description }}</p>
 
         <h3>Directory Structure</h3>
@@ -55,7 +55,7 @@
         </template>
 
         <div v-if="guide.warning" class="callout" :class="'callout-' + guide.warning.severity">
-            <strong>⚠️ Note:</strong> <span v-html="guide.warning.html"></span>
+            <strong>Note:</strong> <span v-html="guide.warning.html"></span>
         </div>
 
         <h3>Important Considerations</h3>

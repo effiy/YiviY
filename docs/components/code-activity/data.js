@@ -23,7 +23,7 @@ window.CODE_ACTIVITY_CONFIG = {
 
     /* ── 多语言文案 ─────────────────────────────────── */
     labels: {
-        title:   '📊 最近一周代码量变化',
+        title:   'Recent Code Activity',
         loading: '加载中...',
         error:   '加载失败，请稍后重试'
     },

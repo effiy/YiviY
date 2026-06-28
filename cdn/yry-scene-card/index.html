@@ -23,8 +23,8 @@
         -->
         <div v-if="resolvedLinks && resolvedLinks.length" class="yry-scene-card-links">
             <template v-for="(l, idx) in resolvedLinks" :key="(l.label || l.href || 'link') + '-' + idx">
-                <a v-if="l.href" :href="l.href" :target="l.target || '_blank'" rel="noopener noreferrer">{{ l.icon }} {{ l.label }}</a>
-                <span v-else>{{ l.icon }} {{ l.label }}</span>
+                <a v-if="l.href" :href="l.href" :target="l.target || '_blank'" rel="noopener noreferrer">{{ l.label }}</a>
+                <span v-else>{{ l.label }}</span>
             </template>
         </div>
       </div>

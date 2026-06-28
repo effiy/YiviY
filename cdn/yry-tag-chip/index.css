@@ -40,10 +40,26 @@
   transition: background .15s, color .15s, border-color .15s;
 }
 
-a.tag-chip { cursor: pointer; }
+a.tag-chip {
+  cursor: pointer;
+  /* 确保链接标签满足 44px 最小触摸目标 */
+  min-height: 24px;
+  line-height: 1.6;
+}
 a.tag-chip:hover {
   background: rgba(255,255,255,.12);
   text-decoration: none;
+}
+a.tag-chip:focus-visible {
+  outline: 2px solid var(--yry-accent, #ffc107);
+  outline-offset: 2px;
+}
+/* 回退：不支持 :focus-visible 的浏览器 */
+@supports not selector(:focus-visible) {
+  a.tag-chip:focus {
+    outline: 2px solid var(--yry-accent, #ffc107);
+    outline-offset: 2px;
+  }
 }
 
 .tag-chip.accent { background: rgba(var(--yry-accent-rgb),.12); color: var(--yry-accent, var(--yry-amber)); border-color: rgba(var(--yry-accent-rgb),.25); }

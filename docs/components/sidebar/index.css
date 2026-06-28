@@ -8,22 +8,31 @@
  * 中定义。
  * ───────────────────────────────────────────────────── */
 
-/* ── Mobile Menu Button ── */
+/* ── Mobile Menu Button ──
+   44×44px 满足 iOS/Android 最小触摸目标要求
+   (ui-ux-pro-max §2: touch-target-size)                */
 .vl-doc #mobile-menu-btn { display: none; }
 
 @media (max-width: 768px) {
     .vl-doc #mobile-menu-btn {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         position: fixed;
         top: 12px; left: 12px;
         z-index: 200;
-        width: 40px; height: 40px;
+        min-width: 44px; min-height: 44px;
         font-size: 22px;
         background: var(--vl-doc-bg);
         border: 1px solid var(--vl-doc-border);
         border-radius: var(--vl-doc-radius);
         cursor: pointer;
         box-shadow: var(--vl-doc-shadow);
+        touch-action: manipulation;
+        transition: background var(--vl-doc-duration-fast);
+    }
+    .vl-doc #mobile-menu-btn:active {
+        background: var(--vl-doc-bg-soft);
     }
 }
 

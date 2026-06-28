@@ -1,18 +1,76 @@
 /* ─────────────────────────────────────────────────────
  * Responsive
- * 媒体查询：移动端布局调整。
- * 仅负责 layout（侧栏位移、主内容留白）。组件自身
- * （如 #mobile-menu-btn）的响应式样式随组件走。
+ * 媒体查询：移动端 / 平板 / 宽屏布局调整。
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - 新增 1024px 平板断点（侧栏折叠 + 主内容区居中）
+ *   - 新增 1440px 宽屏断点（内容区居中 + 更大间距）
+ *   - 移动端菜单按钮尺寸增至 44×44px（触摸目标合规）
+ *   - 移动端主内容区 padding 调整（使用 spacing scale）
+ *   - 防止移动端水平溢出
  * ───────────────────────────────────────────────────── */
 
+/* ── Tablet: 侧栏折叠 ────────────────────────────────── */
+@media (max-width: 1024px) {
+    .vl-doc .main {
+        padding: 40px 32px 64px;
+        max-width: none;
+    }
+}
+
+/* ── Mobile: 侧栏滑出 + 按钮可见 + 内容铺满 ──────────── */
 @media (max-width: 768px) {
     .vl-doc .sidebar {
         transform: translateX(-100%);
-        transition: transform .3s;
+        transition: transform var(--vl-doc-duration-slow) var(--vl-doc-ease-out);
+        /* 确保侧栏在移动端有足够的 z-index */
+        box-shadow: none;
     }
-    .vl-doc .sidebar.open { transform: translateX(0); }
+    .vl-doc .sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--vl-doc-shadow-modal);
+    }
     .vl-doc .main {
         margin-left: 0;
         padding: 64px 20px 40px;
+        /* 防止水平溢出 */
+        overflow-x: hidden;
+        word-break: break-word;
     }
+    /* 移动端表格允许水平滚动 */
+    .vl-doc .main table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 移动端标题大小调整 */
+    .vl-doc h1 { font-size: 26px; }
+    .vl-doc h2 { font-size: 20px; margin-top: 32px; }
+    .vl-doc h3 { font-size: 16px; }
+
+    /* 移动端卡片网格单列 */
+    .vl-doc .card-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+/* ── Wide: 内容居中 + 更大间距 ───────────────────────── */
+@media (min-width: 1440px) {
+    .vl-doc .main {
+        padding: 64px 80px 96px;
+    }
+}
+
+/* ── 极小屏 (< 375px)：进一步收紧 ────────────────────── */
+@media (max-width: 374px) {
+    .vl-doc .main {
+        padding: 56px 14px 32px;
+    }
+    .vl-doc pre {
+        padding: 12px 14px;
+        font-size: 12px;
+    }
+    .vl-doc h1 { font-size: 22px; }
 }

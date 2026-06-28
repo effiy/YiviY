@@ -1,48 +1,139 @@
 /* ─────────────────────────────────────────────────────
  * Design Tokens
  * 仅定义 :root 级变量（颜色 / 字体 / 尺寸 / 阴影 / 圆角）。
+ *
+ * v2 改进（ui-ux-pro-max 审计）：
+ *   - text-muted 对比度从 2.8:1 提升至 4.79:1（WCAG AA）
+ *   - 新增 spacing scale（4pt 节奏）
+ *   - 新增 focus-ring 令牌
+ *   - 新增动效持续时间与缓动令牌
+ *   - 字体栈加入 IBM Plex Sans / JetBrains Mono（font-display: swap）
  * ───────────────────────────────────────────────────── */
 
 :root,
 .vl-doc {
-    /* Color — Surface */
+    /* ── Surface ──────────────────────────────────────── */
     --vl-doc-bg: #ffffff;
     --vl-doc-bg-soft: #f8f9fa;
+    --vl-doc-bg-raised: #ffffff;
 
-    /* Color — Text */
-    --vl-doc-text: #1a1a2e;
-    --vl-doc-text-soft: #555555;
-    --vl-doc-text-muted: #94a3b8;
-    --vl-doc-text-heading: #1e293b;
+    /* ── Text ─────────────────────────────────────────── */
+    --vl-doc-text: #0f172a;
+    --vl-doc-text-soft: #475569;
+    --vl-doc-text-muted: #64748b;
+    --vl-doc-text-heading: #0f172a;
 
-    /* Color — Brand / Accent */
-    --vl-doc-primary: #1a56db;
-    --vl-doc-primary-strong: #1648b3;
+    /* ── Brand / Accent ──────────────────────────────── */
+    --vl-doc-primary: #2563eb;
+    --vl-doc-primary-strong: #1d4ed8;
     --vl-doc-accent: #3b82f6;
 
-    /* Color — Status */
+    /* ── Status ───────────────────────────────────────── */
     --vl-doc-success: #059669;
     --vl-doc-warning: #d97706;
 
-    /* Color — Border */
+    /* ── Border ───────────────────────────────────────── */
     --vl-doc-border: #e2e8f0;
 
-    /* Color — Code */
+    /* ── Code ─────────────────────────────────────────── */
     --vl-doc-code-bg: #f1f5f9;
 
-    /* Font stacks */
-    --vl-doc-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-                       'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
-    --vl-doc-font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    /* ── Focus ring ───────────────────────────────────── */
+    --vl-doc-focus-ring: rgba(37, 99, 235, 0.4);
+    --vl-doc-focus-ring-width: 3px;
 
-    /* Layout sizing */
+    /* ── Font stacks ────────────────────────────────────
+       IBM Plex Sans → 系统回退 → CJK 字体
+       JetBrains Mono → 等宽回退 */
+    --vl-doc-font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                       'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+                       'Noto Sans CJK SC', sans-serif;
+    --vl-doc-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code',
+                       'Consolas', 'Source Code Pro', monospace;
+
+    /* ── Layout sizing ────────────────────────────────── */
     --vl-doc-sidebar-width: 280px;
     --vl-doc-header-height: 64px;
+    --vl-doc-content-max-width: 900px;
 
-    /* Shape */
+    /* ── Spacing scale (4pt rhythm) ──────────────────── */
+    --vl-doc-space-xs: 4px;
+    --vl-doc-space-sm: 8px;
+    --vl-doc-space-md: 16px;
+    --vl-doc-space-lg: 24px;
+    --vl-doc-space-xl: 32px;
+    --vl-doc-space-2xl: 48px;
+    --vl-doc-space-3xl: 64px;
+
+    /* ── Shape ────────────────────────────────────────── */
+    --vl-doc-radius-sm: 6px;
     --vl-doc-radius: 8px;
+    --vl-doc-radius-lg: 12px;
+    --vl-doc-radius-full: 9999px;
 
-    /* Elevation */
+    /* ── Elevation ────────────────────────────────────── */
     --vl-doc-shadow: 0 1px 3px rgba(0, 0, 0, .06), 0 1px 2px rgba(0, 0, 0, .04);
     --vl-doc-shadow-lift: 0 10px 25px rgba(0, 0, 0, .08);
+    --vl-doc-shadow-modal: 0 20px 60px rgba(0, 0, 0, .15);
+
+    /* ── Animation ──────────────────────────────────────
+       duration: 150-300ms 范围（ui-ux-pro-max §7 推荐）
+       easing: ease-out 入场 / ease-in 退场             */
+    --vl-doc-ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --vl-doc-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --vl-doc-duration-fast: 150ms;
+    --vl-doc-duration-normal: 200ms;
+    --vl-doc-duration-slow: 300ms;
+
+    /* ══════════════════════════════════════════════════════
+     * YrY CDN Token Bridge
+     *
+     * CDN 组件默认假定暗色主题（--yry-* 变量），此处桥接至
+     * docs 的浅色设计令牌，使 CDN 组件在 docs 中正确渲染。
+     * 组件自身的 fallback 值在暗色页面上生效；docs 通过
+     * 显式定义这些变量覆盖 fallback。
+     *
+     * 组件使用的 color-mix(in srgb, var(--yry-*-rgb), …)
+     * 需要单独定义 RGB 通道值（不含 rgb() 包裹）。
+     * ══════════════════════════════════════════════════════ */
+
+    /* ── Surface ──────────────────────────────────────── */
+    --yry-bg-card:   var(--vl-doc-bg);
+    --yry-bg-raised: var(--vl-doc-bg);
+    --yry-bg-flat:   var(--vl-doc-bg-soft);
+
+    /* ── Text ─────────────────────────────────────────── */
+    --yry-text:  var(--vl-doc-text);
+    --yry-text2: var(--vl-doc-text-soft);
+    --yry-text3: var(--vl-doc-text-muted);
+
+    /* ── Border / Shadow ──────────────────────────────── */
+    --yry-border:   1px solid var(--vl-doc-border);
+    --yry-shadow:   var(--vl-doc-shadow);
+    --yry-shadow-lg: var(--vl-doc-shadow-lift);
+    --yry-radius:   var(--vl-doc-radius);
+    --yry-ease-out: var(--vl-doc-ease-out);
+
+    /* ── Accent (映射 blue → docs 主色) ──────────────── */
+    --yry-accent:    var(--vl-doc-primary);
+    --yry-accent-rgb: 37, 99, 235;  /* #2563eb */
+
+    /* ── Semantic colors ──────────────────────────────── */
+    --yry-cyan:       #0891b2;
+    --yry-cyan-rgb:   8, 145, 178;
+    --yry-pass:       #059669;
+    --yry-pass-rgb:   5, 150, 105;
+    --yry-fail:       #dc2626;
+    --yry-fail-rgb:   220, 38, 38;
+    --yry-warn:       #d97706;
+    --yry-warn-rgb:   217, 119, 6;
+    --yry-violet:     #7c3aed;
+    --yry-violet-rgb: 124, 58, 237;
+    --yry-blue:       #2563eb;
+    --yry-amber:      #d97706;
+    --yry-info:       var(--vl-doc-text-muted);
+    --yry-purple:     #7c3aed;
+    --yry-gray-pale:  var(--vl-doc-text-soft);
+    --yry-gray-soft:  var(--vl-doc-text-muted);
+    --yry-gray:       var(--vl-doc-text-muted);
 }
