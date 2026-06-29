@@ -1,0 +1,47 @@
+/* ============================================================================
+ * {{COMPONENT_NAME}} · 组件样式
+ * ----------------------------------------------------------------------------
+ * 必须挂载在 docs/components/<scene>/index.css，并通过
+ * assets/mount-component.js 的 _COMPONENTS_WITH_CSS 白名单启用自动注入。
+ *
+ * 颜色 / 字体 / 间距一律使用 --yry-* 或 --vl-doc-* token，禁止硬编码 hex / px 字号。
+ * ============================================================================ */
+
+.{{COMPONENT_SLUG}}-root {
+    --local-surface:   var(--vl-doc-surface, var(--yry-bg-secondary));
+    --local-border:     var(--vl-doc-border,   var(--yry-border));
+    --local-text:       var(--vl-doc-text,     var(--yry-text-primary));
+    --local-text-soft:  var(--vl-doc-text-soft,var(--yry-text-secondary));
+    --local-accent:     var(--yry-accent);
+
+    padding: var(--vl-doc-space-loose, 1.5rem);
+    border-radius: var(--vl-doc-radius-medium, 0.75rem);
+    background: var(--local-surface);
+    border: 1px solid var(--local-border);
+    color: var(--local-text);
+}
+
+.{{COMPONENT_SLUG}}-title {
+    margin: 0 0 var(--vl-doc-space-base, 1rem);
+    font-size: var(--vl-doc-font-heading, 1.5rem);
+    font-weight: var(--vl-doc-weight-heading, 600);
+    color: var(--local-text);
+}
+
+.{{COMPONENT_SLUG}}-body {
+    color: var(--local-text-soft);
+    line-height: var(--vl-doc-line-height-base, 1.6);
+}
+
+.{{COMPONENT_SLUG}}-body code {
+    background: var(--yry-bg-tertiary);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-family: var(--yry-font-mono);
+}
+
+@media (max-width: 768px) {
+    .{{COMPONENT_SLUG}}-root {
+        padding: var(--vl-doc-space-base, 1rem);
+    }
+}

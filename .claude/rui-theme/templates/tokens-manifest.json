@@ -1,0 +1,55 @@
+/**
+ * rui-theme tokens manifest
+ * ---------------------------------------------------------------------------
+ * Lists all canonical --yry-* tokens that any theme MUST define.
+ * The token-contracts rule enforces this manifest as the authoritative
+ * schema; any new theme must include every token below.
+ */
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "title": "rui-theme tokens manifest",
+    "description": "Authoritative list of --yry-* tokens. Any theme MUST define every token here.",
+    "type": "object",
+    "required": [
+        "yry-bg-primary",
+        "yry-bg-secondary",
+        "yry-bg-tertiary",
+        "yry-text-primary",
+        "yry-text-secondary",
+        "yry-text-muted",
+        "yry-border",
+        "yry-accent",
+        "yry-accent-muted",
+        "yry-success",
+        "yry-warn",
+        "yry-error",
+        "yry-chart-1",
+        "yry-chart-2",
+        "yry-chart-3",
+        "yry-chart-4",
+        "yry-chart-5",
+        "yry-font-sans",
+        "yry-font-mono"
+    ],
+    "properties": {
+        "yry-bg-primary":     { "type": "string", "description": "Page background (deepest layer)." },
+        "yry-bg-secondary":   { "type": "string", "description": "Card / panel surface." },
+        "yry-bg-tertiary":    { "type": "string", "description": "Elevated surface (hover / active)." },
+        "yry-text-primary":   { "type": "string", "description": "Main text color." },
+        "yry-text-secondary": { "type": "string", "description": "Muted / secondary text." },
+        "yry-text-muted":     { "type": "string", "description": "Disabled / hint text." },
+        "yry-border":         { "type": "string", "description": "Border / divider color." },
+        "yry-accent":         { "type": "string", "description": "Primary interactive accent." },
+        "yry-accent-muted":   { "type": "string", "description": "Accent backgrounds / hover states." },
+        "yry-success":        { "type": "string", "description": "Success state color." },
+        "yry-warn":           { "type": "string", "description": "Warning state color." },
+        "yry-error":          { "type": "string", "description": "Error / destructive color." },
+        "yry-chart-1":        { "type": "string", "description": "Chart series 1 (primary)." },
+        "yry-chart-2":        { "type": "string", "description": "Chart series 2." },
+        "yry-chart-3":        { "type": "string", "description": "Chart series 3." },
+        "yry-chart-4":        { "type": "string", "description": "Chart series 4." },
+        "yry-chart-5":        { "type": "string", "description": "Chart series 5." },
+        "yry-font-sans":      { "type": "string", "description": "Body / heading font stack." },
+        "yry-font-mono":      { "type": "string", "description": "Monospace font stack (code, metrics)." }
+    }
+}

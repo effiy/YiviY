@@ -1,0 +1,41 @@
+/* ============================================================================
+ * rui-diagram theme-bridge.css
+ * ----------------------------------------------------------------------------
+ * Maps rui-theme tokens (--yry-*) to diagram-specific tokens (--diag-*).
+ * Include this BEFORE any diagram-specific styles to enable theme integration.
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="theme-bridge.css">
+ *   <link rel="stylesheet" href="theme/{preset}.css">  <!-- provides --yry-* -->
+ * ============================================================================ */
+
+:root {
+    /* Surface / Text */
+    --diag-bg:           var(--yry-bg-primary);
+    --diag-surface:      var(--yry-bg-secondary);
+    --diag-surface-elev: var(--yry-bg-tertiary);
+    --diag-border:       var(--yry-border);
+    --diag-grid:         color-mix(in srgb, var(--yry-border) 80%, transparent);
+
+    --diag-text:         var(--yry-text-primary);
+    --diag-text-soft:    var(--yry-text-secondary);
+    --diag-text-muted:   var(--yry-text-muted);
+    --diag-accent:       var(--yry-accent);
+    --diag-accent-bg:    var(--yry-accent-muted, rgba(8, 51, 68, 0.4));
+
+    /* Layer palette (semantic) */
+    --diag-layer-ui:       var(--yry-chart-1, #22d3ee);
+    --diag-layer-service:  var(--yry-chart-3, #34d399);
+    --diag-layer-data:     var(--yry-chart-4, #a78bfa);
+    --diag-layer-infra:    var(--yry-chart-5, #fbbf24);
+    --diag-layer-auth:     var(--yry-error, #fb7185);
+    --diag-layer-external: var(--yry-text-muted, #475569);
+
+    /* State colors */
+    --diag-state-pass: var(--yry-green);
+    --diag-state-warn: var(--yry-warn);
+    --diag-state-fail: var(--yry-error);
+
+    /* Typography */
+    --diag-font: var(--yry-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+}

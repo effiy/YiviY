@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Quality Checklist — [SCENE_NAME] · VideoLingo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2336454f'/><text x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23ffffff' text-anchor='middle'>CK</text></svg>" type="image/svg+xml">
+    <meta name="description" content="Automated quality checklist for [SCENE_NAME] scene cards.">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/default.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+    <div id="checklist-app">
+        <!-- Summary Dashboard -->
+        <section class="summary-dashboard">
+            <div class="summary-header">
+                <h1>📋 Card Quality Checklist</h1>
+                <p class="summary-subtitle">{{ sceneName }} · {{ totalCards }} cards · generated {{ generatedAt }}</p>
+            </div>
+            <div class="summary-stats">
+                <div class="stat stat-pass" :class="{ active: activeFilter === 'pass' }" @click="setFilter('pass')">
+                    <span class="stat-num">{{ counts.pass }}</span>
+                    <span class="stat-label">Pass</span>
+                </div>
+                <div class="stat stat-fail" :class="{ active: activeFilter === 'fail' }" @click="setFilter('fail')">
+                    <span class="stat-num">{{ counts.fail }}</span>
+                    <span class="stat-label">Fail</span>
+                </div>
+                <div class="stat stat-warn" :class="{ active: activeFilter === 'warn' }" @click="setFilter('warn')">
+                    <span class="stat-num">{{ counts.warn }}</span>
+                    <span class="stat-label">Warn</span>
+                </div>
+                <div class="stat stat-pending" :class="{ active: activeFilter === 'pending' }" @click="setFilter('pending')">
+                    <span class="stat-num">{{ counts.pending }}</span>
+                    <span class="stat-label">Manual</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: passRate + '%' }"></div>
+            </div>
+            <p class="pass-rate-text">{{ passRate }}% auto-pass rate ({{ counts.pass }}/{{ totalAutoChecks }} automated checks)</p>
+        </section>
+
+        <!-- Filter Bar -->
+        <section class="filter-bar">
+            <div class="filter-buttons">
+                <button v-for="f in filters" :key="f.key"
+                    :class="{ active: activeFilter === f.key }"
+                    @click="setFilter(f.key)">{{ f.label }} ({{ f.count }})</button>
+            </div>
+            <select v-model="selectedCard" class="card-select">
+                <option value="">All Cards ({{ cards.length }})</option>
+                <option v-for="card in cards" :value="card.name">{{ card.name }}</option>
+            </select>
+            <select v-model="selectedCategory" class="card-select">
+                <option value="">All Categories</option>
+                <option value="structural">Structural</option>
+                <option value="tag-quality">Tag Quality</option>
+                <option value="link-hygiene">Link Hygiene</option>
+                <option value="standard">Standard Compliance</option>
+                <option value="human">Human Review</option>
+            </select>
+            <button class="toggle-all" @click="toggleExpandAll">
+                {{ expandAll ? '▾ Collapse All' : '▸ Expand All' }}
+            </button>
+        </section>
+
+        <!-- Card Checklists -->
+        <section class="cards-list">
+            <div v-for="card in filteredCards" :key="card.name" class="card-section"
+                :class="{ expanded: expandedCards[card.name] !== false }">
+                <div class="card-header" @click="toggleCard(card.name)">
+                    <div class="card-header-left">
+                        <span class="card-name">{{ card.name }}</span>
+                        <span v-if="card.badge" class="card-badge">{{ card.badge }}</span>
+                        <span class="card-source" :title="card.sourceKey">{{ card.sourceKey }}</span>
+                    </div>
+                    <div class="card-header-right">
+                        <span class="card-stats">
+                            <span class="mini-stat pass"    v-if="cardCounts(card.name).pass">{{ cardCounts(card.name).pass }}✓</span>
+                            <span class="mini-stat fail"    v-if="cardCounts(card.name).fail">{{ cardCounts(card.name).fail }}✗</span>
+                            <span class="mini-stat warn"    v-if="cardCounts(card.name).warn">{{ cardCounts(card.name).warn }}⚠</span>
+                            <span class="mini-stat pending" v-if="cardCounts(card.name).pending">{{ cardCounts(card.name).pending }}○</span>
+                        </span>
+                        <span class="expand-icon">{{ expandedCards[card.name] !== false ? '▾' : '▸' }}</span>
+                    </div>
+                </div>
+
+                <div class="card-body" v-show="expandedCards[card.name] !== false">
+                    <p class="card-desc" v-html="truncateDesc(card.desc)"></p>
+
+                    <ul class="check-list">
+                        <li v-for="check in card.checks" :key="check.id" class="check-row" :class="'check-' + check.status">
+                            <input type="checkbox"
+                                :checked="manualChecks[card.name + ':' + check.id] === true"
+                                @change="toggleManual(card.name, check.id, $event.target.checked)">
+                            <span class="check-icon">{{ checkIcon(check.status) }}</span>
+                            <span class="check-label">{{ check.label }}</span>
+                            <span class="check-category">{{ check.category }}</span>
+                            <span class="check-evidence">{{ check.evidence }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

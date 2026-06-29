@@ -1,0 +1,75 @@
+/* ============================================================================
+ * <<PAGE_NAME>> · 独立页样式
+ * ----------------------------------------------------------------------------
+ * 颜色 / 间距 / 字体一律走 --yry-* 或 --vl-doc-* token。
+ * ============================================================================ */
+
+.standalone-page {
+    --local-surface:  var(--vl-doc-surface, var(--yry-bg-secondary));
+    --local-border:    var(--vl-doc-border,   var(--yry-border));
+    --local-text:      var(--vl-doc-text,     var(--yry-text-primary));
+    --local-text-soft: var(--vl-doc-text-soft,var(--yry-text-secondary));
+    --local-accent:    var(--yry-accent);
+
+    margin: 0;
+    background: var(--yry-bg-primary);
+    color: var(--local-text);
+    font-family: var(--yry-font-sans);
+    line-height: 1.6;
+}
+
+#page-app {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--vl-doc-space-loose, 2rem);
+}
+
+.page-header {
+    margin-bottom: var(--vl-doc-space-loose, 2rem);
+    border-bottom: 1px solid var(--local-border);
+    padding-bottom: var(--vl-doc-space-base, 1rem);
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    color: var(--local-accent);
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.back-link:hover { text-decoration: underline; }
+
+.page-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--local-text);
+}
+
+.page-subtitle {
+    margin: 0.5rem 0 0;
+    color: var(--local-text-soft);
+    font-size: 1rem;
+}
+
+.page-content {
+    background: var(--local-surface);
+    border: 1px solid var(--local-border);
+    border-radius: 0.75rem;
+    padding: var(--vl-doc-space-loose, 1.5rem);
+}
+
+.page-footer {
+    margin-top: var(--vl-doc-space-loose, 2rem);
+    padding-top: var(--vl-doc-space-base, 1rem);
+    border-top: 1px solid var(--local-border);
+    color: var(--local-text-soft);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    #page-app { padding: var(--vl-doc-space-base, 1rem); }
+    .page-header h1 { font-size: 1.5rem; }
+}

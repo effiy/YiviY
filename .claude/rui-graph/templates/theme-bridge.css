@@ -1,0 +1,27 @@
+/* ============================================================================
+ * rui-graph theme-bridge.css
+ * ----------------------------------------------------------------------------
+ * Maps rui-theme tokens (--yry-*) to graph-specific tokens (--graph-*).
+ * ============================================================================ */
+
+:root {
+    --graph-bg:        var(--yry-bg-primary);
+    --graph-surface:   var(--yry-bg-secondary);
+    --graph-surface-elev: var(--yry-bg-tertiary);
+    --graph-border:    var(--yry-border);
+    --graph-text:      var(--yry-text-primary);
+    --graph-text-soft: var(--yry-text-secondary);
+    --graph-text-muted: var(--yry-text-muted);
+    --graph-accent:    var(--yry-accent);
+
+    --graph-node-file:      var(--yry-text-muted, #475569);
+    --graph-node-class:     var(--yry-chart-4, #a78bfa);
+    --graph-node-function:  var(--yry-chart-3, #34d399);
+    --graph-node-module:    var(--yry-chart-5, #fbbf24);
+    --graph-node-interface: var(--yry-chart-1, #22d3ee);
+
+    --graph-edge:           var(--yry-border, #1e293b);
+    --graph-edge-accent:    var(--yry-accent);
+
+    --graph-font: var(--yry-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+}

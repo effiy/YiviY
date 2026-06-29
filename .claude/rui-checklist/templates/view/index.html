@@ -1,0 +1,40 @@
+<!--
+    <<VIEW_NAME>> · 视图级清单
+    ----------------------------------------------------------------------
+    与 scene 模板的区别：
+      - scene 模板面向 docs/components/<scene>/ 下的卡片数据
+      - view 模板面向 docs/views/<view>/ 下的报告类聚合数据
+      - 视觉密度更大，每行展示更多度量
+-->
+<template id="view-checklist-template">
+    <section id="view-checklist" class="view-checklist-root">
+        <header class="view-header">
+            <h2>{{ viewTitle }}</h2>
+            <p class="view-subtitle">{{ totalSections }} sections · {{ totalItems }} items · generated {{ generatedAt }}</p>
+        </header>
+
+        <nav class="view-toc">
+            <a v-for="section in sections" :key="section.id" :href="'#section-' + section.id">
+                <span class="toc-status" :class="'toc-' + section.overallStatus">{{ statusIcon(section.overallStatus) }}</span>
+                {{ section.title }}
+                <span class="toc-count">{{ section.items.length }}</span>
+            </a>
+        </nav>
+
+        <div v-for="section in sections" :key="section.id" class="view-section" :id="'section-' + section.id">
+            <h3>{{ section.title }}</h3>
+            <ul class="view-items">
+                <li v-for="item in section.items" :key="item.id" :class="'item-' + item.status">
+                    <input type="checkbox" :checked="checked[item.id]" @change="toggle(item.id, $event.target.checked)">
+                    <span class="item-icon">{{ statusIcon(item.status) }}</span>
+                    <span class="item-title">{{ item.title }}</span>
+                    <span class="item-category">{{ item.category }}</span>
+                    <span v-if="item.evidence" class="item-evidence">{{ item.evidence }}</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

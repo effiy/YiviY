@@ -1,0 +1,54 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "rui-diagram-knowledge-graph.schema.json",
+    "title": "rui-diagram Knowledge Graph",
+    "description": "Typed knowledge graph for codebase understanding and architecture analysis. Node types: file, function, class, module, concept, config, document, service, table, endpoint, pipeline, schema, resource, domain, flow, step, article, entity, topic, claim, source.",
+    "type": "object",
+    "required": ["version", "nodes", "edges", "metadata"],
+    "properties": {
+        "version": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+            "description": "Schema version (semver)."
+        },
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "source":     { "type": "string", "description": "Source code root path." },
+                "generatedAt":{ "type": "string", "format": "date-time" },
+                "fingerprint":{ "type": "string", "description": "Source tree hash for incremental updates." }
+            },
+            "required": ["source", "generatedAt"]
+        },
+        "nodes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["id", "type", "label"],
+                "properties": {
+                    "id":          { "type": "string", "description": "Stable node identifier." },
+                    "type":        { "type": "string", "enum": ["file", "function", "class", "module", "concept", "config", "document", "service", "table", "endpoint", "pipeline", "schema", "resource", "domain", "flow", "step", "article", "entity", "topic", "claim", "source"] },
+                    "label":       { "type": "string" },
+                    "summary":     { "type": "string" },
+                    "layer":       { "type": "string", "description": "Semantic layer (ui / service / data / infra / auth / external)." },
+                    "tags":        { "type": "array", "items": { "type": "string" } },
+                    "metrics":     { "type": "object", "description": "Arbitrary metrics (lines, complexity, etc.)" }
+                }
+            }
+        },
+        "edges": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["from", "to", "type"],
+                "properties": {
+                    "from":  { "type": "string", "description": "Source node id." },
+                    "to":    { "type": "string", "description": "Target node id." },
+                    "type":  { "type": "string", "enum": ["imports", "exports", "contains", "inherits", "implements", "calls", "subscribes", "publishes", "middleware", "reads_from", "writes_to", "transforms", "validates", "depends_on", "tested_by", "configures", "related", "similar_to", "deploys", "serves", "provisions", "triggers", "migrates", "documents", "routes", "defines_schema", "contains_flow", "flow_step", "cross_domain", "cites", "contradicts", "builds_on", "exemplifies", "categorized_under", "authored_by"] },
+                    "weight":{ "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+                    "label": { "type": "string" }
+                }
+            }
+        }
+    }
+}

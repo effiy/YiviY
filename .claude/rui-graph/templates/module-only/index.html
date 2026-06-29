@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[GRAPH_TITLE] — Module-Only Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme-bridge.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="header">
+        <span class="pulse-dot"></span>
+        <h1>[GRAPH_TITLE]</h1>
+        <span class="subtitle">Module-only view · [N_MODULES] modules · [N_EDGES] edges</span>
+    </div>
+
+    <div class="main">
+        <aside class="sidebar">
+            <h3>Modules</h3>
+            <ul id="module-list" class="module-list"></ul>
+        </aside>
+        <div id="cy"></div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[PROJECT_NAME] — Network Topology</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme-bridge.css">
+    <style>
+        :root {
+            --diag-bg:        var(--yry-bg-primary, #0b0b10);
+            --diag-surface:   var(--yry-bg-secondary, #14141c);
+            --diag-border:    var(--yry-border, #1e293b);
+            --diag-text:      var(--yry-text-primary, #f8fafc);
+            --diag-text-soft: var(--yry-text-secondary, #94a3b8);
+            --diag-lan:       var(--yry-chart-3, #34d399);
+            --diag-wan:       var(--yry-chart-5, #fbbf24);
+            --diag-vpn:       var(--yry-chart-4, #a78bfa);
+            --diag-font:      var(--yry-font-mono, 'JetBrains Mono', monospace);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--diag-font); background: var(--diag-bg); min-height: 100vh; padding: 2rem; color: var(--diag-text); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; }
+        .subtitle { margin-left: auto; color: var(--diag-text-soft); font-size: 0.875rem; }
+        .diagram-container { background: var(--diag-surface); border: 1px solid var(--diag-border); border-radius: 1rem; padding: 1.5rem; overflow-x: auto; }
+        svg { width: 100%; min-width: 900px; }
+        .node { fill: var(--diag-surface); stroke: var(--diag-border); stroke-width: 1.5; }
+        .node-lan  { stroke: var(--diag-lan); }
+        .node-wan  { stroke: var(--diag-wan); }
+        .node-vpn  { stroke: var(--diag-vpn); }
+        .edge      { stroke: var(--diag-border); stroke-width: 1.5; fill: none; }
+        .edge-vpn  { stroke: var(--diag-vpn); stroke-dasharray: 4 2; }
+        .label     { fill: var(--diag-text); font-family: var(--diag-font); font-size: 12px; text-anchor: middle; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>[PROJECT_NAME] — Network Topology</h1>
+            <span class="subtitle">[TOPOLOGY_TYPE]</span>
+        </div>
+        <div class="diagram-container">
+            <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+                <!-- Internet -->
+                <circle class="node node-wan" cx="500" cy="80" r="40"/>
+                <text class="label" x="500" y="85">Internet</text>
+
+                <!-- Router / Firewall -->
+                <rect class="node node-vpn" x="450" y="180" width="100" height="50" rx="6"/>
+                <text class="label" x="500" y="210">[Router/Firewall]</text>
+
+                <!-- LAN switch -->
+                <rect class="node node-lan" x="450" y="300" width="100" height="50" rx="6"/>
+                <text class="label" x="500" y="330">[LAN Switch]</text>
+
+                <!-- Hosts -->
+                <rect class="node node-lan" x="200" y="430" width="120" height="50" rx="6"/>
+                <text class="label" x="260" y="460">[Host A]</text>
+                <rect class="node node-lan" x="440" y="430" width="120" height="50" rx="6"/>
+                <text class="label" x="500" y="460">[Host B]</text>
+                <rect class="node node-lan" x="680" y="430" width="120" height="50" rx="6"/>
+                <text class="label" x="740" y="460">[Host C]</text>
+
+                <!-- Edges -->
+                <line class="edge" x1="500" y1="120" x2="500" y2="180"/>
+                <line class="edge" x1="500" y1="230" x2="500" y2="300"/>
+                <line class="edge" x1="500" y1="350" x2="260" y2="430"/>
+                <line class="edge" x1="500" y1="350" x2="500" y2="430"/>
+                <line class="edge" x1="500" y1="350" x2="740" y2="430"/>
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

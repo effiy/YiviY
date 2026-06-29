@@ -1,0 +1,54 @@
+{
+    "name": "<package-name>",
+    "version": "0.1.0",
+    "description": "<one-line description>",
+    "type": "module",
+    "main": "index.js",
+    "exports": {
+        ".": {
+            "import": "./index.js",
+            "require": "./index.cjs",
+            "types": "./index.d.ts"
+        }
+    },
+    "files": [
+        "index.js",
+        "index.cjs",
+        "index.d.ts",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "test": "node --test",
+        "lint": "eslint .",
+        "build": "node scripts/build.mjs",
+        "prepublishOnly": "npm test && npm run lint"
+    },
+    "keywords": [
+        "<keyword-1>",
+        "<keyword-2>"
+    ],
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "dependencies": {
+        "<dep-name>": "^<version>"
+    },
+    "devDependencies": {
+        "<dev-dep-name>": "^<version>"
+    },
+    "author": {
+        "name": "<author-name>",
+        "email": "<author-email>",
+        "url": "<author-url>"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/<owner>/<repo>.git"
+    },
+    "bugs": {
+        "url": "https://github.com/<owner>/<repo>/issues"
+    },
+    "homepage": "https://github.com/<owner>/<repo>#readme"
+}

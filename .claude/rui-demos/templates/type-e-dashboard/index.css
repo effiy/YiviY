@@ -1,0 +1,75 @@
+/* ============================================================================
+ * Type E — Dashboard Demo · 样式
+ * ============================================================================ */
+
+.demo-area--dashboard { padding: var(--vl-doc-space-loose, 2rem); }
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-left-width: 3px;
+    border-radius: 0.5rem;
+}
+
+.metric-card.metric-good    { border-left-color: var(--yry-green); }
+.metric-card.metric-warn    { border-left-color: var(--yry-warn); }
+.metric-card.metric-error   { border-left-color: var(--yry-error); }
+.metric-card.metric-neutral { border-left-color: var(--yry-accent); }
+
+.metric-label {
+    color: var(--yry-text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.metric-value {
+    color: var(--yry-text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: var(--yry-font-mono);
+}
+
+.metric-delta {
+    color: var(--yry-text-secondary);
+    font-size: 0.75rem;
+    font-family: var(--yry-font-mono);
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
+
+.chart-card {
+    padding: 1rem;
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-radius: 0.625rem;
+}
+
+.chart-card h3 {
+    margin: 0 0 0.75rem;
+    color: var(--yry-text-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.chart-card canvas {
+    width: 100% !important;
+    height: 240px !important;
+}

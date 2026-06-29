@@ -1,0 +1,112 @@
+/* ============================================================================
+ * Type A — Tool Interface Demo · 样式
+ * ============================================================================ */
+
+:root {
+    --tool-bg:       var(--yry-bg-secondary);
+    --tool-border:   var(--yry-border);
+    --tool-text:     var(--yry-text-primary);
+    --tool-text-soft:var(--yry-text-secondary);
+    --tool-accent:   var(--yry-accent);
+}
+
+.demo-area--tool {
+    padding: var(--vl-doc-space-loose, 2rem);
+}
+
+.tool-panel {
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--tool-bg);
+    border: 1px solid var(--tool-border);
+    border-radius: 0.75rem;
+    padding: var(--vl-doc-space-loose, 1.5rem);
+}
+
+.tool-input-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--tool-text-soft);
+    font-size: 0.875rem;
+}
+
+.tool-input-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tool-input {
+    flex: 1;
+    padding: 0.625rem 0.875rem;
+    background: var(--yry-bg-tertiary);
+    color: var(--tool-text);
+    border: 1px solid var(--tool-border);
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-family: var(--yry-font-mono);
+}
+
+.tool-input:focus {
+    outline: none;
+    border-color: var(--tool-accent);
+}
+
+.tool-button {
+    padding: 0.625rem 1.25rem;
+    background: var(--yry-bg-tertiary);
+    color: var(--tool-text);
+    border: 1px solid var(--tool-border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background 150ms ease-out;
+}
+
+.tool-button:hover { background: var(--yry-bg-elevated); }
+.tool-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tool-button.primary {
+    background: var(--tool-accent);
+    color: var(--yry-bg-primary);
+    border-color: var(--tool-accent);
+    font-weight: 600;
+}
+
+.tool-progress {
+    margin-top: 1rem;
+}
+
+.progress-track {
+    height: 6px;
+    background: var(--yry-bg-tertiary);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--tool-accent);
+    transition: width 200ms ease-out;
+}
+
+.progress-label {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--tool-text-soft);
+    font-size: 0.8125rem;
+    font-family: var(--yry-font-mono);
+}
+
+.tool-result {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--yry-bg-primary);
+    border-radius: 0.5rem;
+    color: var(--tool-text);
+    font-size: 0.9375rem;
+}
+
+@media (max-width: 768px) {
+    .tool-input-row { flex-direction: column; }
+    .tool-input, .tool-button { width: 100%; }
+}

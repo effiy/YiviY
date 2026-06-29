@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__CARD_NAME__ — Comparison Showcase</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖</text></svg>">
+    <meta name="description" content="Comparison demo for __CARD_NAME__ — __CARD_DESC_SNIPPET__">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../cdn/yry-scene-card/index.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <section class="card-area"><div id="scene-card"></div></section>
+
+            <!-- Demo Area: Type C — Comparison
+                 Side-by-side A/B panels with switcher -->
+            <section class="demo-area demo-area--comparison" id="demo-app">
+                <div class="variant-tabs">
+                    <button v-for="(variant, idx) in variants" :key="variant.id"
+                        :class="['variant-tab', { active: selectedVariant === idx }]"
+                        @click="selectedVariant = idx">
+                        {{ variant.label }}
+                    </button>
+                </div>
+
+                <div v-if="currentVariant" class="comparison-grid">
+                    <div class="comparison-panel comparison-panel--before">
+                        <h4>Before</h4>
+                        <pre class="comparison-code"><code>{{ currentVariant.before }}</code></pre>
+                    </div>
+                    <div class="comparison-panel comparison-panel--after">
+                        <h4>After</h4>
+                        <pre class="comparison-code"><code>{{ currentVariant.after }}</code></pre>
+                    </div>
+                </div>
+
+                <ul v-if="currentVariant" class="diff-highlights">
+                    <li v-for="(diff, idx) in currentVariant.diffs" :key="idx">
+                        <span class="diff-marker" :class="diff.kind">{{ diff.kind }}</span>
+                        <span>{{ diff.text }}</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="info-area">
+                <h2>About this demo</h2>
+                <p>__DEMO_DESCRIPTION__</p>
+                <nav class="info-links">
+                    <a href="../index.html">All demos →</a>
+                    <a href="../../../../index.html">Docs home →</a>
+                </nav>
+            </section>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

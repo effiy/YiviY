@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__CARD_NAME__ — Tool Interface Demo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠</text></svg>">
+    <meta name="description" content="Interactive tool interface demo for __CARD_NAME__ — __CARD_DESC_SNIPPET__">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../cdn/yry-scene-card/index.js"></script>
+
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <!-- Card Area -->
+            <section class="card-area">
+                <div id="scene-card"></div>
+            </section>
+
+            <!-- Demo Area: Type A — Tool Interface
+                 User provides input → simulated processing → result -->
+            <section class="demo-area demo-area--tool" id="demo-app">
+                <div class="tool-panel">
+                    <label class="tool-input-label">__INPUT_LABEL__</label>
+                    <div class="tool-input-row">
+                        <input type="text" v-model="input" :placeholder="inputPlaceholder" class="tool-input">
+                        <button class="tool-button primary" @click="runTool" :disabled="running">
+                            {'{{ running ? "Running…" : "Run" }}'}
+                        </button>
+                    </div>
+
+                    <div v-if="running" class="tool-progress">
+                        <div class="progress-track">
+                            <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+                        </div>
+                        <span class="progress-label">{{ progress }}% — {{ currentStage }}</span>
+                    </div>
+
+                    <div v-if="result" class="tool-result" v-html="result"></div>
+                </div>
+            </section>
+
+            <!-- Info Area -->
+            <section class="info-area">
+                <h2>About this demo</h2>
+                <p>__DEMO_DESCRIPTION__</p>
+                <nav class="info-links">
+                    <a href="../../diagram/index.html" v-if="hasDiagram">Pipeline diagram →</a>
+                    <a href="../../graph/index.html"   v-if="hasGraph">Source graph →</a>
+                    <a href="../index.html">All demos →</a>
+                    <a href="../../../../index.html">Docs home →</a>
+                </nav>
+            </section>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[GRAPH_TITLE] — Full Code Dependency Graph</title>
+
+    <!-- Cytoscape + Layouts -->
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/layout-base@1.0.2/layout-base.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cose-base@1.0.3/cose-base.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="theme-bridge.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+
+    <div class="header">
+        <span class="pulse-dot"></span>
+        <h1 id="graph-title">[GRAPH_TITLE]</h1>
+        <span class="subtitle" id="graph-subtitle">[GRAPH_SUBTITLE]</span>
+        <div class="header-right">
+            <button class="btn primary" onclick="downloadPNG()">📥 PNG</button>
+            <button class="btn" onclick="resetView()">↺ Reset</button>
+            <button class="btn" onclick="fitGraph()">⊞ Fit</button>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <span class="toolbar-label">Layout</span>
+            <select id="layout-select" onchange="switchLayout(this.value)">
+                <option value="cose-bilkent">cose-bilkent</option>
+                <option value="dagre">dagre (LR)</option>
+                <option value="dagre-tb">dagre (TB)</option>
+                <option value="breadthfirst">breadthfirst</option>
+                <option value="concentric">concentric</option>
+            </select>
+        </div>
+        <div class="toolbar-group">
+            <span class="toolbar-label">Search</span>
+            <input type="search" id="search-input" placeholder="File, class, or function..." oninput="doSearch(this.value)">
+        </div>
+        <div class="toolbar-group" id="module-filters"></div>
+    </div>
+
+    <div class="main">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <h3>Stats</h3>
+                <div id="stats-overview"></div>
+                <div class="stat-section-label">By Module</div>
+                <div id="stats-modules"></div>
+            </div>
+            <div class="sidebar-section">
+                <h3>Legend · Nodes</h3>
+                <div id="legend-nodes"></div>
+            </div>
+            <div class="sidebar-section">
+                <h3>Legend · Edges</h3>
+                <div id="legend-edges"></div>
+            </div>
+        </aside>
+
+        <div id="cy"></div>
+    </div>
+
+    <div class="inspector" id="inspector" hidden>
+        <div class="inspector-header">
+            <h3 id="inspector-title">Inspector</h3>
+            <button class="inspector-close" onclick="closeInspector()">×</button>
+        </div>
+        <div class="inspector-body" id="inspector-body"></div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

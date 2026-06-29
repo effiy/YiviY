@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[PROJECT_NAME] — Cloud Architecture</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme-bridge.css">
+    <style>
+        :root {
+            --diag-bg:        var(--yry-bg-primary, #0b0b10);
+            --diag-surface:   var(--yry-bg-secondary, #14141c);
+            --diag-border:    var(--yry-border, #1e293b);
+            --diag-text:      var(--yry-text-primary, #f8fafc);
+            --diag-text-soft: var(--yry-text-secondary, #94a3b8);
+            --diag-compute:   var(--yry-chart-1, #22d3ee);
+            --diag-storage:   var(--yry-chart-4, #a78bfa);
+            --diag-messaging: var(--yry-chart-5, #fbbf24);
+            --diag-iam:       var(--yry-error, #fb7185);
+            --diag-font:      var(--yry-font-mono, 'JetBrains Mono', monospace);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--diag-font); background: var(--diag-bg); min-height: 100vh; padding: 2rem; color: var(--diag-text); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; }
+        .subtitle { margin-left: auto; color: var(--diag-text-soft); font-size: 0.875rem; }
+        .diagram-container { background: var(--diag-surface); border: 1px solid var(--diag-border); border-radius: 1rem; padding: 1.5rem; overflow-x: auto; }
+        svg { width: 100%; min-width: 900px; }
+        .region { fill: none; stroke: var(--diag-border); stroke-width: 1.5; stroke-dasharray: 4 4; }
+        .node { fill: var(--diag-bg); stroke: var(--diag-border); stroke-width: 1.5; }
+        .node-compute   { stroke: var(--diag-compute); }
+        .node-storage   { stroke: var(--diag-storage); }
+        .node-messaging { stroke: var(--diag-messaging); }
+        .node-iam       { stroke: var(--diag-iam); }
+        .edge { stroke: var(--diag-border); stroke-width: 1.5; fill: none; }
+        .label { fill: var(--diag-text); font-family: var(--diag-font); font-size: 11px; text-anchor: middle; }
+        .region-label { fill: var(--diag-text-soft); font-family: var(--diag-font); font-size: 12px; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>[PROJECT_NAME] — Cloud Architecture</h1>
+            <span class="subtitle">[CLOUD_PROVIDER] · [REGION]</span>
+        </div>
+        <div class="diagram-container">
+            <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+                <!-- Region container -->
+                <rect class="region" x="40" y="40" width="920" height="520" rx="12"/>
+                <text class="region-label" x="60" y="60">[CLOUD_REGION]</text>
+
+                <!-- Compute -->
+                <rect class="node node-compute" x="80" y="120" width="160" height="60" rx="6"/>
+                <text class="label" x="160" y="155">[Compute Service]</text>
+
+                <!-- Storage -->
+                <rect class="node node-storage" x="280" y="120" width="160" height="60" rx="6"/>
+                <text class="label" x="360" y="155">[Object Storage]</text>
+
+                <!-- Messaging -->
+                <rect class="node node-messaging" x="480" y="120" width="160" height="60" rx="6"/>
+                <text class="label" x="560" y="155">[Message Queue]</text>
+
+                <!-- IAM -->
+                <rect class="node node-iam" x="680" y="120" width="160" height="60" rx="6"/>
+                <text class="label" x="760" y="155">[IAM / Roles]</text>
+
+                <!-- Edges -->
+                <line class="edge" x1="240" y1="150" x2="280" y2="150"/>
+                <line class="edge" x1="240" y1="150" x2="480" y2="150"/>
+                <line class="edge" x1="440" y1="150" x2="480" y2="150"/>
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

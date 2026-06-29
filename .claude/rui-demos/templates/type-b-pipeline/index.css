@@ -1,0 +1,99 @@
+/* ============================================================================
+ * Type B — Pipeline Visualization Demo · 样式
+ * ============================================================================ */
+
+.demo-area--pipeline { padding: var(--vl-doc-space-loose, 2rem); }
+
+.pipeline-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+}
+
+.ctrl-btn {
+    padding: 0.5rem 1rem;
+    background: var(--yry-bg-tertiary);
+    color: var(--yry-text-primary);
+    border: 1px solid var(--yry-border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.ctrl-btn.primary { background: var(--yry-accent); color: var(--yry-bg-primary); font-weight: 600; }
+.ctrl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.pipeline-stages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.pipeline-step {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-radius: 0.625rem;
+    cursor: pointer;
+    transition: all 200ms ease-out;
+}
+
+.pipeline-step:hover { background: var(--yry-bg-elevated); }
+
+.pipeline-step.active  { border-color: var(--yry-accent); box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15); }
+.pipeline-step.done    { opacity: 0.7; }
+.pipeline-step.expanded { padding-bottom: 1.25rem; }
+
+.step-marker {
+    flex: 0 0 2.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: var(--yry-bg-tertiary);
+    border: 1px solid var(--yry-border);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--yry-text-secondary);
+}
+
+.pipeline-step.active .step-marker {
+    background: var(--yry-accent);
+    color: var(--yry-bg-primary);
+    border-color: var(--yry-accent);
+}
+
+.step-num  { font-size: 0.875rem; }
+.step-check { font-size: 0.875rem; }
+
+.step-body { flex: 1; }
+
+.step-title {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--yry-text-primary);
+}
+
+.step-summary {
+    margin: 0;
+    color: var(--yry-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.step-detail {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--yry-border);
+    color: var(--yry-text-secondary);
+    font-size: 0.875rem;
+}

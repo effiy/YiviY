@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__CARD_NAME__ — Dashboard Demo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <meta name="description" content="Dashboard demo for __CARD_NAME__ — __CARD_DESC_SNIPPET__">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../cdn/yry-scene-card/index.js"></script>
+    __CHARTJS_CDN__
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <section class="card-area"><div id="scene-card"></div></section>
+
+            <!-- Demo Area: Type E — Dashboard
+                 Metric cards + chart visualizations -->
+            <section class="demo-area demo-area--dashboard" id="demo-app">
+                <div class="metric-grid">
+                    <div v-for="m in metrics" :key="m.key" class="metric-card"
+                        :class="'metric-' + m.kind">
+                        <span class="metric-label">{{ m.label }}</span>
+                        <span class="metric-value">{{ m.value }}</span>
+                        <span class="metric-delta" v-if="m.delta">{{ m.delta }}</span>
+                    </div>
+                </div>
+
+                <div class="chart-row">
+                    <div class="chart-card">
+                        <h3>__CHART_1_TITLE__</h3>
+                        <canvas ref="chart1"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>__CHART_2_TITLE__</h3>
+                        <canvas ref="chart2"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-area">
+                <h2>About this demo</h2>
+                <p>__DEMO_DESCRIPTION__</p>
+                <nav class="info-links">
+                    <a href="../index.html">All demos →</a>
+                    <a href="../../../../index.html">Docs home →</a>
+                </nav>
+            </section>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

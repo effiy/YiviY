@@ -1,0 +1,24 @@
+<!--
+    <<COMPONENT_NAME>> · 文档组件
+    ----------------------------------------------------------------------
+    用途：<<COMPONENT_PURPOSE>>
+    注入方式：父页面通过 data-include 加载本文件，mountDocComponent()
+             会自动注入 _COMPONENTS_WITH_CSS 白名单中的 index.css。
+
+    模板契约：
+      - 唯一模板根 id 必须是 <slug>-template
+      - 文案/数据由 data.js 的 labels / props 提供，禁止硬编码
+      - Vue 编译作用域只覆盖本模板，外部元素不受影响
+-->
+<template id="<<COMPONENT_SLUG>>-template">
+    <section id="<<COMPONENT_SLUG>>" class="<<COMPONENT_SLUG>>-root">
+        <h2 class="<<COMPONENT_SLUG>>-title">{{ labels.title }}</h2>
+        <div class="<<COMPONENT_SLUG>>-body" v-html="renderedBody"></div>
+
+        <!-- 子区块占位：由具体组件按需扩展 -->
+        <slot name="extra"></slot>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

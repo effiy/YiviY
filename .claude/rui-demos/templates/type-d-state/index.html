@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__CARD_NAME__ — State Machine Demo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙</text></svg>">
+    <meta name="description" content="State machine demo for __CARD_NAME__">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../cdn/yry-scene-card/index.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <section class="card-area"><div id="scene-card"></div></section>
+
+            <!-- Demo Area: Type D — State Machine
+                 Interactive state transitions -->
+            <section class="demo-area demo-area--state" id="demo-app">
+                <div class="state-display">
+                    <span class="state-label">Current:</span>
+                    <span class="state-value" :class="'state-' + currentState.id">{{ currentState.label }}</span>
+                </div>
+
+                <div class="state-transitions">
+                    <div v-for="trans in currentState.transitions" :key="trans.to"
+                        class="transition-card"
+                        @click="triggerTransition(trans.to)">
+                        <span class="transition-arrow">→</span>
+                        <span class="transition-label">{{ trans.label }}</span>
+                    </div>
+                </div>
+
+                <div class="state-history">
+                    <h4>History</h4>
+                    <ol>
+                        <li v-for="(entry, idx) in history" :key="idx">
+                            <code>{{ entry.from }} → {{ entry.to }}</code>
+                            <span class="history-time">{{ entry.time }}</span>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <section class="info-area">
+                <h2>About this demo</h2>
+                <p>__DEMO_DESCRIPTION__</p>
+                <nav class="info-links">
+                    <a href="../index.html">All demos →</a>
+                    <a href="../../../../index.html">Docs home →</a>
+                </nav>
+            </section>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

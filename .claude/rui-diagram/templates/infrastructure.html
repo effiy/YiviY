@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[PROJECT_NAME] — Infrastructure Diagram</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme-bridge.css">
+    <style>
+        :root {
+            --diag-bg:        var(--yry-bg-primary, #0b0b10);
+            --diag-surface:   var(--yry-bg-secondary, #14141c);
+            --diag-border:    var(--yry-border, #1e293b);
+            --diag-text:      var(--yry-text-primary, #f8fafc);
+            --diag-text-soft: var(--yry-text-secondary, #94a3b8);
+            --diag-compute:   var(--yry-chart-1, #22d3ee);
+            --diag-network:   var(--yry-chart-3, #34d399);
+            --diag-storage:   var(--yry-chart-4, #a78bfa);
+            --diag-external:  var(--yry-text-muted, #475569);
+            --diag-font:      var(--yry-font-mono, 'JetBrains Mono', monospace);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--diag-font); background: var(--diag-bg); min-height: 100vh; padding: 2rem; color: var(--diag-text); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; }
+        .subtitle { margin-left: auto; color: var(--diag-text-soft); font-size: 0.875rem; }
+        .diagram-container {
+            background: var(--diag-surface);
+            border: 1px solid var(--diag-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+        svg { width: 100%; min-width: 900px; }
+        .cluster {
+            fill: none;
+            stroke: var(--diag-border);
+            stroke-dasharray: 4 4;
+            stroke-width: 1;
+        }
+        .node { fill: var(--diag-surface); stroke: var(--diag-border); stroke-width: 1.5; }
+        .node-compute  { stroke: var(--diag-compute); }
+        .node-network  { stroke: var(--diag-network); }
+        .node-storage  { stroke: var(--diag-storage); }
+        .node-external { stroke: var(--diag-external); }
+        .label { fill: var(--diag-text); font-family: var(--diag-font); font-size: 12px; text-anchor: middle; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>[PROJECT_NAME] — Infrastructure</h1>
+            <span class="subtitle">[ENV] · [REGION]</span>
+        </div>
+        <div class="diagram-container">
+            <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+                <!-- Cluster: VPC / Region -->
+                <rect class="cluster" x="40" y="40" width="700" height="500" rx="12"/>
+                <text class="label" x="60" y="60">[VPC / Region]</text>
+
+                <!-- Sub-cluster: Public Subnet -->
+                <rect class="cluster" x="80" y="100" width="280" height="180" rx="8"/>
+                <text class="label" x="100" y="120">[Public Subnet]</text>
+                <rect class="node node-network" x="120" y="150" width="200" height="50" rx="6"/>
+                <text class="label" x="220" y="180">[Load Balancer]</text>
+
+                <!-- Sub-cluster: Private Subnet -->
+                <rect class="cluster" x="80" y="320" width="280" height="180" rx="8"/>
+                <text class="label" x="100" y="340">[Private Subnet]</text>
+                <rect class="node node-compute" x="120" y="370" width="200" height="50" rx="6"/>
+                <text class="label" x="220" y="400">[App Server]</text>
+
+                <!-- Sub-cluster: Data -->
+                <rect class="cluster" x="420" y="100" width="280" height="400" rx="8"/>
+                <text class="label" x="440" y="120">[Data Tier]</text>
+                <rect class="node node-storage" x="460" y="150" width="200" height="50" rx="6"/>
+                <text class="label" x="560" y="180">[Primary DB]</text>
+                <rect class="node node-storage" x="460" y="220" width="200" height="50" rx="6"/>
+                <text class="label" x="560" y="250">[Read Replica]</text>
+
+                <!-- External Services -->
+                <rect class="node node-external" x="800" y="200" width="160" height="60" rx="6"/>
+                <text class="label" x="880" y="235">[External API]</text>
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

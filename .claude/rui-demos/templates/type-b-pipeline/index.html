@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__CARD_NAME__ — Pipeline Visualization</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔀</text></svg>">
+    <meta name="description" content="Pipeline visualization demo for __CARD_NAME__ — __CARD_DESC_SNIPPET__">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../cdn/yry-scene-card/index.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <section class="card-area"><div id="scene-card"></div></section>
+
+            <!-- Demo Area: Type B — Pipeline
+                 Step-by-step animated flow with click-to-expand -->
+            <section class="demo-area demo-area--pipeline" id="demo-app">
+                <div class="pipeline-controls">
+                    <button class="ctrl-btn" @click="reset">↺ Reset</button>
+                    <button class="ctrl-btn primary" @click="autoPlay" :disabled="playing">▶ Auto Play</button>
+                </div>
+
+                <ol class="pipeline-stages">
+                    <li v-for="(step, idx) in steps" :key="step.id"
+                        :class="['pipeline-step', {
+                            active:  currentStep === idx,
+                            done:    currentStep > idx,
+                            expanded: expandedStep === idx
+                        }]"
+                        @click="selectStep(idx)">
+                        <div class="step-marker">
+                            <span class="step-num">{{ idx + 1 }}</span>
+                            <span v-if="currentStep > idx" class="step-check">✓</span>
+                        </div>
+                        <div class="step-body">
+                            <h3 class="step-title">{{ step.title }}</h3>
+                            <p class="step-summary">{{ step.summary }}</p>
+                            <div v-if="expandedStep === idx" class="step-detail" v-html="step.detail"></div>
+                        </div>
+                    </li>
+                </ol>
+            </section>
+
+            <section class="info-area">
+                <h2>About this demo</h2>
+                <p>__DEMO_DESCRIPTION__</p>
+                <nav class="info-links">
+                    <a href="../../diagram/index.html" v-if="hasDiagram">Pipeline diagram →</a>
+                    <a href="../../graph/index.html"   v-if="hasGraph">Source graph →</a>
+                    <a href="../index.html">All demos →</a>
+                    <a href="../../../../index.html">Docs home →</a>
+                </nav>
+            </section>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improvement Checkout — VideoLingo</title>
+    <link rel="stylesheet" href="../../../cdn/theme/default.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+    <div id="checkout-app">
+        <!-- Header -->
+        <header class="checkout-header">
+            <h1>📋 Improvement Checkout</h1>
+            <p class="header-subtitle">{{ totalActions }} actions aggregated from health &amp; architecture reports</p>
+
+            <!-- Overall Progress -->
+            <div class="progress-section">
+                <div class="progress-target">
+                    <span class="target-label">Health:</span>
+                    <span class="target-current">{{ healthScore.current }} / 100</span>
+                    <span class="target-arrow">→</span>
+                    <span class="target-goal">{{ healthScore.target }} / 100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: healthProgress + '%' }"></div>
+                </div>
+                <div class="progress-target">
+                    <span class="target-label">Architecture:</span>
+                    <span class="target-current">{{ archScore.current }} / 10</span>
+                    <span class="target-arrow">→</span>
+                    <span class="target-goal">{{ archScore.target }} / 10</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: archProgress + '%' }"></div>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="summary-stats">
+                <div class="stat stat-done"     @click="setStatusFilter('done')"><span class="stat-num">{{ counts.done }}</span><span class="stat-label">Done</span></div>
+                <div class="stat stat-progress" @click="setStatusFilter('in_progress')"><span class="stat-num">{{ counts.in_progress }}</span><span class="stat-label">In Progress</span></div>
+                <div class="stat stat-todo"     @click="setStatusFilter('todo')"><span class="stat-num">{{ counts.todo }}</span><span class="stat-label">Todo</span></div>
+                <div class="stat stat-blocked"  @click="setStatusFilter('blocked')"><span class="stat-num">{{ counts.blocked }}</span><span class="stat-label">Blocked</span></div>
+            </div>
+        </header>
+
+        <!-- Filter Bar -->
+        <section class="filter-bar">
+            <div class="filter-group">
+                <label>Priority:</label>
+                <select v-model="selectedPriority">
+                    <option value="">All</option>
+                    <option value="P0">P0 (Critical)</option>
+                    <option value="P1">P1 (High)</option>
+                    <option value="P2">P2 (Medium)</option>
+                    <option value="P3">P3 (Low)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Source:</label>
+                <select v-model="selectedSource">
+                    <option value="">All</option>
+                    <option value="health">Health Report</option>
+                    <option value="architecture">Architecture Report</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Phase:</label>
+                <select v-model="selectedPhase">
+                    <option value="">All</option>
+                    <option v-for="p in phases" :key="p" :value="p">{{ p }}</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Critical Path:</label>
+                <button class="filter-toggle" :class="{ active: criticalOnly }" @click="criticalOnly = !criticalOnly">
+                    {{ criticalOnly ? '✓ Showing' : 'Show only' }}
+                </button>
+            </div>
+        </section>
+
+        <!-- Action List -->
+        <section class="action-list">
+            <div v-for="action in filteredActions" :key="action.id" class="action-card"
+                :class="['action-' + action.status, 'priority-' + action.priority.toLowerCase(), { critical: action.critical }]">
+
+                <div class="action-header">
+                    <span class="action-id">{{ action.id }}</span>
+                    <span class="action-priority">P{{ action.priority.slice(1) }}</span>
+                    <span class="action-source">{{ action.source }}</span>
+                    <span v-if="action.critical" class="action-critical">⭐ Critical</span>
+                    <span class="action-status-tag">{{ statusLabel(action.status) }}</span>
+                </div>
+
+                <h3 class="action-title">{{ action.title }}</h3>
+
+                <div class="action-metrics">
+                    <div class="metric metric-before">
+                        <span class="metric-label">Before</span>
+                        <span class="metric-value">{{ action.before }}</span>
+                    </div>
+                    <div class="metric-arrow">→</div>
+                    <div class="metric metric-after">
+                        <span class="metric-label">After</span>
+                        <span class="metric-value">{{ action.after }}</span>
+                    </div>
+                </div>
+
+                <details class="action-steps">
+                    <summary>{{ action.steps.length }} step{{ action.steps.length === 1 ? '' : 's' }}</summary>
+                    <ol>
+                        <li v-for="(step, idx) in action.steps" :key="idx">
+                            <input type="checkbox" :checked="stepStates[action.id + ':' + idx]" @change="toggleStep(action.id, idx, $event.target.checked)">
+                            <span>{{ step }}</span>
+                        </li>
+                    </ol>
+                </details>
+
+                <div class="action-controls">
+                    <button v-for="status in ['todo', 'in_progress', 'done', 'blocked']" :key="status"
+                        class="status-btn" :class="'status-' + status + '-btn'"
+                        :class="{ active: action.status === status }"
+                        @click="setActionStatus(action.id, status)">
+                        {{ statusLabel(status) }}
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

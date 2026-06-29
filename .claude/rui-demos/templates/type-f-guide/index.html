@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__CARD_NAME__ — Guide Walkthrough</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+    <meta name="description" content="Guide walkthrough for __CARD_NAME__">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../cdn/yry-scene-card/index.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <section class="card-area"><div id="scene-card"></div></section>
+
+            <!-- Demo Area: Type F — Guide Walkthrough
+                 Step-by-step interactive tutorial with code snippets -->
+            <section class="demo-area demo-area--guide" id="demo-app">
+                <aside class="guide-sidebar">
+                    <h3>__GUIDE_TITLE__</h3>
+                    <ol class="guide-steps">
+                        <li v-for="(step, idx) in steps" :key="step.id"
+                            :class="{ active: currentStep === idx, done: currentStep > idx }"
+                            @click="goToStep(idx)">
+                            <span class="guide-step-num">{{ idx + 1 }}</span>
+                            <span class="guide-step-title">{{ step.title }}</span>
+                        </li>
+                    </ol>
+                </aside>
+
+                <main class="guide-content">
+                    <div v-if="currentGuide" class="guide-pane">
+                        <h2>{{ currentGuide.title }}</h2>
+                        <p class="guide-summary">{{ currentGuide.summary }}</p>
+
+                        <pre v-if="currentGuide.code" class="guide-code"><code>{{ currentGuide.code }}</code></pre>
+
+                        <div class="guide-actions">
+                            <button class="guide-btn" :disabled="currentStep === 0" @click="prev">← Previous</button>
+                            <button class="guide-btn primary" :disabled="currentStep >= steps.length - 1" @click="next">
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                </main>
+            </section>
+
+            <section class="info-area">
+                <h2>About this demo</h2>
+                <p>__DEMO_DESCRIPTION__</p>
+                <nav class="info-links">
+                    <a href="../index.html">All demos →</a>
+                    <a href="../../../../index.html">Docs home →</a>
+                </nav>
+            </section>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

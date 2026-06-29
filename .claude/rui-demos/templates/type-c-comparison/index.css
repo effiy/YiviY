@@ -1,0 +1,101 @@
+/* ============================================================================
+ * Type C — Comparison Showcase Demo · 样式
+ * ============================================================================ */
+
+.demo-area--comparison { padding: var(--vl-doc-space-loose, 2rem); }
+
+.variant-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--yry-border);
+}
+
+.variant-tab {
+    padding: 0.625rem 1rem;
+    background: transparent;
+    color: var(--yry-text-secondary);
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 150ms ease-out;
+}
+
+.variant-tab:hover { color: var(--yry-text-primary); }
+
+.variant-tab.active {
+    color: var(--yry-accent);
+    border-bottom-color: var(--yry-accent);
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+@media (max-width: 768px) { .comparison-grid { grid-template-columns: 1fr; } }
+
+.comparison-panel {
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-radius: 0.625rem;
+    padding: 1rem;
+}
+
+.comparison-panel--after { border-color: var(--yry-accent); }
+
+.comparison-panel h4 {
+    margin: 0 0 0.75rem;
+    color: var(--yry-text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.comparison-code {
+    margin: 0;
+    padding: 0.875rem;
+    background: var(--yry-bg-primary);
+    border-radius: 0.5rem;
+    color: var(--yry-text-primary);
+    font-family: var(--yry-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    overflow-x: auto;
+}
+
+.diff-highlights {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.diff-highlights li {
+    display: flex;
+    gap: 0.625rem;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--yry-bg-secondary);
+    border-radius: 0.5rem;
+    color: var(--yry-text-secondary);
+    font-size: 0.875rem;
+}
+
+.diff-marker {
+    flex: 0 0 auto;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: var(--yry-font-mono);
+}
+
+.diff-marker.added   { background: var(--yry-green-muted);  color: var(--yry-green); }
+.diff-marker.removed { background: var(--yry-error-muted); color: var(--yry-error); }
+.diff-marker.changed { background: var(--yry-warn-muted);  color: var(--yry-warn); }

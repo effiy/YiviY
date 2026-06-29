@@ -1,0 +1,40 @@
+{
+    "$schema": "./schemas/evals.schema.json",
+    "skill_name": "<skill-name>",
+    "version": "0.1.0",
+    "evals": [
+        {
+            "id": 1,
+            "name": "descriptive-eval-name",
+            "prompt": "User's task prompt goes here — make it specific and realistic.",
+            "expected_output": "Brief description of expected result.",
+            "files": [],
+            "assertions": [
+                {
+                    "id": "structural-check",
+                    "text": "Output file exists at expected path",
+                    "kind": "file-exists"
+                },
+                {
+                    "id": "content-check",
+                    "text": "Output contains required marker phrase",
+                    "kind": "content-contains"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "name": "another-eval-name",
+            "prompt": "Second realistic test prompt.",
+            "expected_output": "Expected result description.",
+            "files": ["fixtures/example-input.txt"],
+            "assertions": [
+                {
+                    "id": "schema-valid",
+                    "text": "Output conforms to expected schema",
+                    "kind": "schema-valid"
+                }
+            ]
+        }
+    ]
+}

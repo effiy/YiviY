@@ -1,17 +1,20 @@
 ---
 name: rui-bot
 description: >
-  Send WeChat Work (WeCom) bot notifications. Use when the user asks to send a
-  notification, notify a WeChat/WeCom channel, or log pipeline messages.
-  Executable: node <this-skill-dir>/send.mjs [options], where
-  <this-skill-dir> is the directory containing this SKILL.md
-  (typically .claude/rui-bot).
+  Notification hub — 项目通知中心。Send WeChat Work (WeCom) bot notifications
+  with multi-level alerts (info/success/warning/error/fatal), structured report
+  templates (pipeline, health, deploy, daily-introspect), and human-friendly
+  formatting. Use when the user asks to send notifications, report pipeline
+  results, do daily introspection, publish deploy alerts, or log to the
+  per-story notification journal.
+  Executable: node <this-skill-dir>/send.mjs [options]. For formatted messages,
+  import from <this-skill-dir>/format.mjs.
 lifecycle: default-pipeline
 ---
 
-# rui-bot
+# rui-bot — 项目通知中心
 
-企业微信消息通知发送。手动触发 — 通过 WeCom webhook 发送通知并追加到消息通知列表。
+企业微信消息通知枢纽 — 提供多级告警、结构化报告模板、人性化消息格式。作为整个 rui-* 技能体系的**通知中枢**，所有管线和自检技能通过 rui-bot 统一发出消息。
 
 ## Invocation
 
@@ -52,6 +55,97 @@ User invokes → ① Append log (→ 消息通知列表.md) → ② Send HTTP PO
 - `【ProjectName】` header auto-prepended
 - Plain text, max **2000** characters
 - Truncated with `…` if over limit
+
+## Alert Levels & Message Formatting
+
+`format.mjs` 提供结构化消息构建 — 告警级别、报告模板、人性化排版。
+
+### 告警级别
+
+| Level | Emoji | 含义 | 使用场景 |
+|-------|-------|------|----------|
+| `info` | ℹ️ | 信息 | 常规状态更新、进度通知 |
+| `success` | ✅ | 成功 | 管线完成、部署成功、检查通过 |
+| `warning` | ⚠️ | 警告 | 部分失败、阈值告警、需关注 |
+| `error` | 🚨 | 错误 | 管线失败、部署失败、检查不通过 |
+| `fatal` | 💥 | 致命 | 系统崩溃、数据丢失风险 |
+
+### 消息构建 API
+
+```javascript
+import { formatAlert, formatReport, formatSummary, ALERT_LEVELS } from './format.mjs';
+
+// ① 通用告警 — 任意场景，完全自定义
+formatAlert({
+  project: 'VideoLingo',
+  level: 'warning',               // info | success | warning | error | fatal
+  title: '字幕提取速率下降',        // 一行概要
+  detail: '过去1小时内失败率升至12%，正常应<5%',
+  fields: { '失败数': '47', '成功率': '88%' },
+  suggestion: '建议检查 yt-dlp 版本兼容性',
+  link: 'http://...',
+});
+
+// ② 管线完成报告 — 自动化管线结果通知
+formatPipelineReport({
+  project: 'VideoLingo',
+  pipelineName: 'yt-dlp 字幕提取',
+  status: 'success',              // success | warning | error
+  stats: { total: 120, success: 118, failed: 2, skipped: 0 },
+  durationSec: 154,
+  logUrl: 'http://...',
+});
+
+// ③ 项目健康报告 — 配合 rui-checklist 使用
+formatHealthReport({
+  project: 'VideoLingo',
+  health: { score: 85, passCount: 68, failCount: 5, warnCount: 7, pendingCount: 3 },
+  topIssues: [
+    { name: 'struct-desc-dot', status: 'fail', note: '3 cards 使用逗号而非 · 分隔符' },
+    { name: 'tag-semantic', status: 'warn', note: '2 cards modifier 与语义不匹配' },
+  ],
+  reportUrl: 'http://...',
+});
+
+// ④ 每日自省报告 — 配合 rui-checklist 每日自省使用
+formatDailyIntrospect({
+  project: 'VideoLingo',
+  date: '2026-06-29',
+  goods: ['修复了 graph 页面键盘快捷键失效问题', '完成了 rui-demos 的 4-demo suite'],
+  bads: ['忽略了 rui-bot 超时重试的边界条件', '未及时更新 SKILL.md 接口文档'],
+  actions: ['补充 rui-bot 重试逻辑的单元测试', '完成 rui-diagram 全景视图'],
+});
+
+// ⑤ 部署报告
+formatDeployReport({
+  project: 'VideoLingo',
+  version: 'v2.3.1',
+  env: 'production',
+  status: 'success',
+  changes: ['修复 yt-dlp 下载超时重试', '新增多语言字幕合并功能'],
+  durationSec: 45,
+});
+
+// ⑥ 简洁摘要 — 高频通知合并
+formatSummary({
+  project: 'VideoLingo',
+  title: '今日管线汇总',
+  items: [
+    { icon: '✅', text: 'yt-dlp 字幕提取: 120/120 成功' },
+    { icon: '⚠️', text: 'WhisperX 转录: 95/100 成功 (5 GPU 不足跳过)' },
+    { icon: '✅', text: 'NLP 分句: 120/120 成功' },
+  ],
+});
+```
+
+### 辅助函数
+
+```javascript
+import { sanitizeForWecom, truncateForWecom } from './format.mjs';
+
+sanitizeForWecom('<strong>text</strong>');  // → "text" (移除 HTML)
+truncateForWecom(longMsg, 2000);            // → 截断到 2000 字符
+```
 
 ## API Contract
 
@@ -129,6 +223,9 @@ node <this-skill-dir>/send.mjs --story=user-login --contentFile=message.txt
 - Send WeCom webhook notifications with retry + backoff
 - Append every send (or `--no-send` log-only attempt) to `docs/故事任务面板/<story>/消息通知列表.md`
 - Truncate messages to 2000 chars and prepend project name header
+- **Format multi-level alerts** (info / success / warning / error / fatal) with `format.mjs`
+- **Generate structured reports**: pipeline completion, health check, deploy, daily introspection
+- **Serve as the notification hub** for all rui-* skills — rui-checklist / rui-demos / rui-diagram pipeline results flow through rui-bot
 
 ### What this skill does NOT do
 
