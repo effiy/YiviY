@@ -17,13 +17,15 @@
                 sceneName: cfg.constants.sceneName,
                 totalCards: cfg.constants.totalCards,
                 generatedAt: formatDate(cfg.constants.generatedAt),
+                sourceFiles: cfg.constants.sourceFiles || [],
                 cards: cfg.cards,
                 activeFilter: 'all',
                 selectedCard: '',
                 selectedCategory: '',
                 expandAll: true,
                 expandedCards: expandedCards,
-                checkedItems: loadCheckedItems()
+                checkedItems: loadCheckedItems(),
+                guideDismissed: loadGuideDismissed()
             };
         },
 
@@ -148,6 +150,16 @@
                 if (!desc) return '';
                 var text = desc.replace(/<[^>]*>/g, '');
                 return text.length > 120 ? text.substring(0, 120) + '…' : text;
+            },
+
+            dismissGuide: function() {
+                this.guideDismissed = true;
+                saveGuideDismissed(true);
+            },
+
+            showGuide: function() {
+                this.guideDismissed = false;
+                saveGuideDismissed(false);
             }
         },
 
@@ -183,6 +195,18 @@
     function saveCheckedItems(items) {
         try {
             localStorage.setItem('checklist_checked_' + cfg.constants.sceneName, JSON.stringify(items));
+        } catch(e) {}
+    }
+
+    function loadGuideDismissed() {
+        try {
+            return localStorage.getItem('checklist_guide_dismissed_' + cfg.constants.sceneName) === '1';
+        } catch(e) { return false; }
+    }
+
+    function saveGuideDismissed(val) {
+        try {
+            localStorage.setItem('checklist_guide_dismissed_' + cfg.constants.sceneName, val ? '1' : '0');
         } catch(e) {}
     }
 })();

@@ -69,6 +69,12 @@ Based on the user interview, fill in these components:
 - **compatibility**: Required tools, dependencies (optional, rarely needed)
 - **the rest of the skill :)**
 
+**After writing SKILL.md, immediately generate `help.mjs`:**
+1. Copy the template from `templates/help.mjs`
+2. Replace all `{{PLACEHOLDER}}` markers with the skill's actual name, title, tagline, entry script, subcommands, parameters, and usage scenarios
+3. Each usage scenario should demonstrate a complete, realistic workflow with copy-pasteable commands
+4. Verify it runs: `node .claude/<skill-name>/help.mjs`
+
 ### Skill Writing Guide
 
 #### Anatomy of a Skill
@@ -78,6 +84,8 @@ skill-name/
 ├── SKILL.md (required)
 │   ├── YAML frontmatter (name, description required)
 │   └── Markdown instructions
+├── help.mjs (required)
+│   └── 技能概述、核心参数、核心特性使用演示
 └── Bundled Resources (optional)
     ├── scripts/    - Executable code for deterministic/repetitive tasks
     ├── references/ - Docs loaded into context as needed
@@ -138,6 +146,35 @@ Output: feat(auth): implement JWT-based authentication
 ### Writing Style
 
 Try to explain to the model why things are important in lieu of heavy-handed musty MUSTs. Use theory of mind and try to make the skill general and not super-narrow to specific examples. Start by writing a draft and then look at it with fresh eyes and improve it.
+
+### help.mjs — 技能帮助文本（必需）
+
+**每个技能必须生成 `help.mjs`**，用于概述技能、核心参数和核心特性使用演示。该文件遵循统一的帮助布局规范。
+
+**必须包含的章节：**
+
+| 章节 | 布局函数 | 内容要求 |
+|------|---------|---------|
+| 标题 | `bold("# skill-name — 标题")` | 技能名 + 一句话功能标题 |
+| 副标题 | `dim("...")` | 核心能力标签行（用 · 分隔） |
+| 快速入门 | `hdr("快速入门")` + `item(...)` | 2–4 条最常用命令 |
+| 可执行入口 | `hdr("可执行入口: ...")` | 入口脚本路径 |
+| 核心参数 | `subhdr("核心参数")` + `item(...)` | 所有 CLI 参数及其说明 |
+| 核心特性演示 | `hdr("核心特性演示")` + `scene(...)` + `item(...)` | 2–4 个典型使用场景，每个场景展示完整操作序列 |
+
+**导入依赖（相对于 `.claude/<skill-name>/`）：**
+```js
+import { bold, dim, cyan } from '../../lib/tty.mjs';
+import { hdr, subhdr, item, scene } from '../../lib/help-layout.mjs';
+```
+
+**生成方式：**
+1. 从 `templates/help.mjs` 复制骨架
+2. 替换所有 `{{PLACEHOLDER}}` 占位符
+3. 根据技能实际功能填充子命令、参数和场景
+4. 每个场景应展示真实可运行的命令序列
+
+**模板位置：** `<rui-skill-dir>/templates/help.mjs`
 
 ### Test Cases
 

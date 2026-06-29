@@ -3,7 +3,7 @@
 // 用法: node .claude/rui-trends/help.mjs
 
 import { bold, dim, cyan } from '../../lib/tty.mjs';
-import { hdr, subhdr, item, flag } from '../../lib/help-layout.mjs';
+import { hdr, subhdr, item } from '../../lib/help-layout.mjs';
 
 const help = `
 ${bold("# rui-trends — GitHub Trending 查询")}

@@ -14,6 +14,66 @@
 <body>
     <div id="checklist-app">
         <!-- ══════════════════════════════════════════════
+             Quick Guide Panel (dismissible, re-openable)
+             ══════════════════════════════════════════════ -->
+        <section v-if="!guideDismissed" class="guide-panel">
+            <div class="guide-header">
+                <div class="guide-header-left">
+                    <h2>📖 Quick Guide</h2>
+                    <p class="guide-subtitle">How to read and act on this audit</p>
+                </div>
+                <button class="guide-close" @click="dismissGuide" title="Hide guide">×</button>
+            </div>
+
+            <div class="guide-body">
+                <!-- Purpose -->
+                <div class="guide-purpose">
+                    <p>
+                        <strong>{{ totalCards }} cards</strong> in <code>{{ sceneName }}</code> were scored against
+                        <strong>{{ totalChecks }} checks</strong> across 6 categories (structural · tag-quality · link-hygiene · standard · i18n · human).
+                        <span class="guide-priority" v-if="counts.fail > 0">
+                            ⚠ <strong>{{ counts.fail }} fail</strong> item<span v-if="counts.fail !== 1">s</span> need fixing first.
+                        </span>
+                        <span class="guide-priority guide-priority-warn" v-else-if="counts.warn > 0">
+                            {{ counts.warn }} warn item<span v-if="counts.warn !== 1">s</span> to review.
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Legend -->
+                <div class="guide-legend">
+                    <h3>Status Legend</h3>
+                    <ul class="legend-list">
+                        <li><span class="legend-dot pass"></span><b>Pass</b><span class="legend-desc">meets standard</span></li>
+                        <li><span class="legend-dot fail"></span><b>Fail</b><span class="legend-desc">must fix · blocks compliance</span></li>
+                        <li><span class="legend-dot warn"></span><b>Warn</b><span class="legend-desc">should review · non-blocking</span></li>
+                        <li><span class="legend-dot pending"></span><b>Manual</b><span class="legend-desc">needs human judgment</span></li>
+                    </ul>
+                </div>
+
+                <!-- Workflow -->
+                <div class="guide-workflow">
+                    <h3>Recommended Workflow</h3>
+                    <ol class="workflow-list">
+                        <li><b>Scan the dashboard</b> — fail and warn counts reveal the worst offenders.</li>
+                        <li><b>Filter by Fail</b> — click the fail counter to isolate blocking issues.</li>
+                        <li><b>Read the evidence</b> — each row explains what was found and where.</li>
+                        <li><b>Fix and tick ✓</b> — update the source, then mark the item resolved.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="guide-footer">
+                <span class="footer-label">Sources</span>
+                <code v-for="(src, i) in sourceFiles" :key="src" class="footer-source">
+                    {{ src }}<span v-if="i < sourceFiles.length - 1" class="footer-sep">·</span>
+                </code>
+            </div>
+        </section>
+
+        <button v-else class="guide-show" @click="showGuide">📖 Show quick guide</button>
+
+        <!-- ══════════════════════════════════════════════
              Summary Dashboard
              ══════════════════════════════════════════════ -->
         <section class="summary-dashboard">

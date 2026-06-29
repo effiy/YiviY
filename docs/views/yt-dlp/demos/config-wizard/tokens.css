@@ -1,0 +1,55 @@
+/**
+ * Page Tokens — config-wizard
+ * =============================================================================
+ * Page-specific design tokens layered on top of the CDN theme
+ * (modern-minimalist).
+ *
+ *   1. Token Bridge — alias canonical theme tokens to page-friendly names
+ *      (e.g. --yry-bg-card → --yry-bg-primary).
+ *   2. Scale Extensions — spacing / font-size / leading scales consumed by
+ *      index.css (matches yt-dlp-tool's Exaggerated Minimalism rui-ui scale).
+ *
+ * Loaded from index.html; applies to :root so all rules in index.css can
+ * reference the page-friendly names without redefining the theme.
+ */
+
+:root {
+    /* ── Surface aliases ───────────────────── */
+    --yry-bg-primary:   var(--yry-bg-card);
+    --yry-bg-secondary: var(--yry-bg-flat);
+    --yry-bg-tertiary:  var(--yry-bg-raised);
+
+    /* ── Text aliases ──────────────────────── */
+    --yry-text-primary:   var(--yry-text);
+    --yry-text-secondary: var(--yry-text-soft);
+
+    /* ── Accent derivatives ────────────────── */
+    --yry-accent-text:  #ffffff;
+    --yry-accent-hover: #1c3956;
+    --yry-accent-muted: var(--yry-accent-soft);
+
+    /* ── Semantic aliases ──────────────────── */
+    --yry-success: var(--yry-pass);
+    --yry-warning: var(--yry-warn);
+
+    /* ── Spacing scale (8px base, Exaggerated Minimalism) ── */
+    --yry-space-1:  4px;
+    --yry-space-2:  8px;
+    --yry-space-3:  12px;
+    --yry-space-4:  16px;
+    --yry-space-5:  24px;
+    --yry-space-6:  32px;
+    --yry-space-8:  48px;
+    --yry-space-16: 96px;
+
+    /* ── Font sizes (Exaggerated Minimalism — bumped up) ── */
+    --yry-font-size-xs:   0.75rem;
+    --yry-font-size-sm:   0.9375rem;
+    --yry-font-size-base: 1.125rem;
+    --yry-font-size-lg:   1.5rem;
+    --yry-font-size-xl:   2rem;
+    --yry-font-size-2xl:  2.5rem;
+
+    /* ── Typography ────────────────────────── */
+    --yry-leading-relaxed: 1.75;
+}

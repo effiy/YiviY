@@ -77,7 +77,7 @@ window.INTRO_CONFIG = {
                       { label: '清单', href: 'views/yt-dlp/checklist/index.html',                  target: '' },
                       { label: '图解', href: 'views/yt-dlp/diagram/index.html',                  target: '' },
                       { label: '图谱', href: 'views/yt-dlp/graph/index.html',                     target: '' },
-                      { label: '演示', href: 'views/yt-dlp/demos/yt-dlp-tool/index.html',          target: '' },
+                      { label: '演示', href: 'views/yt-dlp/demos/index.html',                       target: '' },
                       { label: 'Issues', href: 'https://github.com/yt-dlp/yt-dlp/issues',           target: '_blank' }
                   ]},
                 { name: '🎙️ WhisperX', badge: 'Core', desc: 'Word-level subtitle recognition · <strong>low-illusion</strong> output · speaker diarization · multi-language',
@@ -223,7 +223,7 @@ window.INTRO_CONFIG = {
                       { label: '清单', href: 'views/yt-dlp/checklist/index.html',                  target: '' },
                       { label: '图解', href: 'views/yt-dlp/diagram/index.html',                  target: '' },
                       { label: '图谱', href: 'views/yt-dlp/graph/index.html',                     target: '' },
-                      { label: '演示', href: 'views/yt-dlp/demos/yt-dlp-tool/index.html',          target: '' },
+                      { label: '演示', href: 'views/yt-dlp/demos/index.html',                       target: '' },
                       { label: 'Issues', href: 'https://github.com/yt-dlp/yt-dlp/issues',           target: '_blank' }
                   ]},
                 { name: '🎙️ WhisperX', badge: '核心', desc: '单词级字幕识别 · <strong>低幻觉</strong>输出 · 说话人分离 · 多语言支持',

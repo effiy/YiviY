@@ -23,7 +23,7 @@ description: "技能的创建、迭代、评估与描述优化的全生命周期
 | 阶段 | 写产物 | 风险 | 阻断 |
 |------|--------|:---:|:---:|
 | Capture Intent | `notes.md`（用户访谈）| 低 | 无 |
-| Interview | 草稿 `SKILL.md` | 中 | 用户确认 |
+| Interview | 草稿 `SKILL.md` + `help.mjs` 骨架 | 中 | 用户确认 |
 | Run Eval | `<workspace>/iteration-N/eval-X/{with_skill,without_skill}/outputs/` | 中 | 无 |
 | Grade | `grading.json` | 低 | 无 |
 | Aggregate / Viewer | `benchmark.json` + `benchmark.md` + HTML viewer | 低 | 无 |
@@ -63,6 +63,7 @@ description: "技能的创建、迭代、评估与描述优化的全生命周期
 | 路径 | 权限 | 备注 |
 |------|:---:|------|
 | `<target-skill>/SKILL.md` | write（用户 gate 后）| 被管理的目标技能 |
+| `<target-skill>/help.mjs` | write（用户 gate 后）| 技能帮助文本 — **每个技能必需** |
 | `<target-skill>/` 其他文件 | read | 只在描述优化范围内改 frontmatter |
 | `<this-skill-dir>/scripts/` | r+w | owned |
 | `<this-skill-dir>/agents/`, `references/`, `assets/` | r+w | owned |
@@ -86,6 +87,8 @@ description: "技能的创建、迭代、评估与描述优化的全生命周期
 | 9 | runner 同时启动 with-skill 与 baseline 子代理（同一批） | 防测量时机偏差 | 强制同批 |
 | 10 | benchmark 必须按 with_skill 在前、baseline 在后输出 | viewer 排序 | 重排序 |
 | 11 | 生成报告前**强制**完成 viewer 渲染（先人工再自动化）| 防止绕过评审 | 阻塞 |
+| 12 | **创建技能时强制生成 `help.mjs`** — 必须包含概述、核心参数、核心特性演示 | 统一帮助入口 | 阻塞提示 |
+| 13 | `help.mjs` 必须从 `templates/help.mjs` 骨架生成，替换所有 `{{PLACEHOLDER}}` | 结构一致 | 校验拒绝 |
 
 ## 失败与降级
 

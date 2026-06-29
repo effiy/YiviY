@@ -171,12 +171,12 @@ input, select { font-family: inherit; }
     font-family: var(--yry-font-mono, monospace);
     font-size: 11px;
 }
-.codec-badge--h\\.264 { background: var(--yry-accent-muted); color: var(--yry-accent); }
+.codec-badge--h\.264 { background: var(--yry-accent-muted); color: var(--yry-accent); }
 .codec-badge--av1   { background: rgba(209,170,71,0.15); color: var(--yry-warning); }
 .codec-badge--vp9   { background: rgba(71,143,209,0.15); color: var(--yry-info); }
 .codec-badge--opus  { background: rgba(36,208,105,0.15); color: var(--yry-success); }
 .codec-badge--aac   { background: var(--yry-accent-muted); color: var(--yry-accent); }
-.codec-badge--vorbis{ background: rgba(209,71,71,0.15); color: var(--yry-error); }
+.codec-badge--vorbis{ background: rgba(209,71,71,0.15); color: var(--yry-fail); }
 .codec-badge--mp3   { background: rgba(255,255,255,0.08); color: var(--yry-text-muted); }
 
 /* Size bar inside table cell */

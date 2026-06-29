@@ -7,20 +7,22 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23708090'/><text x='16' y='22' font-size='16' font-family='monospace' font-weight='bold' fill='%23ffffff' text-anchor='middle'>YT</text></svg>" type="image/svg+xml">
     <meta name="description" content="Interactive yt-dlp download pipeline simulator — each stage traces to the actual Python source file and function. Clickable trace links connect to the code dependency graph.">
 
-    <!-- Theme: Modern Minimalist (rui-theme) -->
-    <link rel="stylesheet" href="../../../../../cdn/theme/modern-minimalist.css">
+    <!-- Google Fonts: Inter (rui-ui: professional + clean hierarchy) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Theme: Ocean Depths (rui-ui: dark + green-accent, closest to slate/teal recommendation) -->
+    <link rel="stylesheet" href="../../../../../cdn/theme/ocean-depths.css">
+
+    <!-- Page tokens: bridge + scale extensions layered on top of the theme -->
+    <link rel="stylesheet" href="tokens.css">
+
     <link rel="stylesheet" href="index.css">
 </head>
 <body class="demos-page">
     <div id="app">
         <div class="page">
-            <!-- ══════════════════════════════════════════════ -->
-            <!-- Card Area — YrySceneCard renders the header  -->
-            <!-- ══════════════════════════════════════════════ -->
-            <section class="card-area">
-                <div id="scene-card"></div>
-            </section>
-
             <!-- ══════════════════════════════════════════════ -->
             <!-- Demo Area — Vue 3 mounts here                -->
             <!-- ══════════════════════════════════════════════ -->
@@ -179,30 +181,12 @@
                     <p class="demo-empty__hint">Try one of the sample URLs, or paste your own YouTube/Vimeo link</p>
                 </div>
             </section>
-
-            <!-- ══════════════════════════════════════════════ -->
-            <!-- Info Area                                      -->
-            <!-- ══════════════════════════════════════════════ -->
-            <section class="info-area">
-                <h3 class="info-area__title">{{ ui.infoHeader }}</h3>
-                <p class="info-area__text" v-html="ui.infoP1"></p>
-                <p class="info-area__text" v-html="ui.infoP2"></p>
-                <p class="info-area__text info-area__text--muted" v-html="ui.infoP3"></p>
-                <div class="info-links">
-                    <a href="../../diagram/index.html" class="info-link">📐 {{ ui.pipelineLink }}</a>
-                    <a href="../../graph/index.html" class="info-link">🕸️ {{ ui.graphLink }}</a>
-                    <a href="../index.html" class="info-link">🎬 {{ ui.allDemosLink }}</a>
-                    <a href="../../../../index.html" class="info-link">🏠 {{ ui.docsHomeLink }}</a>
-                </div>
-            </section>
         </div>
     </div>
 
     <!-- CDN scripts -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="../../../../../cdn/shared/yry-loader.js"></script>
-    <script src="../../../../../cdn/yry-tag-chip/index.js"></script>
-    <script src="../../../../../cdn/yry-scene-card/index.js"></script>
     <script src="../../../../assets/lang.js"></script>
     <script src="data.js"></script>
     <script src="index.js"></script>

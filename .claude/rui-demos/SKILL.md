@@ -97,23 +97,29 @@ Full code templates: see `references/standalone-demo-pattern.md` (CDN path resol
 ```
 User has card data and wants to generate demo pages...
 
-├─ External tool cards (yt-dlp, WhisperX, Streamlit)
+├─ External tool cards (yt-dlp, WhisperX, Streamlit UI)
 │  → Type A: Tool Interface Demo — mock UI + interactive simulation
+│     Mock data MUST trace to actual source files (e.g., _1_ytdlp.py, _2_asr.py)
 │
-├─ Pipeline/algorithm cards (NLP Split, 3-Step T-R-A)
+├─ Pipeline/algorithm cards (NLP Split, 3-Step T-R-A, Term Base)
 │  → Type B: Pipeline Visualization — step-by-step animated flow
+│     Each stage MUST reference a real pipeline function and source file
 │
-├─ Quality/comparison cards (Netflix 1-Line, Multi-TTS, i18n)
-│  → Type C: Comparison Showcase — side-by-side before/after or A/B
+├─ Multi-variant/comparison cards (Multi-TTS, i18n, Netflix 1-Line)
+│  → Type C: Comparison Showcase — side-by-side or tabbed A/B
+│     Variants MUST reflect actual supported engines/languages/formats
 │
 ├─ Control/state cards (Task Control, Resume, Model Picker)
 │  → Type D: State Machine Demo — interactive state transitions
+│     States MUST match actual pipeline states (running/paused/stopped)
 │
-├─ Report cards (Code Health, Architecture)
+├─ Report cards (Code Health Report, Architecture Report)
 │  → Type E: Dashboard Demo — metric cards + interactive charts
+│     Metrics MUST use real assessment data from the card's meta field
 │
-├─ Nav/guide cards (Quick Start, Configuration, Troubleshooting)
+├─ Nav/guide cards (Quick Start, Configuration, Troubleshooting, etc.)
 │  → Type F: Guide Walkthrough — step-by-step interactive tutorial
+│     Code snippets MUST be real, working CLI commands from the project
 │
 └─ Mixed batch (multiple types in one generation run)
    → Group by type → parallel subagents → per-scene index page
@@ -137,9 +143,9 @@ User has card data and wants to generate demo pages...
 | 🏗️ 架构评估 | badge: 'Report', meta 含 ATAM | **Type E** 仪表盘 | 维度分→对比基准→建议展开 | "架构评估一目了然" |
 | 🚀 快速开始指南 | badge: 'Guide', tags "5 min" | **Type F** 引导教程 | 步骤点→代码块→复制按钮 | "3-5步带用户走完入门" |
 | ⚙️ 配置指南 | badge: 'Guide', nameHref #config | **Type F** 引导教程 | 配置步骤→代码块→预期结果 | "可复制的配置代码" |
-| 🔌 插件/扩展 | ext links 1-2, 技术标签 | **Type A** 工具界面 | 配置面板→启用开关→效果预览 | "展示插件的功能和配置" |
-| 📈 性能基准 | count tags "10 benchmarks" | **Type C** 对比展示 | 基准表格→排序→高亮 | "交互式查看性能数据" |
-| 🔐 认证流程 | desc 含 "OAuth"/"JWT"/"login" | **Type B** 管线可视化 | 认证步骤流→每步说明→代码 | "展示认证的完整流程" |
+| 🚀 Streamlit 面板 | ext links 3+, desc 含 "launch" | **Type A** 工具界面 | 一键启动→实时进度→日志流 | "模拟 Streamlit 控制面板" |
+| 📚 术语库 | purple tag, desc 含 "terminology" | **Type B** 管线可视化 | 术语提取→AI生成→一致性检查→导出 | "展示术语库的构建流程" |
+| 💾 断点续传 | tags 含 "checkpoint"/"recovery" | **Type D** 状态机 | 保存检查点→中断模拟→恢复→验证 | "展示暂停和恢复的完整流程" |
 
 ## Demo Types Reference
 
@@ -416,7 +422,7 @@ Dispatch one subagent per demo (up to 5 concurrently). Each subagent receives:
   Generating batch 1/3: yt-dlp ✓, whisperx ✓, nlp-split ✓, term-base ✓
   Generating batch 2/3: 3-step-tra ✓, netflix-1line ✓, multi-tts ✓, streamlit-ui ⚠ (retrying...)
   Generating batch 3/3: i18n ✓, resume ✓, model-picker ✓, task-control ✓
-Phase 3 complete. 12 demos generated (0 failed, 1 warning: streamlit-ui retry succeeded with delayed mock data).
+Phase 3 complete. 12 demos generated (0 failed, 1 warning: streamlit-ui resolved)
 ```
 
 ---
@@ -965,14 +971,14 @@ For multi-language demo suites:
 
 ### Example 3: Custom Card → Demo
 
-**Input:** "I have this card: { name: 'Smart Cache', desc: 'LRU + TTL eviction · <strong>3x hit rate</strong>', tags: [{ text: 'LRU+TTL', modifier: 'purple' }, { text: '3x hit rate', modifier: 'accent' }] }. Generate a demo."
+**Input:** "I have this card: { name: '📝 Resume', desc: 'Detailed logging with checkpointing · <strong>pause and resume</strong> anytime · progress recovery', tags: [{ text: 'checkpoint', modifier: 'info' }, { text: 'recovery', modifier: 'accent' }] }. Generate a demo."
 
 **Process:**
-1. **Phase 0**: Inline card detected. Ask user for scene name → "features". Create `docs/components/features/demos/` if needed.
-2. **Phase 1**: `purple` tag + "eviction" in desc → Type B (Pipeline). Concept: "Visual cache grid with color-coded entries. User clicks to simulate cache hits/misses. Hit rate counter updates live."
-3. **Phase 2**: Scaffold generated at `docs/components/features/demos/smart-cache/`.
-4. **Phase 3**: Fill in pipeline content: 4 steps (Request → LRU Check → TTL Validate → Serve/Evict), cache grid visualization.
-5. **Phase 4**: Generate `docs/components/features/demos/index.html`.
+1. **Phase 0**: Inline card detected. Ask user for scene name → "intro". Output to `docs/components/intro/demos/`.
+2. **Phase 1**: `checkpoint` + "pause and resume" in desc → Type D (State Machine). Concept: "Three-state machine (Running → Paused → Stopped) simulating pipeline execution with checkpoint save/restore. User triggers pause, sees checkpoint saved, resumes from checkpoint."
+3. **Phase 2**: Scaffold generated at `docs/components/intro/demos/resume/`.
+4. **Phase 3**: Fill in state machine content: 3 states with transitions, action log, checkpoint save/load simulation. States match the actual VideoLingo pipeline states.
+5. **Phase 4**: Generate `docs/components/intro/demos/index.html`.
 6. **Phase 5**: Validate — passes all checks.
 
 ---
