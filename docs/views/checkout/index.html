@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%234f46e5'/><text x='16' y='22' font-size='18' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>VL</text></svg>" type="image/svg+xml">
+    <title>Improvement Action Checkout — VideoLingo</title>
+
+    <!-- CDN Theme -->
+    <link rel="stylesheet" href="../../cdn/theme/tech-innovation.css">
+
+    <!-- Docs CSS -->
+    <link rel="stylesheet" href="../../styles/tokens.css">
+    <link rel="stylesheet" href="../../styles/base.css">
+
+    <!-- Checkout-specific styles -->
+    <link rel="stylesheet" href="index.css">
+
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body class="vl-doc">
+
+<div id="checkout-app">
+    <!-- ═══════════════ SCORE DASHBOARD ═══════════════ -->
+    <section class="co-score-dashboard">
+        <div class="co-score-header">
+            <h1>📋 Improvement Action Checkout</h1>
+            <p class="co-score-subtitle">{{ totalActions }} actions · {{ totalHours }}h estimated · Generated {{ generatedAt }}</p>
+        </div>
+
+        <!-- Source Score Cards -->
+        <div class="co-source-cards">
+            <div class="co-source-card" v-for="src in sourceCards" :key="src.key">
+                <div class="sc-label">{{ src.label }}</div>
+                <div class="sc-score-row">
+                    <span class="sc-current" :class="src.scoreClass">{{ src.current }}</span>
+                    <span class="sc-arrow">→</span>
+                    <span class="sc-target">{{ src.target }}</span>
+                    <span class="sc-grade" :class="src.scoreClass">{{ src.grade }}</span>
+                </div>
+                <div class="sc-progress-bar">
+                    <div class="sc-progress-fill" :style="{ width: src.progressPercent + '%' }"></div>
+                </div>
+                <div class="sc-meta">
+                    {{ src.completedActions }}/{{ src.totalActions }} actions done
+                    <span v-if="src.progressPercent > 0">({{ src.progressPercent }}%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Path Alert -->
+        <div class="co-critical-alert" v-if="criticalPathItems.length > 0">
+            <div class="ca-icon">⚠️</div>
+            <div class="ca-text">
+                <strong>Critical Path:</strong> {{ criticalPathItems.length }} blocking actions must be completed first to unlock {{ criticalPathUnlocks }} dependent actions.
+                <span class="ca-items">{{ criticalPathItems.map(a => a.id).join(', ') }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ PROGRESS OVERVIEW ═══════════════ -->
+    <section class="co-progress-overview">
+        <div class="co-progress-bar-wrap">
+            <div class="co-progress-bar">
+                <div class="co-seg co-seg-done" :style="{ width: donePercent + '%' }" v-if="donePercent > 0" :title="counts.done + ' done'"></div>
+                <div class="co-seg co-seg-progress" :style="{ width: inProgressPercent + '%' }" v-if="inProgressPercent > 0" :title="counts.in_progress + ' in progress'"></div>
+                <div class="co-seg co-seg-blocked" :style="{ width: blockedPercent + '%' }" v-if="blockedPercent > 0" :title="counts.blocked + ' blocked'"></div>
+            </div>
+            <div class="co-progress-legend">
+                <span class="co-leg co-leg-done">✓ {{ counts.done }} Done</span>
+                <span class="co-leg co-leg-progress">◷ {{ counts.in_progress }} In Progress</span>
+                <span class="co-leg co-leg-blocked">⊘ {{ counts.blocked }} Blocked</span>
+                <span class="co-leg co-leg-todo">○ {{ counts.todo }} Todo</span>
+            </div>
+        </div>
+        <!-- Phase Summary -->
+        <div class="co-phase-summary">
+            <div class="co-phase-chip" v-for="p in phaseSummaries" :key="p.id"
+                :class="{ 'phase-active': activePhase === p.id }"
+                @click="activePhase = activePhase === p.id ? 'all' : p.id">
+                <span class="pc-dot" :class="'pc-' + p.id"></span>
+                <span class="pc-label">{{ p.label }}</span>
+                <span class="pc-count">{{ p.done }}/{{ p.total }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ FILTER BAR ═══════════════ -->
+    <section class="co-filter-bar">
+        <div class="co-filter-group">
+            <button v-for="f in statusFilters" :key="f.key"
+                :class="{ active: activeStatus === f.key }"
+                @click="activeStatus = f.key">
+                {{ f.label }}
+                <span class="fb-count">{{ f.count }}</span>
+            </button>
+        </div>
+        <div class="co-filter-group">
+            <select v-model="activeSource">
+                <option value="all">All Sources</option>
+                <option value="health-report">🏥 Health Report</option>
+                <option value="architecture-report">🏗️ Architecture Report</option>
+            </select>
+            <select v-model="activePhase">
+                <option value="all">All Phases</option>
+                <option v-for="p in phases" :value="p.id">{{ p.label }}</option>
+            </select>
+            <select v-model="activePriority">
+                <option value="all">All Priorities</option>
+                <option value="P0">P0 Critical</option>
+                <option value="P1">P1 High</option>
+                <option value="P2">P2 Medium</option>
+                <option value="P3-P4">P3-P4 Continuous</option>
+            </select>
+        </div>
+        <div class="co-filter-toggles">
+            <label class="co-toggle">
+                <input type="checkbox" v-model="criticalOnly"> Critical Path Only
+            </label>
+            <button class="co-expand-btn" @click="expandAll = !expandAll">
+                {{ expandAll ? 'Collapse All' : 'Expand All' }}
+            </button>
+        </div>
+    </section>
+
+    <!-- ═══════════════ ACTION CARDS ═══════════════ -->
+    <section class="co-actions-list">
+        <div v-for="action in filteredActions" :key="action.id"
+            :id="'action-' + action.id"
+            class="co-action-card"
+            :class="[
+                'ac-status-' + action.status,
+                'ac-pri-' + action.priority.toLowerCase().replace('+','').replace('-',''),
+                { 'ac-critical': action.criticalPath }
+            ]">
+            <!-- Header -->
+            <div class="ac-header" @click="toggleExpand(action.id)">
+                <div class="ac-header-left">
+                    <span class="ac-status-dot" :class="'sd-' + action.status"></span>
+                    <span class="ac-id-badge">{{ action.id }}</span>
+                    <span class="ac-priority-badge" :class="'pri-' + action.priority.toLowerCase().replace('+','').replace('-','')">{{ action.priority }}</span>
+                    <span class="ac-title">{{ action.title }}</span>
+                    <span class="ac-critical-star" v-if="action.criticalPath" title="Critical Path">⚡</span>
+                </div>
+                <div class="ac-header-right">
+                    <span class="ac-source-icon">{{ action.source === 'health-report' ? '🏥' : '🏗️' }}</span>
+                    <span class="ac-dim-tag">{{ action.dimension }}</span>
+                    <span class="ac-hours-tag">{{ action.estimatedHours }}h</span>
+                    <span class="ac-expand-icon">{{ expanded[action.id] ? '▾' : '▸' }}</span>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="ac-body" v-show="expanded[action.id] || expandAll">
+                <!-- Before / After -->
+                <div class="ac-before-after">
+                    <div class="ba-col ba-before">
+                        <div class="ba-col-label">🔴 Before</div>
+                        <div class="ba-metric">{{ action.before.metric }}</div>
+                        <div class="ba-score" v-if="action.before.score">{{ action.before.score }}</div>
+                        <div class="ba-consequence">{{ action.before.consequence }}</div>
+                    </div>
+                    <div class="ba-arrow-col"><div class="ba-arrow">→</div></div>
+                    <div class="ba-col ba-after">
+                        <div class="ba-col-label">🟢 After</div>
+                        <div class="ba-metric">{{ action.after.metric }}</div>
+                        <div class="ba-score" v-if="action.after.score">{{ action.after.score }}</div>
+                        <div class="ba-unlocks" v-if="action.after.unlocks">
+                            <strong>🔓 Unlocks:</strong> {{ action.after.unlocks }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dependencies -->
+                <div class="ac-deps" v-if="action.dependencies.length || action.blocks.length">
+                    <div class="ac-dep-row" v-if="action.dependencies.length">
+                        <strong>Depends on:</strong>
+                        <span v-for="depId in action.dependencies" :key="depId"
+                            class="ac-dep-tag" :class="'dep-' + getActionStatus(depId)"
+                            @click.stop="scrollToAction(depId)">
+                            {{ depId }}
+                            <span class="dep-status-icon">{{ getActionStatusIcon(depId) }}</span>
+                        </span>
+                    </div>
+                    <div class="ac-dep-row" v-if="action.blocks.length">
+                        <strong>Unblocks:</strong>
+                        <span v-for="blockId in action.blocks" :key="blockId"
+                            class="ac-dep-tag ac-blocks-tag" @click.stop="scrollToAction(blockId)">
+                            {{ blockId }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Steps -->
+                <div class="ac-steps">
+                    <div class="ac-steps-header">
+                        <span class="ash-title">📝 Steps</span>
+                        <span class="ash-progress">{{ getStepProgress(action) }}</span>
+                    </div>
+                    <div v-for="step in action.steps" :key="step.id"
+                        class="ac-step" :class="'step-status-' + step.status">
+                        <input type="checkbox"
+                            :checked="step.status === 'done'"
+                            @change.stop="toggleStep(action.id, step.id)" />
+                        <span class="step-icon" :class="'si-' + step.status"></span>
+                        <span class="step-text" :class="{ 'step-done-text': step.status === 'done' }">{{ step.text }}</span>
+                    </div>
+                </div>
+
+                <!-- Status Control -->
+                <div class="ac-status-bar">
+                    <span class="asb-label">Status:</span>
+                    <button v-for="s in ['todo','in_progress','done','blocked']" :key="s"
+                        :class="{ active: action.status === s }"
+                        @click.stop="setStatus(action.id, s)"
+                        class="asb-btn asb-{{ s }}">
+                        {{ statusIcon(s) }} {{ statusLabel(s) }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Empty State -->
+    <div v-if="filteredActions.length === 0" class="co-empty">
+        <div class="co-empty-icon">🔍</div>
+        <p>No actions match the current filters.</p>
+        <button @click="resetFilters" class="co-reset-btn">Reset All Filters</button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="co-footer">
+        <p>Generated from Code Health Report (26 actions) + Architecture Analysis Report (10 actions) — 36 total · {{ totalHours }}h estimated · Status persists in browser localStorage</p>
+        <p class="co-footer-links">
+            <a href="../健康报告/index.html">Code Health Report</a> ·
+            <a href="../架构报告/index.html">Architecture Report</a> ·
+            <a href="../../index.html">Docs Home</a>
+        </p>
+    </footer>
+</div>
+
+<script src="data.js"></script>
+<script src="index.js"></script>
+</body>
+</html>

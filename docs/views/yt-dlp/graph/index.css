@@ -1,26 +1,32 @@
 /* ════════════════════════════════════════════════════════════════════════
    yt-dlp — Code Dependency Graph Stylesheet
    VideoLingo design system: #020617 background, JetBrains Mono
+   Uses CSS custom properties for Cytoscape.js bridge compatibility.
    ════════════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
+  /* ── Surface ── */
   --bg: #020617;
   --surface: #0f172a;
   --border: #1e293b;
+
+  /* ── Text ── */
   --text: #f8fafc;
   --text-soft: #94a3b8;
   --text-muted: #64748b;
+
+  /* ── Font ── */
   --font: 'JetBrains Mono', monospace;
 
-  /* Code entity colors */
+  /* ── Entity type colors (code graph) ── */
   --file: #38bdf8;           --file-bg: rgba(8, 51, 68, 0.85);
   --class: #a78bfa;          --class-bg: rgba(76, 29, 149, 0.85);
   --function: #34d399;       --function-bg: rgba(6, 78, 59, 0.85);
   --module: #fbbf24;         --module-bg: rgba(120, 53, 15, 0.85);
 
-  /* Edge colors */
+  /* ── Edge colors ── */
   --edge-import: #475569;
   --edge-call: #94a3b8;
   --edge-inherit: #a78bfa;
@@ -161,16 +167,6 @@ body {
   border-radius: 3px;
   flex-shrink: 0;
 }
-.legend-dot.hex {
-  width: 11px; height: 11px;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  border-radius: 0;
-}
-.legend-dot.diamond {
-  width: 10px; height: 10px;
-  transform: rotate(45deg);
-  border-radius: 1px;
-}
 .legend-line { width: 20px; height: 1.5px; flex-shrink: 0; }
 .stat-row {
   display: flex;
@@ -212,16 +208,12 @@ body {
   border: 1px solid var(--module);
   color: var(--module);
 }
-.stat-module-name {
-  font-weight: 500;
-}
+.stat-module-name { font-weight: 500; }
 .stat-module-counts {
   color: var(--text-muted);
   font-size: 0.65rem;
 }
-.stat-module-row.active .stat-module-counts {
-  color: var(--module);
-}
+.stat-module-row.active .stat-module-counts { color: var(--module); }
 .stat-filtered-label {
   font-size: 0.65rem;
   text-transform: uppercase;
@@ -229,24 +221,6 @@ body {
   color: var(--module);
   margin-bottom: 0.4rem;
   padding: 0.2rem 0;
-}
-.stat-show-all {
-  font-family: var(--font);
-  font-size: 0.65rem;
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.3rem;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-soft);
-  cursor: pointer;
-  transition: all 0.15s;
-  width: 100%;
-}
-.stat-show-all:hover {
-  color: var(--text);
-  border-color: var(--text-soft);
-  background: rgba(30, 41, 59, 0.5);
 }
 
 /* ── Graph Container ─────────────────── */
@@ -292,6 +266,7 @@ body {
   text-align: center;
   padding: 1rem;
 }
+
 /* ── Detail Header ────────────────────── */
 .detail-header {
   display: flex;

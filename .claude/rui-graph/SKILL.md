@@ -594,7 +594,7 @@ Update existing `graph-data.json` when source code changes.
 ## Critical Rules
 
 - **Cytoscape.js from CDN** — use `https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js`. No npm, no build.
-- **Layout plugins from CDN** — `cytoscape-dagre@2.5.0`, `cytoscape-cose-bilkent@4.1.0`, `dagre@0.8.5`.
+- **Layout plugins from CDN** — `dagre@0.8.5`, `cytoscape-dagre@2.5.0`, `layout-base@1.0.2`, `cose-base@1.0.3`, `cytoscape-cose-bilkent@4.1.0`.
 - **Self-contained HTML** — no external CSS/JS files beyond CDN.
 - **`file://` URLs must work** — no web server required for the HTML file.
 - **Dark theme** — background `#020617`, surface `#0f172a`, border `#1e293b`. Match VideoLingo design system.

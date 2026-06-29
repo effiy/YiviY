@@ -266,6 +266,18 @@ window.GRAPH_DATA = {
     { data: { id: 'edge:plugins:_utils:imports',       source: 'file:plugins.py',       target: 'file:utils/_utils.py',          type: 'imports' } },
     { data: { id: 'edge:aes:_utils:imports',           source: 'file:aes.py',           target: 'file:utils/_utils.py',          type: 'imports' } },
 
+    // Cross-module imports (inferred from usage patterns)
+    { data: { id: 'edge:YoutubeDL:options:imports',    source: 'file:YoutubeDL.py', target: 'file:options.py',              type: 'imports' } },
+    { data: { id: 'edge:YoutubeDL:traversal:imports',  source: 'file:YoutubeDL.py', target: 'file:utils/traversal.py',      type: 'imports' } },
+    { data: { id: 'edge:YoutubeDL:net_utils:imports',  source: 'file:YoutubeDL.py', target: 'file:utils/networking.py',     type: 'imports' } },
+    { data: { id: 'edge:YoutubeDL:aes:imports',        source: 'file:YoutubeDL.py', target: 'file:aes.py',                  type: 'imports' } },
+    { data: { id: 'edge:init:version:imports',         source: 'file:__init__.py',  target: 'file:version.py',               type: 'imports' } },
+    { data: { id: 'edge:init:cache:imports',           source: 'file:__init__.py',  target: 'file:cache.py',                 type: 'imports' } },
+    { data: { id: 'edge:options:globals:imports',      source: 'file:options.py',   target: 'file:globals.py',               type: 'imports' } },
+    { data: { id: 'edge:options:version:imports',      source: 'file:options.py',   target: 'file:version.py',               type: 'imports' } },
+    { data: { id: 'edge:common:traversal:imports',     source: 'file:networking/common.py', target: 'file:utils/traversal.py',  type: 'imports' } },
+    { data: { id: 'edge:_utils:traversal:imports',     source: 'file:utils/_utils.py',      target: 'file:utils/traversal.py',  type: 'imports' } },
+
     /* ═══════════════════════════════════════════════════════════════════
        EDGES — inherits (subclass → superclass)
        type=inherits, bold solid arrow, color=#a78bfa, width=2
@@ -323,25 +335,51 @@ window.GRAPH_DATA = {
     // Utility calls
     { data: { id: 'edge:download:sanitize:calls',     source: 'func:download',     target: 'func:sanitize_filename',   type: 'calls' } },
 
+    // Setup chain: main → _real_main → build_request_director → download
+    { data: { id: 'edge:_real_main:build_rd:calls',    source: 'func:_real_main',            target: 'func:build_request_director',  type: 'calls' } },
+    { data: { id: 'edge:_real_main:download:calls',    source: 'func:_real_main',            target: 'func:download',               type: 'calls' } },
+
+    // Download pipeline: extract_info needs urlopen for HTTP requests
+    { data: { id: 'edge:extract_info:urlopen:calls',   source: 'func:extract_info',          target: 'func:urlopen',                type: 'calls' } },
+    { data: { id: 'edge:download:process_info:calls',  source: 'func:download',              target: 'func:process_info',           type: 'calls' } },
+
+    // Plugin loading internals
+    { data: { id: 'edge:load_plugins:dirs:calls',      source: 'func:load_all_plugins',      target: 'func:directories',            type: 'calls' } },
+
     /* ═══════════════════════════════════════════════════════════════════
-       EDGES — exports (__init__.py → re-exported target file)
+       EDGES — exports (package init → re-exported submodule)
        type=exports, dotted arrow, color=#22d3ee, width=1
        ═══════════════════════════════════════════════════════════════════ */
 
-    // utils/__init__.py re-exports from _utils.py, traversal.py, networking.py
+    // yt_dlp package — public API re-exports
+    { data: { id: 'edge:ytdlp_mod:YoutubeDL:exports',  source: 'module:yt_dlp', target: 'file:YoutubeDL.py',    type: 'exports', symbol: 'YoutubeDL' } },
+    { data: { id: 'edge:ytdlp_mod:options:exports',     source: 'module:yt_dlp', target: 'file:options.py',      type: 'exports', symbol: 'Options' } },
+    { data: { id: 'edge:ytdlp_mod:cookies:exports',     source: 'module:yt_dlp', target: 'file:cookies.py',      type: 'exports', symbol: 'cookies' } },
+    { data: { id: 'edge:ytdlp_mod:plugins:exports',     source: 'module:yt_dlp', target: 'file:plugins.py',      type: 'exports', symbol: 'plugins' } },
 
-    // networking/__init__.py re-exports from common.py (Request, Response, RequestDirector, RequestHandler)
-    { data: { id: 'edge:net_init:common:exports',     source: 'file:networking/common.py', target: 'file:networking/_urllib.py',  type: 'exports', symbol: 'lazy_import' } },
+    // utils package — re-exports utilities
+    { data: { id: 'edge:utils_mod:_utils:exports',      source: 'module:utils',  target: 'file:utils/_utils.py',     type: 'exports', symbol: 'utils' } },
+    { data: { id: 'edge:utils_mod:traversal:exports',   source: 'module:utils',  target: 'file:utils/traversal.py',  type: 'exports', symbol: 'traverse_obj' } },
+    { data: { id: 'edge:utils_mod:networking:exports',  source: 'module:utils',  target: 'file:utils/networking.py', type: 'exports', symbol: 'HTTPHeaderDict' } },
+
+    // networking package — re-exports handlers + data classes
+    { data: { id: 'edge:net_mod:common:exports',        source: 'module:networking', target: 'file:networking/common.py',     type: 'exports', symbol: 'Request,Response' } },
+    { data: { id: 'edge:net_mod:exceptions:exports',    source: 'module:networking', target: 'file:networking/exceptions.py', type: 'exports', symbol: 'RequestError' } },
+    { data: { id: 'edge:net_mod:_urllib:exports',       source: 'module:networking', target: 'file:networking/_urllib.py',    type: 'exports', symbol: 'UrllibRH' } },
+    { data: { id: 'edge:net_mod:_requests:exports',     source: 'module:networking', target: 'file:networking/_requests.py',  type: 'exports', symbol: 'RequestsRH' } },
+    { data: { id: 'edge:net_mod:_curlcffi:exports',     source: 'module:networking', target: 'file:networking/_curlcffi.py',  type: 'exports', symbol: 'CurlCFFIRH' } },
   ],
 
   meta: {
     nodeCount: 68,
-    edgeCount: 107,
+    edgeCount: 133,
     fileCount: 20,
     classCount: 22,
     functionCount: 23,
     moduleCount: 3,
     modules: ['yt_dlp', 'utils', 'networking'],
+    edgeBreakdown: { imports: 45, calls: 20, inherits: 11, contains: 45, exports: 12 },
     source: 'site-packages/yt_dlp/ core files (excludes extractor/downloader/postprocessor/compat/test)',
+    tool: 'rui-graph SKILL.md Phase 1–2 pipeline (AST analysis + manual curation)',
   }
 };

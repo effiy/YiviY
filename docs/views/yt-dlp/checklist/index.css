@@ -239,8 +239,9 @@ body {
 .card-schema-tag {
     padding: 0.1rem 0.5rem;
     border-radius: var(--yry-radius-sm);
-    background: var(--yry-amber);
-    color: #fff;
+    background: var(--yry-bg-flat);
+    color: var(--yry-text-muted);
+    border: 1px solid var(--yry-border-color);
     font-size: 0.65rem;
     font-weight: 600;
     font-family: var(--yry-font-mono);

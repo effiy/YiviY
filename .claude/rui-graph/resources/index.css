@@ -55,7 +55,7 @@ body {
 }
 .pulse-dot {
   width: 10px; height: 10px;
-  background: var(--default);
+  background: var(--file);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -93,7 +93,7 @@ body {
   color: var(--text);
   outline: none;
 }
-.toolbar select:focus, .toolbar input:focus { border-color: var(--default); }
+.toolbar select:focus, .toolbar input:focus { border-color: var(--file); }
 .toolbar input[type="search"] { width: 160px; }
 .filter-btn {
   font-family: var(--font);
@@ -108,7 +108,7 @@ body {
   white-space: nowrap;
 }
 .filter-btn:hover { color: var(--text); border-color: var(--text-soft); }
-.filter-btn.active { color: var(--text); border-color: var(--default); background: var(--default-bg); }
+.filter-btn.active { color: var(--text); border-color: var(--file); background: var(--file-bg); }
 
 /* Action buttons */
 .btn {
@@ -124,8 +124,8 @@ body {
   white-space: nowrap;
 }
 .btn:hover { color: var(--text); border-color: var(--text-soft); background: rgba(30, 41, 59, 0.5); }
-.btn.primary { border-color: var(--default); color: var(--default); }
-.btn.primary:hover { background: var(--default-bg); }
+.btn.primary { border-color: var(--module); color: var(--module); }
+.btn.primary:hover { background: var(--module-bg); }
 
 /* ── Main Layout ─────────────────────── */
 .main { display: flex; flex: 1; overflow: hidden; }

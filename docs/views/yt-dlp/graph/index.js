@@ -283,12 +283,19 @@
       var t = n.data('type');
       if (t === 'file') {
         n.style('display', (n.data('module') || '') === moduleName ? 'element' : 'none');
-      } else if (t === 'class' || t === 'function' || t === 'module') {
+      } else if (t === 'class' || t === 'function') {
         var connected = n.connectedEdges('[type="contains"]').some(function(e) {
           var fileNode = e.source().data('type') === 'file' ? e.source() : e.target();
           return fileNode.style('display') !== 'none';
         });
         n.style('display', connected ? 'element' : 'none');
+      } else if (t === 'module') {
+        // Module nodes match by label (the module name) or are connected via exports
+        var isTarget = n.data('label') === moduleName;
+        var hasVisibleExports = n.connectedEdges('[type="exports"]').targets().some(function(tgt) {
+          return tgt.style('display') !== 'none';
+        });
+        n.style('display', (isTarget || hasVisibleExports) ? 'element' : 'none');
       }
     });
     cy.edges().forEach(function(e) {
@@ -521,8 +528,8 @@
       // ── Meta ──
       html += '<div class="detail-meta">';
       if (data.file) {
-        var fNode = cy.getElementById(data.file);
-        html += '<div class="detail-meta-row"><span class="dm-label">File</span><code onclick="focusNode(\'' + escHtml(data.file) + '\')" style="cursor:pointer;color:var(--file)">' + escHtml(fNode.length ? fNode.data('path') || fNode.data('label') : data.file) + '</code></div>';
+        var fNode2 = cy.getElementById(data.file);
+        html += '<div class="detail-meta-row"><span class="dm-label">File</span><code onclick="focusNode(\'' + escHtml(data.file) + '\')" style="cursor:pointer;color:var(--file)">' + escHtml(fNode2.length ? fNode2.data('path') || fNode2.data('label') : data.file) + '</code></div>';
       }
       if (data.class) {
         html += '<div class="detail-meta-row"><span class="dm-label">Class</span><span class="dm-value" style="color:var(--class)">' + escHtml(data.class) + '</span></div>';
@@ -618,13 +625,13 @@
       }
 
       // ── Exports ──
-      var exportsList = node.connectedEdges('[type="exports"]').targets()
+      var modExports = node.connectedEdges('[type="exports"]').targets()
         .filter(function(n) { return n.id() !== data.id; });
-      if (exportsList.length) {
+      if (modExports.length) {
         html += '<div class="detail-section">';
-        html += '<div class="detail-section-title">⇢ Public API (Re-exports) <span class="detail-count">' + exportsList.length + '</span></div>';
+        html += '<div class="detail-section-title">⇢ Public API (Re-exports) <span class="detail-count">' + modExports.length + '</span></div>';
         html += '<ul class="detail-conn-list">';
-        exportsList.forEach(function(n) {
+        modExports.forEach(function(n) {
           var sym = '';
           var edgeData = node.connectedEdges('[type="exports"]').filter(function(e) { return e.target().id() === n.id(); });
           if (edgeData.length) sym = edgeData[0].data('symbol') || '';
@@ -676,7 +683,9 @@
     cy.edges().removeClass('dimmed');
     document.getElementById('search-input').value = '';
     // Reset to yt_dlp module filter
-    window.filterByModule('yt_dlp');
+    var ytdlpBtn = Array.from(document.querySelectorAll('#module-filters .filter-btn'))
+      .find(function(b) { return b.textContent === 'yt_dlp'; });
+    window.filterByModule('yt_dlp', ytdlpBtn);
     fitGraph();
   };
 
@@ -793,7 +802,7 @@
       // ── Filtered module view ──
       if (sectionLabel) sectionLabel.style.display = 'none';
       var s = getModuleStats(filteredModule);
-      // Count visible edges (faster: count across all)
+      // Count visible edges
       var visEdges = 0;
       cy.edges().forEach(function(e) {
         if (e.style('display') !== 'none') visEdges++;
@@ -811,7 +820,7 @@
   }
 
   function initUI() {
-    // Stats — yt_dlp module only
+    // Stats — yt_dlp module only (default view)
     updateStats('yt_dlp');
 
     // Legend — Nodes
@@ -836,7 +845,23 @@
       '<div class="legend-item"><span class="legend-line" style="background:#475569;height:1px"></span> contains (thin solid)</div>' +
       '<div class="legend-item"><span class="legend-line" style="background:transparent;border-top:1.5px dotted #22d3ee"></span> exports (dotted cyan)</div>';
 
-    // Module filter hidden — only yt_dlp module shown
+    // Module filter buttons
+    var allFiles = cy.nodes('[type="file"]');
+    var uniqueModules = [];
+    var seenMods = {};
+    allFiles.forEach(function(f) {
+      var m = f.data('module');
+      if (m && !seenMods[m]) { seenMods[m] = true; uniqueModules.push(m); }
+    });
+    uniqueModules.sort();
+    var filterHtml = '<span class="toolbar-label">Module</span>';
+    filterHtml += '<button class="filter-btn" onclick="filterByModule(\'all\', this)">All</button>';
+    uniqueModules.forEach(function(m) {
+      // yt_dlp is the default active filter
+      var activeClass = m === 'yt_dlp' ? ' active' : '';
+      filterHtml += '<button class="filter-btn' + activeClass + '" onclick="filterByModule(\'' + escHtml(m) + '\', this)">' + escHtml(m) + '</button>';
+    });
+    document.getElementById('module-filters').innerHTML = filterHtml;
   }
 
   /* ── Deep-link: ?focus=<nodeId> from demos/diagram ── */

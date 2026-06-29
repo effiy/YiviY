@@ -413,8 +413,10 @@ When a node is clicked, show type-specific detail:
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 
 <!-- Layout extensions -->
-<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/layout-base@1.0.2/layout-base.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cose-base@1.0.3/cose-base.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
 
 <!-- Font -->

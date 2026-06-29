@@ -9,8 +9,17 @@
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/layout-base@1.0.2/layout-base.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cose-base@1.0.3/cose-base.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
 
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Theme bridge (optional — maps --yry-* CDN theme to --graph-* tokens) -->
+  <!-- <link rel="stylesheet" href="theme-bridge.css"> -->
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -59,7 +68,9 @@
     <div class="sidebar" id="sidebar">
       <div class="sidebar-section">
         <h3>Stats</h3>
-        <div id="stats-content">Loading...</div>
+        <div id="stats-overview"></div>
+        <div class="stat-section-label">By Module</div>
+        <div id="stats-modules"></div>
       </div>
       <div class="sidebar-section">
         <h3>Legend · Nodes</h3>
