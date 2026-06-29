@@ -16,12 +16,7 @@
 
 var DOC_CODE_ACTIVITY_EXTRA = {
     data: function () {
-        var cfg = window.CODE_ACTIVITY_CONFIG || {};
         return {
-            apiUrl:   cfg.apiUrl   || '',
-            labels:   cfg.labels   || {},
-            fetchCfg: cfg.fetch    || {},
-            chartCfg: cfg.chart    || {},
             loading:  true,
             error:    false,
             _abortCtrl: null,
@@ -33,7 +28,8 @@ var DOC_CODE_ACTIVITY_EXTRA = {
         _resolveLastWeek: function (data) {
             var last = data[data.length - 1];
             var days = (last && Array.isArray(last.days)) ? last.days : [];
-            var labels = this.chartCfg.dayLabels || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            var chart = this.chart || {};
+            var labels = chart.dayLabels || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             var today = new Date().getDay();
             var orderedLabels = [];
             var orderedValues = [];
@@ -47,7 +43,7 @@ var DOC_CODE_ACTIVITY_EXTRA = {
         fetchAndRender: function () {
             var self = this;
             if (!this.apiUrl) { this.loading = false; this.error = true; return; }
-            var timeoutMs = this.fetchCfg.timeoutMs || 8000;
+            var timeoutMs = (this.fetch || {}).timeoutMs || 8000;
             var ctrl = new AbortController();
             this._abortCtrl = ctrl;
             this._timer = setTimeout(function () { ctrl.abort(); }, timeoutMs);
@@ -74,7 +70,7 @@ var DOC_CODE_ACTIVITY_EXTRA = {
             if (!canvas || typeof Chart === 'undefined') return;
             if (this._chart) { this._chart.destroy(); this._chart = null; }
             var resolved = this._resolveLastWeek(data);
-            var chartCfg = this.chartCfg || {};
+            var chartCfg = this.chart || {};
             var gradientCfg = chartCfg.gradient || {};
             var borderColor = chartCfg.borderColor || '#6366f1';
             var ctx = canvas.getContext('2d');

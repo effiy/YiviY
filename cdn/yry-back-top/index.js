@@ -34,6 +34,7 @@
     'use strict';
 
     var COMPONENT_NAME = 'YryBackTop';
+    var SELF_SRC = (document.currentScript && document.currentScript.src) || '';
 
     /* ── 单例状态 (闭包内共享) ──────────────────────────────────── */
     var _app          = null;  // Vue app 实例 (单例)
