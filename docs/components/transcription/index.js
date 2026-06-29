@@ -1,9 +1,1 @@
-/**
- * Transcription Vue 3 组件
- * 由 assets/mount-component.js 公共工具挂载。
- */
-mountDocComponent({
-    name: 'DocTranscription',
-    templateId: 'transcription-template',
-    dataKey: 'TRANSCRIPTION_CONFIG'
-});
+mountDocComponent({name:'DocTranscription',templateId:'transcription-template',dataKey:'TRANSCRIPTION_CONFIG',i18n:true});

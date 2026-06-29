@@ -18,6 +18,19 @@
                        :href="item.href">{{ item.label }}</a>
                 </div>
             </nav>
+            <div class="lang-switch" v-if="langs.length" role="radiogroup" aria-label="Language">
+                <button v-for="lang in langs"
+                        :key="lang.code"
+                        class="lang-btn"
+                        :class="{ active: lang.code === currentLang }"
+                        @click="setLanguage(lang.code)"
+                        role="radio"
+                        :aria-checked="lang.code === currentLang"
+                        :aria-label="lang.label">
+                    <span class="lang-emoji">{{ lang.emoji }}</span>
+                    <span class="lang-label">{{ lang.native }}</span>
+                </button>
+            </div>
             <div class="sidebar-footer">
                 <template v-for="(link, idx) in footerLinks" :key="link.href">
                     <a :href="link.href" target="_blank">{{ link.label }}</a>

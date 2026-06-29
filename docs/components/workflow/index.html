@@ -1,6 +1,6 @@
 <template id="workflow-template">
     <section id="workflow">
-        <h2>Pipeline Steps</h2>
+        <h2>{{ title }}</h2>
         <p>VideoLingo's processing pipeline has two stages: <strong>Text Processing</strong> (subtitle generation) and <strong>Audio Processing</strong> (dubbing).</p>
         <template v-for="(stage, sIdx) in stages" :key="stage.title">
             <h3>{{ stage.title }}</h3>

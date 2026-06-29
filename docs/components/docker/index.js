@@ -5,5 +5,6 @@
 mountDocComponent({
     name: 'DocDocker',
     templateId: 'docker-template',
-    dataKey: 'DOCKER_CONFIG'
+    dataKey: 'DOCKER_CONFIG',
+    i18n: true
 });

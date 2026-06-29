@@ -1,8 +1,8 @@
 <template id="quick-start-template">
     <section id="quick-start">
-        <h2>Quick Start</h2>
-        <p>The fastest way to get VideoLingo running.</p>
-        <h3>Prerequisites</h3>
+        <h2>{{ title }}</h2>
+        <p>{{ intro }}</p>
+        <h3>{{ prerequisitesTitle }}</h3>
         <ul>
             <li v-for="req in prerequisites" :key="req.name">
                 <strong>{{ req.name }}</strong> — {{ req.desc }}

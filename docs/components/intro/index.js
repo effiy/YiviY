@@ -1,29 +1,33 @@
 /**
  * Intro Vue 3 组件
  * 由 assets/mount-component.js 公共工具挂载。
- * 数据来源：window.INTRO_TITLE / INTRO_LEAD / INTRO_CARDS / INTRO_CALLOUT
- *          （多 key 由 extra.data 自定义 data() 收集）
+ * 语言切换由 i18n: true 透明处理——模板无需修改。
  *
  * 渲染分工：本组件只渲染 #intro-card-N 占位 div，由 mounted() 钩子遍历调用
  *          window.YrySceneCard.mount() 注入实际卡片内容（依赖 cdn/yry-scene-card）。
+ *          语言切换后通过 $nextTick 重新挂载卡片。
  */
 mountDocComponent({
     name: 'DocIntro',
     templateId: 'intro-template',
-    dataKey: 'INTRO_TITLE',
+    dataKey: 'INTRO_CONFIG',
+    i18n: true,
     extra: {
-        data: function () {
-            return {
-                title: window.INTRO_TITLE || '',
-                lead: window.INTRO_LEAD || '',
-                cards: window.INTRO_CARDS || [],
-                callout: window.INTRO_CALLOUT || null
-            };
-        },
         mounted: function () {
-            var cards = this.cards || [];
-            cards.forEach(function (card, i) {
-                mountYrySceneCard(card, '#intro-card-' + i);
+            var self = this;
+
+            /* 挂载所有 YrySceneCard */
+            function mountCards() {
+                var cards = self.cards || [];
+                cards.forEach(function (card, i) {
+                    mountYrySceneCard(card, '#intro-card-' + i);
+                });
+            }
+            mountCards();
+
+            /* 语言切换后 DOM 被 Vue 重建，重新挂载卡片 */
+            document.addEventListener('vl-lang-changed', function () {
+                self.$nextTick(mountCards);
             });
         }
     }

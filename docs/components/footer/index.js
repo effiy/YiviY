@@ -7,5 +7,6 @@
 mountDocComponent({
     name: 'DocFooter',
     templateId: 'footer-template',
-    dataKey: 'FOOTER_CONFIG'
+    dataKey: 'FOOTER_CONFIG',
+    i18n: true
 });

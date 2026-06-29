@@ -5,5 +5,6 @@
 mountDocComponent({
     name: 'DocCustomTts',
     templateId: 'custom-tts-template',
-    dataKey: 'CUSTOM_TTS_CONFIG'
+    dataKey: 'CUSTOM_TTS_CONFIG',
+    i18n: true
 });

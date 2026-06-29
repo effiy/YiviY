@@ -7,6 +7,11 @@
  *   - dataKey:    data.js 注入到 window 上的数据对象名（如 'INTRO_CONFIG'）
  *
  * 选填 extra：需要自定义 methods / mounted / data 等时，覆盖默认组件选项。
+ * 选填 i18n:   当 true 时，启用透明语言切换——数据格式必须是语言键值对：
+ *              { en: { title: '...' }, 'zh-CN': { title: '...' }, ... }
+ *              mountDocComponent 自动解析当前语言、注入 currentLang、
+ *              并监听 vl-lang-changed 透明替换顶层响应式属性。
+ *              模板无需任何修改。
  *
  * 启动流程：
  *   1. 推导 SELF_DIR：优先读 document.currentScript 的 data-cs-dir
@@ -19,6 +24,137 @@
  * 注意：不要把 <template> 的内容节点直接克隆作为 mountEl，否则 Vue 渲染后
  * 会产生嵌套重复（例如外层 mountEl 与渲染根都是 <section id="intro">）。
  */
+
+/* ──────────────────────────────────────────────────
+ * I18n Helpers
+ * ────────────────────────────────────────────────── */
+
+/**
+ * 返回已知语言 code 列表（来自 VL_LANG，回退硬编码）。
+ */
+function getKnownLangCodes() {
+    if (window.VL_LANG && window.VL_LANG.available) {
+        return window.VL_LANG.available.map(function (l) { return l.code; });
+    }
+    return ['en', 'zh-CN', 'zh-TW', 'ja', 'es', 'ru', 'fr'];
+}
+
+/**
+ * 判断对象是否有属性名匹配已知语言 code。
+ */
+function hasLanguageKeys(obj) {
+    if (!obj || typeof obj !== 'object') return false;
+    var codes = getKnownLangCodes();
+    for (var i = 0; i < codes.length; i++) {
+        if (Object.prototype.hasOwnProperty.call(obj, codes[i])) return true;
+    }
+    return false;
+}
+
+/**
+ * 从语言键值对配置里解析指定语言的扁平数据。
+ *   - 保留顶层非语言 code 的键（语言无关常量）
+ *   - 合并语言 slice 内的键（覆盖同名语言无关键）
+ *   - 注入 currentLang
+ */
+function resolveI18nData(rawConfig, lang) {
+    var langCodes = getKnownLangCodes();
+    var langSlice = rawConfig[lang] || rawConfig['en'] || {};
+    var result = { currentLang: lang };
+
+    /* 1. 复制语言无关的顶层键 */
+    var key;
+    for (key in rawConfig) {
+        if (Object.prototype.hasOwnProperty.call(rawConfig, key) && langCodes.indexOf(key) === -1) {
+            result[key] = rawConfig[key];
+        }
+    }
+    /* 2. 合并语言 slice（可覆盖语言无关键） */
+    for (key in langSlice) {
+        if (Object.prototype.hasOwnProperty.call(langSlice, key)) {
+            result[key] = langSlice[key];
+        }
+    }
+    return result;
+}
+
+/**
+ * 在已挂载的 Vue 组件实例上原地替换语言 slice 的属性。
+ * Vue 的响应式系统会检测属性变化并触发重渲染。
+ */
+function applyI18nSlice(vm, rawConfig, lang) {
+    var langSlice = rawConfig[lang] || rawConfig['en'] || {};
+    var fallback = rawConfig['en'] || {};
+
+    /* 先应用当前语言 slice 的属性 */
+    for (var key in langSlice) {
+        if (Object.prototype.hasOwnProperty.call(langSlice, key)) {
+            vm[key] = langSlice[key];
+        }
+    }
+    /* 补全当前语言缺失但 en fallback 中存在的键 */
+    for (var key in fallback) {
+        if (Object.prototype.hasOwnProperty.call(fallback, key) &&
+            !Object.prototype.hasOwnProperty.call(langSlice, key)) {
+            vm[key] = fallback[key];
+        }
+    }
+}
+
+/**
+ * 为组件包裹 i18n 能力：修改 data() 以返回当前语言的扁平数据，
+ * 并在 mounted 后监听语言变更以自动替换响应式属性。
+ */
+function wrapI18n(Component, opts) {
+    var dataKey = opts.dataKey;
+    var originalData = Component.data;
+
+    Component.data = function () {
+        var rawConfig = window[dataKey] || {};
+        if (!hasLanguageKeys(rawConfig)) {
+            /* 数据未按语言键值对组织——回退原始行为 */
+            return originalData.call(this);
+        }
+        var currentLang = (window.VL_LANG && window.VL_LANG.current) || 'en';
+        var base = originalData.call(this);
+
+        /* 若原始 data() 返回了额外私有状态（如 loading/error），
+           将 i18n 解析结果合并进去，而非替换整个对象。           */
+        if (hasLanguageKeys(base)) {
+            /* 简单模式：base 就是原始配置本身 */
+            return resolveI18nData(base, currentLang);
+        }
+        /* 复杂模式：base 含组件私有状态，合并 i18n 属性 */
+        var resolved = resolveI18nData(rawConfig, currentLang);
+        for (var key in resolved) {
+            if (Object.prototype.hasOwnProperty.call(resolved, key)) {
+                base[key] = resolved[key];
+            }
+        }
+        return base;
+    };
+
+    var originalMounted = Component.mounted;
+    Component.mounted = function () {
+        var self = this;
+        if (typeof originalMounted === 'function') {
+            originalMounted.call(this);
+        }
+
+        document.addEventListener('vl-lang-changed', function (e) {
+            var newLang = e.detail && e.detail.lang;
+            if (!newLang || newLang === self.currentLang) return;
+            self.currentLang = newLang;
+
+            var rawConfig = window[dataKey] || {};
+            applyI18nSlice(self, rawConfig, newLang);
+        });
+    };
+}
+
+/* ──────────────────────────────────────────────────
+ * Component Mounting
+ * ────────────────────────────────────────────────── */
 
 function mountDocComponent(opts) {
     'use strict';
@@ -54,6 +190,12 @@ function mountDocComponent(opts) {
             return window[opts.dataKey] || {};
         }
     }, opts.extra || {});
+
+    /* ── i18n 包裹 ────────────────────────────────────────────
+       放在 Object.assign 之后，确保 data/mounted 已最终确定。     */
+    if (opts.i18n) {
+        wrapI18n(Component, opts);
+    }
 
     Vue.createApp(Component).mount(mountEl);
 }

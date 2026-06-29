@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="data:image/png;base64,{{ iconBase64 }}" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VideoLingo Documentation Center</title>
     <meta name="description" content="VideoLingo 文档中心，提供视频处理和分析的详细指南。">
@@ -49,7 +50,10 @@
 <!-- CDN components (intro 卡片依赖 YrySceneCard，进而依赖 YryTagChip，须提前加载) -->
 <script src="../cdn/yry-tag-chip/index.js"></script>
 <script src="../cdn/yry-scene-card/index.js"></script>
+<!-- YryBackTop · 零配置自初始化,加载即创建回到顶部按钮 -->
+<script src="../cdn/yry-back-top/index.js"></script>
 <script src="assets/mount-component.js"></script>
+<script src="assets/lang.js"></script>
 <script src="assets/include.js"></script>
 <script src="assets/main.js"></script>
 

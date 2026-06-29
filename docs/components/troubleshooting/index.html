@@ -1,6 +1,6 @@
 <template id="troubleshooting-template">
     <section id="troubleshooting">
-        <h2>Troubleshooting</h2>
+        <h2>{{ title }}</h2>
         <h3>Common Issues</h3>
         <div class="card" v-for="issue in issues" :key="issue.title">
             <h4>{{ issue.title }}</h4>

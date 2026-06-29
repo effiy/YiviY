@@ -1,119 +1,58 @@
 /* ─────────────────────────────────────────────────────
  * Translations
- * translations 组件专属样式（README 多语言渲染器）：
- *   - 语言切换器：.lang-switcher / .lang-btn / .lang-btn:hover / .lang-btn.active / .lang-emoji
- *   - README 头： .readme-hero / .readme-hero h1 / .trendshift-badge
- *   - 概览块：   .feature-list / .tagline
- *   - 演示块：   .demo-grid / .demo-cell / .demo-cell h4 / .demo-cell video
- *   - 语言列：   .lang-grid / .lang-pill
- *   - 提示/列表：.callout-text / .callout-list / .install-steps* / .alt-note
+ * translations 组件专属样式（README 多语言内容渲染器）：
+ *   - 演示块：   .demo-grid / .demo-cell / .demo-video-wrap
+ *   - 语言列：   .lang-grid / .lang-pill / .lang-pill-*
+ *   - 安装步骤： .install-steps* / .alt-note
  *   - 章节列表：.api-list / .limitations-list* / .contact-list*
  *
- * 原归属 docs/styles/components.css (Translations Section 整段)，
- * 现随组件迁移至本文件以实现「样式随组件走」。
  * 跨 section 共享的 .callout/.callout-warning/.callout-success 基础变体
  * 仍由 docs/styles/base.css 提供；本组件只补 README 特有增强样式。
+ *
+ * 已迁出（2026-06-29）：
+ *   - Hero (readme-hero / readme-title / readme-subtitle / trendshift-*)
+ *     → docs/components/intro/index.css（首屏整合）
+ *   - Overview (feature-list / tagline)
+ *     → docs/components/intro/index.css
  * ───────────────────────────────────────────────────── */
-
-/* ── Language Switcher ─────────────────────────────── */
-.vl-doc .lang-switcher {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 32px;
-    padding: 12px;
-    background: var(--vl-doc-bg-soft);
-    border: 1px solid var(--vl-doc-border);
-    border-radius: var(--vl-doc-radius);
-}
-
-.vl-doc .lang-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border: 1px solid var(--vl-doc-border);
-    border-radius: 100px;
-    background: var(--vl-doc-bg);
-    color: var(--vl-doc-text-soft);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all .15s;
-}
-
-.vl-doc .lang-btn:hover {
-    border-color: var(--vl-doc-primary);
-    color: var(--vl-doc-text);
-}
-
-.vl-doc .lang-btn.active {
-    background: var(--vl-doc-primary);
-    border-color: var(--vl-doc-primary);
-    color: #fff;
-    font-weight: 600;
-}
-
-.vl-doc .lang-emoji { font-size: 15px; }
-
-/* ── Hero ─────────────────────────────────────────── */
-.vl-doc .readme-hero {
-    text-align: center;
-    padding: 24px 0 32px;
-    border-bottom: 1px solid var(--vl-doc-border);
-    margin-bottom: 32px;
-}
-
-.vl-doc .readme-hero h1 {
-    font-size: 32px;
-    margin: 0 0 16px;
-}
-
-.vl-doc .trendshift-badge {
-    width: 250px;
-    height: 55px;
-}
-
-/* ── Overview ─────────────────────────────────────── */
-.vl-doc .feature-list {
-    list-style: none;
-    padding: 0;
-    margin: 16px 0;
-}
-
-.vl-doc .feature-list li {
-    padding: 6px 0;
-    line-height: 1.7;
-}
-
-.vl-doc .tagline {
-    background: var(--vl-doc-bg-soft);
-    padding: 14px 20px;
-    border-radius: var(--vl-doc-radius);
-    border-left: 4px solid var(--vl-doc-primary);
-    margin: 20px 0;
-}
 
 /* ── Demo ─────────────────────────────────────────── */
 .vl-doc .demo-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-    margin: 16px 0;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
 }
 
 .vl-doc .demo-cell {
     background: var(--vl-doc-bg);
     border: 1px solid var(--vl-doc-border);
     border-radius: var(--vl-doc-radius);
-    padding: 12px;
+    padding: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.vl-doc .demo-cell h4 { margin: 0 0 8px; font-size: 14px; }
-.vl-doc .demo-cell video {
-    width: 100%;
-    border-radius: 6px;
+.vl-doc .demo-cell:hover {
+    border-color: var(--vl-doc-primary);
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+
+.vl-doc .demo-cell h4 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.vl-doc .demo-video-wrap {
+    border-radius: 8px;
+    overflow: hidden;
     background: #000;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+.vl-doc .demo-video-wrap video {
+    width: 100%;
+    display: block;
 }
 
 /* ── Language Support ─────────────────────────────── */
@@ -121,23 +60,45 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 12px 0;
+    margin: 16px 0;
 }
 
 .vl-doc .lang-pill {
-    display: inline-block;
-    padding: 4px 12px;
-    background: var(--vl-doc-bg-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    background: var(--vl-doc-bg);
     border: 1px solid var(--vl-doc-border);
     border-radius: 100px;
     font-size: 13px;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.vl-doc .lang-pill:hover {
+    border-color: var(--vl-doc-primary);
+    background: var(--vl-doc-bg-soft);
+}
+
+.vl-doc .lang-pill-flag {
+    font-size: 15px;
+    line-height: 1;
+}
+
+.vl-doc .lang-pill-name {
+    font-weight: 500;
+}
+
+.vl-doc .lang-pill-rating {
+    color: var(--vl-doc-text-muted);
+    font-size: 11px;
 }
 
 .vl-doc .callout-text {
     color: var(--vl-doc-text-muted);
     font-size: 13px;
     font-style: italic;
-    margin: 8px 0;
+    margin: 10px 0;
 }
 
 .vl-doc .callout-list {
@@ -150,61 +111,86 @@
     counter-reset: vl-doc-install-step;
     list-style: none;
     padding: 0;
-    margin: 16px 0;
+    margin: 20px 0;
 }
 
 .vl-doc .install-steps li {
     counter-increment: vl-doc-install-step;
-    padding: 12px 0 12px 40px;
+    padding: 16px 0 16px 48px;
     position: relative;
+    border-left: 2px solid var(--vl-doc-border);
+    margin-left: 11px;
+}
+
+.vl-doc .install-steps li:last-child {
+    border-left-color: transparent;
 }
 
 .vl-doc .install-steps li::before {
     content: counter(vl-doc-install-step);
     position: absolute;
-    left: 0; top: 12px;
-    width: 26px; height: 26px;
+    left: -15px;
+    top: 16px;
+    width: 28px;
+    height: 28px;
     background: var(--vl-doc-primary);
     color: #fff;
     border-radius: 50%;
-    font-size: 12px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
 }
 
 .vl-doc .install-steps li p {
-    margin: 0 0 8px;
+    margin: 0 0 10px;
     font-weight: 600;
+    font-size: 15px;
 }
 
 .vl-doc .install-steps li pre {
-    margin: 8px 0 0;
+    margin: 10px 0 0;
+    background: var(--vl-doc-bg-soft);
+    border: 1px solid var(--vl-doc-border);
+    border-radius: var(--vl-doc-radius);
+    padding: 14px 16px;
+    overflow-x: auto;
+}
+
+.vl-doc .install-steps li pre code {
+    background: none;
+    padding: 0;
+    font-size: 14px;
 }
 
 .vl-doc .alt-note {
     color: var(--vl-doc-text-muted);
     font-size: 13px;
-    margin: 8px 0 16px;
+    margin: 8px 0 20px;
 }
 
 /* ── API / Limitations / Contact Lists ────────────── */
 .vl-doc .api-list {
     list-style: none;
     padding: 0;
-    margin: 16px 0;
+    margin: 20px 0;
 }
 
 .vl-doc .api-list li {
-    padding: 6px 0;
+    padding: 8px 0;
     line-height: 1.7;
 }
 
 .vl-doc .limitations-list {
-    padding-left: 20px;
+    padding-left: 24px;
     line-height: 1.7;
 }
 
 .vl-doc .limitations-list li {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    padding-left: 4px;
 }
 
 .vl-doc .contact-list {
@@ -213,6 +199,24 @@
 }
 
 .vl-doc .contact-list li {
-    padding: 4px 0;
+    padding: 5px 0;
     line-height: 1.7;
+}
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width: 768px) {
+    .vl-doc .demo-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .vl-doc .install-steps li {
+        padding-left: 40px;
+        margin-left: 8px;
+    }
+    .vl-doc .install-steps li::before {
+        left: -13px;
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
 }

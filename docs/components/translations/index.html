@@ -1,41 +1,14 @@
 <template id="translations-template">
-    <section id="translations">
-        <!-- Language Switcher -->
-        <div class="lang-switcher" role="tablist" aria-label="Language">
-            <button v-for="lang in available"
-                    :key="lang.code"
-                    class="lang-btn"
-                    :class="{ active: lang.code === currentLang }"
-                    @click="setLanguage(lang.code)"
-                    role="tab"
-                    :aria-selected="lang.code === currentLang">
-                <span class="lang-emoji">{{ lang.emoji }}</span>
-                <span class="lang-label">{{ lang.native }}</span>
-            </button>
-        </div>
-
-        <!-- ── Hero ──────────────────────────────────────── -->
-        <header class="readme-hero">
-            <h1>{{ langContent.hero.title }}</h1>
-            <a :href="constants.social.trendshift" target="_blank">
-                <img :src="constants.social.trendshift" alt="trendshift" class="trendshift-badge">
-            </a>
-        </header>
-
-        <!-- ── Overview ──────────────────────────────────── -->
-        <h2>{{ langContent.overview.title }} (<a :href="langContent.overview.ctaHref" target="_blank">{{ langContent.overview.cta }}</a>)</h2>
-        <p class="intro-lead">{{ langContent.overview.lead }}</p>
-        <ul class="feature-list">
-            <li v-for="(feat, fIdx) in langContent.overview.features" :key="fIdx" v-html="feat.html"></li>
-        </ul>
-        <p class="tagline" v-html="langContent.overview.tagline.html"></p>
+    <section id="translations" :data-lang="currentLang">
 
         <!-- ── Demo ──────────────────────────────────────── -->
         <h2>{{ langContent.demo.title }}</h2>
         <div class="demo-grid">
             <div v-for="video in demoVideos" :key="video.id" class="demo-cell">
                 <h4>{{ langContent.demo.items[video.id] }}</h4>
-                <video :src="video.url" controls preload="metadata"></video>
+                <div class="demo-video-wrap">
+                    <video :src="video.url" controls preload="metadata"></video>
+                </div>
             </div>
         </div>
 
@@ -44,7 +17,9 @@
         <p v-html="langContent.languages.inputTitle.html"></p>
         <div class="lang-grid">
             <span v-for="lang in langContent.languages.inputLangs" :key="lang.flag" class="lang-pill">
-                {{ lang.flag }} {{ lang.name }} {{ lang.rating }}
+                <span class="lang-pill-flag">{{ lang.flag }}</span>
+                <span class="lang-pill-name">{{ lang.name }}</span>
+                <span class="lang-pill-rating">{{ lang.rating }}</span>
             </span>
         </div>
         <p class="callout-text" v-html="langContent.languages.inputNote.html"></p>

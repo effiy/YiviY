@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   YrY CDN — YryBackTop · Vue 3 回到顶部按钮 样式
+
+   模板结构 (来自 index.html 中 <script type="text/x-template" id="yry-back-top-tpl">):
+     <button class="yry-back-top-btn" :class="{ 'is-visible': visible }">
+       {{ icon }}
+     </button>
+
+   命名约定: 所有类名以 `yry-back-top-` 前缀, 与 scene-card `yry-scene-card-*` /
+             breadcrumb `breadcrumb` / toast `yry-toast-*` 系列一致。
+
+   依赖 design tokens (来自 cdn/theme/*.css 或页面 :root):
+     --yry-bg-card / --yry-bg-raised
+     --yry-text / --yry-text-soft / --yry-accent
+     --yry-border / --yry-shadow / --yry-ease-out
+     --yry-radius-full
+
+   所有颜色都带 fallback, 即使页面未加载主题也能正常显示。
+   透明度统一通过 color-mix(in srgb, ..., transparent N%) 实现, 无需维护
+   --yry-*-rgb 双变量对。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.yry-back-top-btn {
+  position: fixed;
+  right:   var(--yry-back-top-right,  28px);
+  bottom:  var(--yry-back-top-bottom, 28px);
+  z-index: var(--yry-back-top-z,      100);
+  width:   var(--yry-back-top-size,   42px);
+  height:  var(--yry-back-top-size,   42px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:  1px solid var(--yry-border, rgba(255, 255, 255, .08));
+  border-radius: var(--yry-radius-full, 9999px);
+  background: var(--yry-bg-raised, rgba(42, 42, 56, 1));
+  color: var(--yry-text-soft, #d4d4d4);
+  font-size: 1.05rem;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--yry-shadow, 0 4px 20px rgba(0, 0, 0, .30));
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition:
+    opacity .2s var(--yry-ease-out, ease),
+    transform .2s var(--yry-ease-out, ease),
+    border-color .15s var(--yry-ease-out, ease),
+    color .15s var(--yry-ease-out, ease),
+    background .15s var(--yry-ease-out, ease);
+}
+
+/* ── visible 状态: 平滑上浮 + 显示 ───────────────────────────────────── */
+.yry-back-top-btn.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ── hover / focus: 边框与图标变为强调色 ────────────────────────────── */
+.yry-back-top-btn:hover {
+  border-color: var(--yry-accent, #ffc107);
+  color: var(--yry-accent, #ffc107);
+  background: color-mix(in srgb, var(--yry-accent, #ffc107) 8%, var(--yry-bg-raised, rgba(42, 42, 56, 1)));
+}
+
+.yry-back-top-btn:focus-visible {
+  outline: 2px solid var(--yry-accent, #ffc107);
+  outline-offset: 2px;
+}
+@supports not selector(:focus-visible) {
+  .yry-back-top-btn:focus {
+    outline: 2px solid var(--yry-accent, #ffc107);
+    outline-offset: 2px;
+  }
+}
+
+.yry-back-top-btn:active {
+  transform: translateY(0) scale(.94);
+}
+
+/* ── 入场动画 (mount 时) ────────────────────────────────────────────── */
+@keyframes yry-back-top-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 0; transform: translateY(6px); } /* 配合 .is-visible 过渡到 translateY(0) */
+}
+
+/* ── 用户偏好: 减少动画 ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .yry-back-top-btn {
+    transition: opacity .1s linear, border-color .1s linear, color .1s linear;
+    transform: none;
+  }
+  .yry-back-top-btn.is-visible { transform: none; }
+}
+
+/* ── 移动端: 稍微紧凑 ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .yry-back-top-btn {
+    right:  16px;
+    bottom: 16px;
+    width:  38px;
+    height: 38px;
+    font-size: .96rem;
+  }
+}

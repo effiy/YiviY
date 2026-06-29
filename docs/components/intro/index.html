@@ -2,19 +2,43 @@
     Intro 组件骨架
     ----------------------------------------------------------------------
     容器职责：
-      - 渲染 title / lead / 卡片网格 / callout；
-      - 在 mounted 钩子里调用 window.YrySceneCard.mount() 把每张卡片注入
-        到 #intro-card-N 占位 div（YrySceneCard 通过 yry-loader 异步加载）。
+      - 渲染 Hero（产品 slogan + CTA 入口 + trendshift 徽章）
+      - 渲染 Overview（README 简介章节：features 列表 + tagline）
+      - 渲染卡片网格（YrySceneCard 注入）
+      - 渲染底部 callout
+
+    Hero / Overview 数据源自 docs/components/translations/data.js，
+    由本组件整合到 docs/index.html 的首屏。
 -->
 <template id="intro-template">
     <section id="intro">
-        <h1>{{ title }}</h1>
-        <p class="intro-lead">{{ lead }}</p>
+
+        <!-- ── Hero ──────────────────────────────────────── -->
+        <header class="readme-hero">
+            <h1 class="readme-title">{{ hero.title }}</h1>
+            <p class="readme-subtitle">{{ overview.lead }}</p>
+            <a :href="overview.ctaHref" target="_blank" class="hero-cta">{{ overview.cta }}</a>
+            <a :href="constants.social.trendshift" target="_blank" class="trendshift-wrap">
+                <img :src="constants.social.trendshift" alt="trendshift" class="trendshift-badge">
+            </a>
+        </header>
+
+        <!-- ── Overview ──────────────────────────────────── -->
+        <h2>
+            {{ overview.title }}
+            (<a :href="overview.ctaHref" target="_blank">{{ overview.cta }}</a>)
+        </h2>
+        <ul class="feature-list">
+            <li v-for="(feat, fIdx) in overview.features"
+                :key="fIdx"
+                v-html="feat.html"></li>
+        </ul>
+        <p class="tagline" v-html="overview.tagline.html"></p>
+
         <!--
             卡片网格：每个 .intro-card-slot 是 YrySceneCard 的挂载点。
             Vue 仅负责渲染容器骨架，由 index.js 的 mounted 钩子调用
-            window.YrySceneCard.mount(card, '#intro-card-N') 注入实际卡片内容。
-            使用 .card-grid 复用 styles/base.css 中已有的网格布局。
+            window.YrySceneCard.mount() 注入实际卡片内容。
         -->
         <div class="card-grid">
             <div v-for="(card, i) in cards"
@@ -22,6 +46,7 @@
                  :id="'intro-card-' + i"
                  class="intro-card-slot"></div>
         </div>
+
         <div class="callout" v-if="callout">
             <strong>{{ callout.strong }}</strong>
             {{ callout.text }}<a :href="callout.linkHref">{{ callout.linkText }}</a>.

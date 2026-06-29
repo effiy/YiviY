@@ -1,12 +1,137 @@
 /* ─────────────────────────────────────────────────────
  * Intro
  * intro 组件专属样式：
+ *   - .readme-hero / .readme-title / .readme-subtitle / .trendshift-*
+ *   - .feature-list / .tagline / .hero-cta
  *   - .intro-lead  引导段大字
  * 跨 section 共享的 .card / .card-grid / .badge 等已统一收敛到
  * docs/styles/base.css，不在此处重复。
+ *
+ * Hero / Overview 由原 translations 组件迁移至此。
  * ───────────────────────────────────────────────────── */
 
-.vl-doc .intro-lead {
-    font-size: 17px;
-    color: var(--vl-doc-text);
+/* ── Hero ──────────────────────────────────────────── */
+.vl-doc .readme-hero {
+    text-align: center;
+    padding: 40px 20px 36px;
+    border-bottom: 1px solid var(--vl-doc-border);
+    margin-bottom: 40px;
+    background: linear-gradient(
+        180deg,
+        var(--vl-doc-bg-soft) 0%,
+        transparent 100%
+    );
+    border-radius: var(--vl-doc-radius);
+}
+
+.vl-doc .readme-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin: 0 0 12px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(
+        135deg,
+        var(--vl-doc-primary) 0%,
+        color-mix(in srgb, var(--vl-doc-primary) 60%, #6366f1) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Fallback for browsers without background-clip: text support */
+@supports not (-webkit-background-clip: text) {
+    .vl-doc .readme-title {
+        background: none;
+        -webkit-text-fill-color: var(--vl-doc-text);
+        color: var(--vl-doc-text);
+    }
+}
+
+.vl-doc .readme-subtitle {
+    font-size: 16px;
+    color: var(--vl-doc-text-soft);
+    max-width: 600px;
+    margin: 0 auto 18px;
+    line-height: 1.6;
+}
+
+.vl-doc .trendshift-wrap {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+.vl-doc .trendshift-wrap:hover {
+    transform: translateY(-2px);
+}
+
+.vl-doc .trendshift-badge {
+    width: 250px;
+    height: 55px;
+}
+
+/* Hero 内的 CTA 按钮（指向 videolingo.io） */
+.vl-doc .hero-cta {
+    display: inline-block;
+    margin: 8px 0 18px;
+    padding: 10px 22px;
+    border-radius: var(--vl-doc-radius);
+    background: var(--vl-doc-primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vl-doc .hero-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--vl-doc-primary) 40%, transparent);
+    color: #fff;
+}
+
+/* ── Overview ──────────────────────────────────────── */
+.vl-doc .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.vl-doc .feature-list li {
+    padding: 8px 0 8px 28px;
+    line-height: 1.7;
+    position: relative;
+}
+
+.vl-doc .feature-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 4px;
+    color: var(--vl-doc-primary);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.vl-doc .tagline {
+    background: var(--vl-doc-bg-soft);
+    padding: 16px 22px;
+    border-radius: var(--vl-doc-radius);
+    border-left: 4px solid var(--vl-doc-primary);
+    margin: 24px 0;
+    line-height: 1.7;
+}
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width: 768px) {
+    .vl-doc .readme-hero {
+        padding: 28px 16px 24px;
+    }
+    .vl-doc .readme-title {
+        font-size: 26px;
+    }
+    .vl-doc .readme-subtitle {
+        font-size: 14px;
+    }
+    .vl-doc .trendshift-badge {
+        width: 200px;
+        height: 44px;
+    }
 }
