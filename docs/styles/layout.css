@@ -160,3 +160,24 @@
 .vl-doc .main a:not(.card):not(.nav-link):not(.tab):not(.badge):not(.skip-link):hover {
     color: var(--vl-doc-primary-strong);
 }
+
+/* ── Diagram Link（卡片内指向架构图的链接）────────────────── */
+.vl-doc .diagram-link {
+    display: inline-block;
+    font-family: var(--vl-doc-font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+    margin-left: 0.375rem;
+    border-radius: 4px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid transparent;
+    color: var(--vl-doc-primary);
+    transition: all var(--vl-doc-duration-fast) var(--vl-doc-ease-out);
+    vertical-align: baseline;
+}
+.vl-doc .diagram-link:hover {
+    background: rgba(99, 102, 241, 0.18);
+    border-color: rgba(99, 102, 241, 0.3);
+    text-decoration: none;
+}

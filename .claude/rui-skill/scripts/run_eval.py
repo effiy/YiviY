@@ -24,10 +24,16 @@ def find_project_root() -> Path:
 
     Mimics how Claude Code discovers its project root, so the command file
     we create ends up where claude -p will look for it.
+
+    CONTRACT — keep this in sync with the JS counterpart:
+      lib/fs.mjs :: findProjectRoot()
+    Both implementations MUST resolve the same directory for any given
+    cwd, otherwise the JS/Python toolchains will disagree about where
+    skill artifacts and .claude/commands/ live.
     """
     current = Path.cwd()
     for parent in [current, *current.parents]:
-        if (parent / ".claude").is_dir():
+        if (parent / "CLAUDE.md").is_file() or (parent / ".git").is_dir():
             return parent
     return current
 

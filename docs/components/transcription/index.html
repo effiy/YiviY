@@ -1,7 +1,7 @@
 <template id="transcription-template">
     <section id="transcription">
         <h2>{{ title }}</h2>
-        <p>VideoLingo uses <strong>WhisperX</strong> for word-level transcription with forced alignment, providing timestamp-accurate subtitles.</p>
+        <p>VideoLingo uses <strong>WhisperX</strong> for word-level transcription with forced alignment, providing timestamp-accurate subtitles. <a class="diagram-link" :href="diagramUrl">{{ diagramLabel }} →</a></p>
         <h3>Whisper Models</h3>
         <table>
             <tr><th>Model</th><th>Speed</th><th>Accuracy</th><th>VRAM</th></tr>

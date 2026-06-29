@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhisperX Transcription Pipeline · VideoLingo</title>
+    <meta name="description" content="WhisperX transcription pipeline architecture diagram — Audio input to word-level timestamps, with Demucs, model selection, forced alignment, and multi-runtime support.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2334d399'/><text x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23020617' text-anchor='middle'>WX</text></svg>" type="image/svg+xml">
+
+    <!-- CDN Theme (dark, AI/ML oriented) — one line to switch themes -->
+    <link rel="stylesheet" href="../../../cdn/theme/midnight-galaxy.css">
+
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <!-- Export: html2canvas + jsPDF -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+
+    <!-- Page-specific styles -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="vl-doc">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Vue 3 Template
+     ═══════════════════════════════════════════════════════════════════ -->
+<template id="diagram-template">
+<div class="diagram-page">
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <div class="diagram-header">
+        <div class="diagram-header-row">
+            <div class="pulse-dot"></div>
+            <h1>{{ title }}</h1>
+
+            <!-- Language Toggle -->
+            <button class="lang-toggle" @click="switchLang" :title="switchLangHint">
+                {{ currentLang === 'en' ? '中' : 'EN' }}
+            </button>
+
+            <!-- Export Toolbar -->
+            <div class="toolbar" :class="{ expanded: toolbarExpanded }">
+                <div class="toolbar-actions">
+                    <button @click="copyAsImage">{{ exportStatus.copy || copyPng }}</button>
+                    <button @click="downloadPNG">{{ exportStatus.png || downloadPng }}</button>
+                    <button @click="downloadPDF">{{ exportStatus.pdf || downloadPdf }}</button>
+                </div>
+                <button class="toolbar-toggle" @click="toolbarExpanded = !toolbarExpanded"
+                        :title="exportOptions" aria-label="Export options">⋯</button>
+            </div>
+        </div>
+        <p class="diagram-subtitle">{{ subtitle }}</p>
+    </div>
+
+    <!-- ── SVG Diagram ─────────────────────────────────────── -->
+    <div class="diagram-container" ref="diagramContainer">
+        <svg viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+                </marker>
+                <marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#34d399" />
+                </marker>
+                <marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" />
+                </marker>
+                <marker id="arrowhead-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" />
+                </marker>
+                <marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
+                </marker>
+                <marker id="arrowhead-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#fb923c" />
+                </marker>
+                <marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" />
+                </marker>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+
+            <!-- Background Grid -->
+            <rect width="100%" height="100%" fill="url(#grid)" />
+
+            <!-- ============================================================
+                 ARROWS — drawn before component boxes for correct z-order
+                 ============================================================ -->
+
+            <!-- Audio Input → Demucs (down) -->
+            <line x1="145" y1="120" x2="145" y2="143" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead-violet)"/>
+            <text x="155" y="135" fill="#94a3b8" font-size="8">{{ svg.arrows.audio }}</text>
+
+            <!-- Audio Input → WhisperX Engine (skip Demucs, right, dashed) -->
+            <line x1="245" y1="92" x2="318" y2="92" stroke="#a78bfa" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrowhead-violet)"/>
+            <text x="270" y="85" fill="#64748b" font-size="7">{{ svg.arrows.skip }}</text>
+
+            <!-- Demucs → WhisperX Engine (right then up into engine) -->
+            <polyline points="245,170 282,170 282,140 318,140" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrowhead-orange)"/>
+            <text x="260" y="163" fill="#94a3b8" font-size="8">{{ svg.arrows.demux }}</text>
+
+            <!-- Model Selection → WhisperX Engine (left) -->
+            <line x1="660" y1="117" x2="622" y2="117" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead-cyan)"/>
+
+            <!-- Runtime Backends → WhisperX Engine (left) -->
+            <line x1="660" y1="247" x2="622" y2="247" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead-amber)"/>
+
+            <!-- WhisperX Engine → Chinese Auto-Switch (down) -->
+            <line x1="470" y1="235" x2="470" y2="258" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead-emerald)"/>
+
+            <!-- Chinese Auto-Switch → Output Region (down) -->
+            <line x1="470" y1="310" x2="470" y2="333" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrowhead-rose)"/>
+
+            <!-- WhisperX Engine → Output Region (down, direct path, dashed) -->
+            <line x1="350" y1="235" x2="350" y2="390" stroke="#34d399" stroke-width="1" stroke-dasharray="5,3"/>
+
+            <!-- Output → downstream (within output region, bottom arrow) -->
+            <line x1="580" y1="472" x2="580" y2="496" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead-violet)"/>
+            <text x="595" y="489" fill="#a78bfa" font-size="8">{{ svg.outputs.arrow }}</text>
+
+            <!-- ============================================================
+                 REGION BOUNDARIES
+                 ============================================================ -->
+
+            <!-- Audio Source Region — violet / Data -->
+            <rect x="20" y="30" width="250" height="200" rx="12" fill="rgba(167, 139, 250, 0.04)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="8,4"/>
+            <text x="32" y="48" fill="#a78bfa" font-size="10" font-weight="600">{{ svg.regions.audio }}</text>
+
+            <!-- VideoLingo Transcription Region — emerald / Service -->
+            <rect x="290" y="30" width="690" height="630" rx="12" fill="rgba(6, 78, 59, 0.04)" stroke="#34d399" stroke-width="1" stroke-dasharray="8,4"/>
+            <text x="302" y="48" fill="#34d399" font-size="10" font-weight="600">{{ svg.regions.engine }}</text>
+
+            <!-- Output Artifacts Sub-Region — violet / Data -->
+            <rect x="320" y="337" width="520" height="115" rx="12" fill="rgba(167, 139, 250, 0.04)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="8,4"/>
+            <text x="332" y="355" fill="#a78bfa" font-size="9" font-weight="600">{{ svg.regions.output }}</text>
+
+            <!-- ============================================================
+                 COMPONENT BOXES — opaque #0f172a mask behind each
+                 ============================================================ -->
+
+            <!-- ── Audio Input — Data / violet ── -->
+            <rect x="45" y="65" width="200" height="55" rx="6" fill="#0f172a"/>
+            <rect x="45" y="65" width="200" height="55" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="145" y="85" fill="white" font-size="11" font-weight="600" text-anchor="middle">{{ svg.audioInput.title }}</text>
+            <text x="145" y="101" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.audioInput.file }}</text>
+            <text x="145" y="113" fill="#a78bfa" font-size="7" text-anchor="middle">{{ svg.audioInput.from }}</text>
+
+            <!-- ── Demucs (optional) — Message Bus / orange ── -->
+            <rect x="45" y="145" width="200" height="50" rx="6" fill="#0f172a"/>
+            <rect x="45" y="145" width="200" height="50" rx="6" fill="rgba(251, 146, 60, 0.25)" stroke="#fb923c" stroke-width="1.5"/>
+            <text x="145" y="163" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.demucs.title }}</text>
+            <text x="145" y="177" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.demucs.model }}</text>
+            <text x="145" y="189" fill="#fb923c" font-size="7" text-anchor="middle">{{ svg.demucs.effect }}</text>
+
+            <!-- ── WhisperX Engine — Backend / emerald (large) ── -->
+            <rect x="320" y="65" width="300" height="170" rx="8" fill="#0f172a"/>
+            <rect x="320" y="65" width="300" height="170" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+            <text x="470" y="87" fill="white" font-size="11" font-weight="600" text-anchor="middle">{{ svg.engine.title }}</text>
+            <text x="340" y="108" fill="#94a3b8" font-size="8">{{ svg.engine.load }}</text>
+            <text x="340" y="126" fill="#94a3b8" font-size="8">{{ svg.engine.transcribe }}</text>
+            <text x="340" y="144" fill="#94a3b8" font-size="8">{{ svg.engine.align }}</text>
+            <text x="340" y="164" fill="#34d399" font-size="8">{{ svg.engine.output }}</text>
+            <text x="340" y="184" fill="#34d399" font-size="7">{{ svg.engine.batch }}</text>
+            <!-- Internal step connectors -->
+            <line x1="338" y1="113" x2="338" y2="120" stroke="#34d399" stroke-width="0.5"/>
+            <line x1="338" y1="131" x2="338" y2="138" stroke="#34d399" stroke-width="0.5"/>
+            <line x1="338" y1="149" x2="338" y2="156" stroke="#34d399" stroke-width="0.5"/>
+
+            <!-- ── Model Selection — Frontend / cyan ── -->
+            <rect x="660" y="65" width="180" height="105" rx="8" fill="#0f172a"/>
+            <rect x="660" y="65" width="180" height="105" rx="8" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="750" y="85" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.modelSelect.title }}</text>
+            <text x="750" y="103" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.modelSelect.v3 }}</text>
+            <text x="750" y="119" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.modelSelect.turbo }}</text>
+            <text x="750" y="137" fill="#22d3ee" font-size="8" text-anchor="middle">{{ svg.modelSelect.belle }}</text>
+            <text x="750" y="155" fill="#475569" font-size="7" text-anchor="middle">CTranslate2 · FP16</text>
+
+            <!-- ── Runtime Backends — Infrastructure / amber ── -->
+            <rect x="660" y="195" width="180" height="105" rx="8" fill="#0f172a"/>
+            <rect x="660" y="195" width="180" height="105" rx="8" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+            <text x="750" y="215" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.runtime.title }}</text>
+            <text x="750" y="233" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.runtime.local }}</text>
+            <text x="750" y="251" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.runtime.cloud }}</text>
+            <text x="750" y="269" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.runtime.elevenlabs }}</text>
+            <text x="750" y="287" fill="#475569" font-size="7" text-anchor="middle">compute_type float16</text>
+
+            <!-- ── Chinese Auto-Switch — Auth / rose ── -->
+            <rect x="320" y="260" width="300" height="50" rx="6" fill="#0f172a"/>
+            <rect x="320" y="260" width="300" height="50" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+            <text x="470" y="280" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.chinese.title }}</text>
+            <text x="470" y="296" fill="#fb7185" font-size="8" text-anchor="middle">{{ svg.chinese.desc }} · {{ svg.chinese.note }}</text>
+
+            <!-- ── Output: word_timestamps.json — Data / violet ── -->
+            <rect x="340" y="372" width="145" height="55" rx="6" fill="#0f172a"/>
+            <rect x="340" y="372" width="145" height="55" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="412" y="394" fill="white" font-size="9" font-weight="600" text-anchor="middle">📝 {{ svg.outputs.words }}</text>
+            <text x="412" y="410" fill="#94a3b8" font-size="7" text-anchor="middle">word-level timestamps</text>
+            <text x="412" y="422" fill="#a78bfa" font-size="7" text-anchor="middle">+ speaker labels</text>
+
+            <!-- ── Output: subtitles.srt — Data / violet ── -->
+            <rect x="505" y="372" width="130" height="55" rx="6" fill="#0f172a"/>
+            <rect x="505" y="372" width="130" height="55" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="570" y="394" fill="white" font-size="9" font-weight="600" text-anchor="middle">📄 {{ svg.outputs.srt }}</text>
+            <text x="570" y="410" fill="#94a3b8" font-size="7" text-anchor="middle">SubRip format</text>
+            <text x="570" y="422" fill="#a78bfa" font-size="7" text-anchor="middle">indexed + timed</text>
+
+            <!-- ── Output: subtitles.vtt — Data / violet ── -->
+            <rect x="655" y="372" width="155" height="55" rx="6" fill="#0f172a"/>
+            <rect x="655" y="372" width="155" height="55" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="732" y="394" fill="white" font-size="9" font-weight="600" text-anchor="middle">🌐 {{ svg.outputs.vtt }}</text>
+            <text x="732" y="410" fill="#94a3b8" font-size="7" text-anchor="middle">WebVTT format</text>
+            <text x="732" y="422" fill="#a78bfa" font-size="7" text-anchor="middle">HTML5 <track></text>
+
+            <!-- ── Output: detect_language bar — External / slate ── -->
+            <rect x="340" y="437" width="470" height="20" rx="4" fill="#0f172a"/>
+            <rect x="340" y="437" width="470" height="20" rx="4" fill="rgba(30, 41, 59, 0.5)" stroke="#475569" stroke-width="1"/>
+            <text x="575" y="451" fill="#94a3b8" font-size="8" text-anchor="middle">language_detection · punctuation_restoration · multi-lang filter (primary only)</text>
+
+            <!-- ── find_video_files → WhisperX gateway — Frontend / cyan ── -->
+            <rect x="320" y="500" width="520" height="40" rx="6" fill="#0f172a"/>
+            <rect x="320" y="500" width="520" height="40" rx="6" fill="rgba(8, 51, 68, 0.3)" stroke="#22d3ee" stroke-width="1"/>
+            <text x="580" y="518" fill="#22d3ee" font-size="8" font-weight="600" text-anchor="middle">{{ svg.gateway.line1 }}</text>
+            <text x="580" y="534" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.gateway.line2 }}</text>
+
+            <!-- ============================================================
+                 LEGEND — outside all boundary boxes, ≥20px below lowest
+                 Lowest boundary: Engine y=30+630=660 → legend y=680→ need taller viewBox
+                 Actually Engine region ends at y=660 (30+630), legend starts at y=580
+                 but viewBox is 680. Let's place legend at y=590, fits.
+                 ============================================================ -->
+            <text x="290" y="592" fill="white" font-size="10" font-weight="600">{{ svg.legend.title }}</text>
+
+            <rect x="290" y="604" width="16" height="10" rx="2" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1"/>
+            <text x="312" y="613" fill="#94a3b8" font-size="8">{{ svg.legend.audio }}</text>
+
+            <rect x="440" y="604" width="16" height="10" rx="2" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
+            <text x="462" y="613" fill="#94a3b8" font-size="8">{{ svg.legend.engine }}</text>
+
+            <rect x="620" y="604" width="16" height="10" rx="2" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
+            <text x="642" y="613" fill="#94a3b8" font-size="8">{{ svg.legend.model }}</text>
+
+            <rect x="770" y="604" width="16" height="10" rx="2" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
+            <text x="792" y="613" fill="#94a3b8" font-size="8">{{ svg.legend.runtime }}</text>
+
+            <rect x="290" y="622" width="16" height="10" rx="2" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1"/>
+            <text x="312" y="631" fill="#94a3b8" font-size="8">{{ svg.legend.optional }}</text>
+
+            <rect x="440" y="622" width="16" height="10" rx="2" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1"/>
+            <text x="462" y="631" fill="#94a3b8" font-size="8">{{ svg.legend.special }}</text>
+
+            <rect x="620" y="622" width="16" height="10" rx="2" fill="transparent" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,4"/>
+            <text x="642" y="631" fill="#94a3b8" font-size="8">{{ svg.legend.boundary }}</text>
+
+            <!-- Tech stack row -->
+            <text x="500" y="658" fill="#475569" font-size="8" text-anchor="middle">{{ svg.techStack }}</text>
+        </svg>
+    </div>
+
+    <!-- ── Info Cards ──────────────────────────────────────── -->
+    <div class="diagram-cards">
+        <div class="diagram-card" v-for="(card, i) in cards" :key="i">
+            <div class="diagram-card-header">
+                <div class="card-dot" :class="card.dotClass"></div>
+                <h3>{{ card.title }}</h3>
+            </div>
+            <ul>
+                <li v-for="(item, j) in card.items" :key="j">{{ item }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ── Footer ──────────────────────────────────────────── -->
+    <p class="diagram-footer">{{ footer }}</p>
+</div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     Script Loading Order (Critical)
+       data.js MUST load before index.js
+       lang.js + mount-component.js provide VL_LANG + mountDocComponent()
+     ═══════════════════════════════════════════════════════════════════ -->
+<script src="data.js"></script>
+<script src="../../../assets/lang.js"></script>
+<script src="../../../assets/mount-component.js"></script>
+<script src="index.js"></script>
+
+</body>
+</html>

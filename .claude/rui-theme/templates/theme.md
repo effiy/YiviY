@@ -2,6 +2,8 @@
 
 > <One-line description of the theme's mood and use case.>
 
+> **Naming convention**: CSS custom properties under `:root` MUST be semantic (e.g. `--yry-chart-primary`), never numbered (e.g. `--yry-chart-1`). All token names flow from role → hierarchy → modifier; ordinals are encoded by ordering in the palette table, not by suffixes.
+
 ## Visual Identity
 
 | Aspect | Choice |
@@ -62,11 +64,11 @@
     --yry-success:       #XXXXXX;
     --yry-warn:          #XXXXXX;
     --yry-error:         #XXXXXX;
-    --yry-chart-1:       #XXXXXX;
-    --yry-chart-2:       #XXXXXX;
-    --yry-chart-3:       #XXXXXX;
-    --yry-chart-4:       #XXXXXX;
-    --yry-chart-5:       #XXXXXX;
+    --yry-chart-primary:    #XXXXXX;
+    --yry-chart-secondary:  #XXXXXX;
+    --yry-chart-tertiary:   #XXXXXX;
+    --yry-chart-quaternary: #XXXXXX;
+    --yry-chart-quinary:    #XXXXXX;
 
     --yry-font-sans: <heading>, <fallback>;
     --yry-font-mono: <mono>, <fallback>;

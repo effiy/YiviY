@@ -3,53 +3,30 @@
  *
  * Demo type: __DEMO_TYPE_LABEL__
  * Interactivity: __DEMO_INTERACTIVITY_DESC__
+ *
+ * 通过共享 helper `assets/demo-mount.js` 启动；该脚本已处理：
+ *   - Vue / YrySceneCard 就绪守卫
+ *   - 将 window.DEMO_CARD_DATA 挂载到 #scene-card
+ *   - 创建 Vue 应用并挂载到 #demo-app
  */
-(function() {
-    'use strict';
+mountDemoApp({
+    data: function () {
+        return __DEMO_DATA__;
+    },
 
-    var cardData = window.DEMO_CARD_DATA;
-    var mockData = window.DEMO_MOCK_DATA;
+    methods: {
+        __DEMO_METHODS__
+    },
 
-    // ── Mount the rui-scene card ──────────────────
-    // The card area uses YrySceneCard.mount() — NOT inline Vue templates.
-    // cardData must be a valid YrySceneCard props object from data.js.
-    // Links in cardData use { label, href, target } format.
-    (function mountCard() {
-        var el = document.getElementById('scene-card');
-        function doMount() {
-            if (el && window.YrySceneCard && cardData) {
-                window.YrySceneCard.mount(cardData, el);
-            }
-        }
-        if (window.YrySceneCard) { doMount(); return; }
-        document.addEventListener('yry-scene-card-ready', function once() {
-            document.removeEventListener('yry-scene-card-ready', once);
-            doMount();
-        });
-    })();
+    computed: {
+        __DEMO_COMPUTED__
+    },
 
-    // ── Vue Demo App ─────────────────────────────
-    var app = Vue.createApp({
-        data: function() {
-            return __DEMO_DATA__;
-        },
+    mounted: function () {
+        __DEMO_MOUNTED__
+    },
 
-        methods: {
-            __DEMO_METHODS__
-        },
-
-        computed: {
-            __DEMO_COMPUTED__
-        },
-
-        mounted: function() {
-            __DEMO_MOUNTED__
-        },
-
-        beforeUnmount: function() {
-            __DEMO_BEFORE_UNMOUNT__
-        }
-    });
-
-    app.mount('#demo-app');
-})();
+    beforeUnmount: function () {
+        __DEMO_BEFORE_UNMOUNT__
+    }
+});

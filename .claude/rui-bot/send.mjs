@@ -60,11 +60,22 @@ function parseArgs() {
 
   for (const arg of args) {
     if (arg === "--no-send" || arg.startsWith("--no-send=")) { opts.noSend = true; continue; }
+    if (!arg.startsWith("--")) {
+      console.error(`[rui-bot] ⚠️  忽略非选项参数: ${arg}`);
+      continue;
+    }
     const eq = arg.indexOf("=");
-    if (eq === -1) continue;
+    if (eq === -1) {
+      console.error(`[rui-bot] ⚠️  忽略无值的选项: ${arg}`);
+      continue;
+    }
     const key = arg.slice(2, eq);
     const val = arg.slice(eq + 1);
-    if (key in opts) opts[key] = val;
+    if (!(key in opts)) {
+      console.error(`[rui-bot] ⚠️  未知选项 --${key}（拼写错误？运行 --help 查看完整列表）`);
+      continue;
+    }
+    opts[key] = val;
   }
   return opts;
 }
