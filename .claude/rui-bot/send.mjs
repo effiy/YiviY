@@ -36,7 +36,7 @@ function parseArgs() {
   const opts = { story: "", project: "", content: "", contentFile: "", noSend: false };
 
   for (const arg of args) {
-    if (arg === "--no-send") { opts.noSend = true; continue; }
+    if (arg === "--no-send" || arg.startsWith("--no-send=")) { opts.noSend = true; continue; }
     const eq = arg.indexOf("=");
     if (eq === -1) continue;
     const key = arg.slice(2, eq);

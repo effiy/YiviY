@@ -71,9 +71,10 @@ window.INTRO_CONFIG = {
             lead:  'VideoLingo is an all-in-one video translation, localization, and dubbing tool aimed at generating Netflix-quality subtitles. It eliminates stiff machine translations and multi-line subtitles while adding high-quality dubbing, enabling global knowledge sharing across language barriers.',
             features: [
                 /* ── 外部工具 · 自定义链接指向工具自身仓库 ── */
-                { name: '🎥 yt-dlp', desc: 'YouTube video download via yt-dlp · <strong>1,200+ sites</strong> · format selection · subtitle extraction',
+                { name: '🎥 yt-dlp', nameHref: 'views/yt-dlp/diagram.html', nameTarget: '', desc: 'YouTube video download via yt-dlp · <strong>1,200+ sites</strong> · format selection · subtitle extraction',
                   tags: [{ text: '1.2k sites', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
                   links: [
+                      { label: '图解', href: 'views/yt-dlp/diagram.html',                           target: '' },
                       { label: '源码', href: 'https://github.com/yt-dlp/yt-dlp',                    target: '_blank' },
                       { label: '文档', href: 'https://github.com/yt-dlp/yt-dlp#readme',             target: '_blank' },
                       { label: 'Wiki', href: 'https://github.com/yt-dlp/yt-dlp/wiki',              target: '_blank' },
@@ -216,9 +217,10 @@ window.INTRO_CONFIG = {
             lead:  'VideoLingo 是一站式视频翻译本地化配音工具，能够一键生成 Netflix 级别的高质量字幕，告别生硬机翻，告别多行字幕，还能加上高质量的克隆配音，让全世界的知识能够跨越语言的障碍共享。',
             features: [
                 /* ── 外部工具 · 自定义链接指向工具自身仓库 ── */
-                { name: '🎥 yt-dlp', desc: '使用 yt-dlp 下载 YouTube 视频 · <strong>1,200+ 站点</strong> · 格式选择 · 字幕提取',
+                { name: '🎥 yt-dlp', nameHref: 'views/yt-dlp/diagram.html', nameTarget: '', desc: '使用 yt-dlp 下载 YouTube 视频 · <strong>1,200+ 站点</strong> · 格式选择 · 字幕提取',
                   tags: [{ text: '1.2k 站点', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
                   links: [
+                      { label: '图解', href: 'views/yt-dlp/diagram.html',                           target: '' },
                       { label: '源码', href: 'https://github.com/yt-dlp/yt-dlp',                    target: '_blank' },
                       { label: '文档', href: 'https://github.com/yt-dlp/yt-dlp#readme',             target: '_blank' },
                       { label: 'Wiki', href: 'https://github.com/yt-dlp/yt-dlp/wiki',              target: '_blank' },
