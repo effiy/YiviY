@@ -35,26 +35,12 @@
 
     var COMPONENT_NAME = 'YryBackTop';
 
-    /* ── 抓取 SELF_SRC (script.onload 等异步回调中 document.currentScript 已为 null,
-           故必须在 IIFE 顶层一次性捕获) ── */
-    var SELF_SRC = (document.currentScript && document.currentScript.src) || '';
-
     /* ── 单例状态 (闭包内共享) ──────────────────────────────────── */
     var _app          = null;  // Vue app 实例 (单例)
     var _scrollCtrl   = null;  // AbortController 用于卸载时释放 scroll 监听
     var _cfg          = null;  // 当前配置 (data.js + defaultConfig 浅合并结果)
     var _loaderCtx    = null;  // yryLoadComponent 传入的 ctx (fetchTemplate/dispatchReady/...)
     var _loaderReady  = false; // data.js 是否已就绪
-
-    /* ── 字段快捷访问 (data.js 的 runtime 配置嵌套在 defaults 中, 这里统一解包) ── */
-    function _threshold()    { return _cfg.defaults.threshold;    }
-    function _size()         { return _cfg.defaults.size;         }
-    function _bottom()       { return _cfg.defaults.bottomOffset; }
-    function _right()        { return _cfg.defaults.rightOffset;  }
-    function _zIndex()       { return _cfg.defaults.zIndex;       }
-    function _iconChar()     { return _cfg.defaults.iconChar;     }
-    function _ariaLabel()    { return _cfg.defaults.ariaLabel;    }
-    function _hostId()       { return _cfg.defaults.hostId;       }
 
     /* ── 懒挂载 Vue 应用 (template 已抓取后由 onReady 调用) ─────── */
     function _mountApp(templateHTML) {
@@ -64,10 +50,10 @@
         }
 
         /* ── 创建并复用宿主 div (避免重复挂载时重复创建) ─── */
-        var host = document.getElementById(_hostId());
+        var host = document.getElementById(_cfg.defaults.hostId);
         if (!host) {
             host = document.createElement('div');
-            host.id = _hostId();
+            host.id = _cfg.defaults.hostId;
             document.body.appendChild(host);
         } else if (host._yryBackTopInstance) {
             /* 宿主 div 已被本组件实例占用, 直接复用 */
@@ -77,20 +63,20 @@
             template: templateHTML,
             data: function () {
                 return {
-                    visible:   window.scrollY > _threshold(),
-                    icon:      _iconChar(),
-                    ariaLabel: _ariaLabel()
+                    visible:   window.scrollY > _cfg.defaults.threshold,
+                    icon:      _cfg.defaults.iconChar,
+                    ariaLabel: _cfg.defaults.ariaLabel
                 };
             },
             computed: {
                 /* 内联样式 (位置/尺寸/层级) — 全部从 data.js 配置派生, 运行时可热改 */
                 btnStyle: function () {
                     return {
-                        width:        _size()         + 'px',
-                        height:       _size()         + 'px',
-                        right:        _right()        + 'px',
-                        bottom:       _bottom()       + 'px',
-                        zIndex:       _zIndex()
+                        width:        _cfg.defaults.size        + 'px',
+                        height:       _cfg.defaults.size        + 'px',
+                        right:        _cfg.defaults.rightOffset + 'px',
+                        bottom:       _cfg.defaults.bottomOffset + 'px',
+                        zIndex:       _cfg.defaults.zIndex
                     };
                 }
             },
@@ -110,7 +96,7 @@
                 function onScroll() {
                     if (ticking) return;
                     requestAnimationFrame(function () {
-                        self.visible = window.scrollY > _threshold();
+                        self.visible = window.scrollY > _cfg.defaults.threshold;
                         ticking = false;
                     });
                     ticking = true;
@@ -121,7 +107,7 @@
                 });
 
                 /* 同步一次初始可见性 (应对页面刷新时已滚动到底部的情况) */
-                this.visible = window.scrollY > _threshold();
+                this.visible = window.scrollY > _cfg.defaults.threshold;
 
                 host._yryBackTopInstance = this; // 标记宿主已被本组件占用
             },
@@ -131,7 +117,7 @@
                     _scrollCtrl.abort();
                     _scrollCtrl = null;
                 }
-                var h = document.getElementById(_hostId());
+                var h = document.getElementById(_cfg.defaults.hostId);
                 if (h) h._yryBackTopInstance = null;
                 _app = null;
             }
@@ -188,18 +174,6 @@
         });
     }
 
-    /* ── 入口: loader 已就绪则立即 bootstrap, 否则显式注入一次 ── */
-    if (typeof window.yryBootstrapFromCurrentScript === 'function') {
-        _bootstrap();
-    } else {
-        var loaderScript = document.createElement('script');
-        loaderScript.src = SELF_SRC
-            ? new URL('../shared/yry-loader.js', SELF_SRC).href
-            : '../shared/yry-loader.js';
-        loaderScript.onload = _bootstrap;
-        loaderScript.onerror = function () {
-            console.error('[' + COMPONENT_NAME + '] yry-loader.js 加载失败');
-        };
-        document.head.appendChild(loaderScript);
-    }
+    /* ── bootstrap: loader 已就绪则直接调用（loader 由 docs/index.html 预加载） ── */
+    _bootstrap();
 })();

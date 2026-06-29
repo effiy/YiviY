@@ -3,9 +3,10 @@
  * 由 assets/mount-component.js 公共工具挂载。
  *
  * 语言感知：
- *   - 当前语言从全局 VL_LANG.current 读取
- *   - 语言切换通过 VL_LANG.setLanguage() 派发 vl-lang-changed 事件
- *   - 监听该事件以同步更新 sidebar 自身（导航标签更新）
+ *   - 通过 mountDocComponent 的 i18n:true 选项启用透明语言切换
+ *   - groups 字段来自各语言 slice（en / zh-CN / ...），logo / langs /
+ *     footerLinks 来自 constants，自动合并到 Vue 实例
+ *   - 切换语言时由 wrapI18n 替换响应式属性，无需手动监听 vl-lang-changed
  *
  * 状态收敛：
  *   - 侧栏展开/收起 (.open) 完全由 Vue 的 isOpen 控制
@@ -13,26 +14,16 @@
  *     完成，main.js 不再直接操作 #sidebar DOM。
  */
 
-function resolveSidebarGroups(cfg, lang) {
-    var groupsMap = cfg.groups || {};
-    return groupsMap[lang] || groupsMap['en'] || [];
-}
-
 mountDocComponent({
     name: 'DocSidebar',
     templateId: 'sidebar-template',
     dataKey: 'SIDEBAR_CONFIG',
+    i18n: true,
     extra: {
         data: function () {
-            var cfg = window.SIDEBAR_CONFIG || {};
-            var currentLang = (window.VL_LANG && window.VL_LANG.current) || 'en';
             return {
-                isOpen: false,
-                logo: cfg.logo || {},
-                currentLang: currentLang,
-                langs: cfg.langs || [],
-                groups: resolveSidebarGroups(cfg, currentLang),
-                footerLinks: cfg.footerLinks || []
+                /* 组件私有状态：侧栏展开状态（与 i18n 数据无关） */
+                isOpen: false
             };
         },
         methods: {
@@ -59,13 +50,6 @@ mountDocComponent({
                     !(mobileBtn && mobileBtn.contains(e.target))) {
                     self.isOpen = false;
                 }
-            });
-
-            /* 全局语言变更 → 更新导航标签 */
-            document.addEventListener('vl-lang-changed', function (e) {
-                self.currentLang = e.detail.lang;
-                var cfg = window.SIDEBAR_CONFIG || {};
-                self.groups = resolveSidebarGroups(cfg, e.detail.lang);
             });
         }
     }

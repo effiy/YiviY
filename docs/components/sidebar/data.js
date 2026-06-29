@@ -5,37 +5,40 @@
  * 与模板/样式解耦，便于后续维护。
  * 通过 window.SIDEBAR_CONFIG 单一对象暴露，供 Vue 组件读取。
  *
- * groups 按语言 code 分组：groups[lang] = [ { title, items[] } ]。
- * 当前语言由全局 VL_LANG.current 驱动，切换后 sidebar 自动更新。
+ * 数据形态遵循 mount-component.js 的 i18n:true 约定：
+ *   - 顶层 keys 中, 语言 code (en / zh-CN / ...) 对应各语言的 groups 切片
+ *   - 非语言 code 的键（这里仅为 constants）由 resolveI18nData 自动注入,
+ *     模板可通过 this.logo / this.langs / this.footerLinks 直接访问
+ *   - 切换语言时, wrapI18n 自动把当前语言 slice 的属性替换到 Vue 实例,
+ *     模板无需任何 i18n 监听代码
  *
- * logo 与 footerLinks 为语言无关的常量（品牌名 / URL）。
+ * 语言列表：直接读取 window.VL_LANG.available。
+ * 加载顺序由 docs/index.html 保证——lang.js 永远在 sidebar 的
+ * data.js 之前同步执行（lang.js 是顶层 <script>，sidebar 走
+ * data-include 异步加载），因此此处可直接取，VL_LANG 必然已就绪。
  */
 
 window.SIDEBAR_CONFIG = {
-    logo: {
-        icon: 'V',
-        text: 'VideoLingo',
-        version: 'Documentation v3.0'
+    /* ── 跨语言常量 ─────────────────────────────────── */
+    constants: {
+        logo: {
+            icon:    'V',
+            text:    'VideoLingo',
+            version: 'Documentation v3.0'
+        },
+
+        langs: window.VL_LANG.available,
+
+        footerLinks: [
+            { label: 'GitHub',  href: 'https://github.com/Huanshere/VideoLingo' },
+            { label: 'SaaS',    href: 'https://videolingo.io' },
+            { label: 'AI Help', href: 'https://share.fastgpt.in/chat/share?shareId=066w11n3r9aq6879r4z0v9rh' }
+        ]
     },
 
-    /* langs 从 VL_LANG 读取；若 lang.js 未加载则回退硬编码 */
-    get langs() {
-        if (window.VL_LANG && window.VL_LANG.available) {
-            return window.VL_LANG.available;
-        }
-        return [
-            { code: 'en',    label: 'English',  native: 'English',  emoji: '🇬🇧' },
-            { code: 'zh-CN', label: '简体中文', native: '简体中文', emoji: '🇨🇳' },
-            { code: 'zh-TW', label: '繁體中文', native: '繁體中文', emoji: '🇭🇰' },
-            { code: 'ja',    label: '日本語',   native: '日本語',  emoji: '🇯🇵' },
-            { code: 'es',    label: 'Español',  native: 'Español', emoji: '🇪🇸' },
-            { code: 'ru',    label: 'Русский',  native: 'Русский', emoji: '🇷🇺' },
-            { code: 'fr',    label: 'Français', native: 'Français', emoji: '🇫🇷' }
-        ];
-    },
-
-    groups: {
-        'en': [
+    /* ── 多语言导航分组 ───────────────────────────────── */
+    'en': {
+        groups: [
             {
                 title: 'Get Started',
                 items: [
@@ -74,9 +77,11 @@ window.SIDEBAR_CONFIG = {
                     { label: 'Code Activity',    href: '#code-activity',    active: false }
                 ]
             }
-        ],
+        ]
+    },
 
-        'zh-CN': [
+    'zh-CN': {
+        groups: [
             {
                 title: '快速开始',
                 items: [
@@ -115,9 +120,11 @@ window.SIDEBAR_CONFIG = {
                     { label: '代码活跃度',      href: '#code-activity',   active: false }
                 ]
             }
-        ],
+        ]
+    },
 
-        'zh-TW': [
+    'zh-TW': {
+        groups: [
             {
                 title: '快速開始',
                 items: [
@@ -156,9 +163,11 @@ window.SIDEBAR_CONFIG = {
                     { label: '程式碼活躍度',    href: '#code-activity',   active: false }
                 ]
             }
-        ],
+        ]
+    },
 
-        'ja': [
+    'ja': {
+        groups: [
             {
                 title: 'はじめに',
                 items: [
@@ -197,9 +206,11 @@ window.SIDEBAR_CONFIG = {
                     { label: 'コードアクティビティ', href: '#code-activity', active: false }
                 ]
             }
-        ],
+        ]
+    },
 
-        'es': [
+    'es': {
+        groups: [
             {
                 title: 'Primeros pasos',
                 items: [
@@ -238,9 +249,11 @@ window.SIDEBAR_CONFIG = {
                     { label: 'Actividad de código', href: '#code-activity', active: false }
                 ]
             }
-        ],
+        ]
+    },
 
-        'ru': [
+    'ru': {
+        groups: [
             {
                 title: 'Начало работы',
                 items: [
@@ -279,9 +292,11 @@ window.SIDEBAR_CONFIG = {
                     { label: 'Активность кода',  href: '#code-activity',   active: false }
                 ]
             }
-        ],
+        ]
+    },
 
-        'fr': [
+    'fr': {
+        groups: [
             {
                 title: 'Démarrage',
                 items: [
@@ -321,11 +336,5 @@ window.SIDEBAR_CONFIG = {
                 ]
             }
         ]
-    },
-
-    footerLinks: [
-        { label: 'GitHub',  href: 'https://github.com/Huanshere/VideoLingo' },
-        { label: 'SaaS',    href: 'https://videolingo.io' },
-        { label: 'AI Help', href: 'https://share.fastgpt.in/chat/share?shareId=066w11n3r9aq6879r4z0v9rh' }
-    ]
+    }
 };

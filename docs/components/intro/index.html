@@ -3,12 +3,31 @@
     ----------------------------------------------------------------------
     容器职责：
       - 渲染 Hero（产品 slogan + CTA 入口 + trendshift 徽章）
-      - 渲染 Overview（README 简介章节：features 列表 + tagline）
+      - 渲染 Overview（README 简介章节：features 卡片网格 + tagline）
+      - 渲染 Demo（演示视频网格，从 translations 上移）
       - 渲染卡片网格（YrySceneCard 注入）
       - 渲染底部 callout
 
     Hero / Overview 数据源自 docs/components/intro/data.js，
     由本组件整合到 docs/index.html 的首屏。
+
+    v5 改进：
+      - 演示视频 Demo 章节从 translations/index.html 上移至此,
+        紧随 overview 之后、site cards 之前
+      - 视频 URL 由 INTRO_CONFIG.constants.demoVideos 提供（跨语言不变）,
+        标题由各语言 slice 的 demo.title / demo.items[id] 提供
+
+    v4 改进：
+      - feature-list 重写为 feature-grid 卡片网格，每项通过 YrySceneCard 渲染
+        （依赖 cdn/yry-scene-card；与下方 site cards 共用同一组件）
+      - 原 `<strong>` 强调的核心特性迁移到 YrySceneCard 的 badge 视觉强调
+      - features 数据结构：{ name, desc, badge?, links: [] }，详见 data.js
+
+    v4 改进（ui-ux-pro-max 优化）：
+      - Hero-Centric 全幅居中布局，流体 padding + 装饰分隔线
+      - 标题字号提升 + text-wrap: balance 多行断行优化
+      - 入场动画缩短至 0.35s（micro-interactions 推荐区间）
+      - CTA touch target ≥44px（WCAG 无障碍触控区域）
 
     v3 改进（ui-ux-pro-max 优化）：
       - trendshift 图片添加 width/height/loading=lazy，防 CLS
@@ -30,15 +49,38 @@
             {{ overview.title }}
             (<a :href="overview.ctaHref" target="_blank">{{ overview.cta }}</a>)
         </h2>
-        <ul class="feature-list">
-            <li v-for="(feat, fIdx) in overview.features"
-                :key="fIdx"
-                v-html="feat.html"></li>
-        </ul>
-        <p class="tagline" v-html="overview.tagline.html"></p>
 
         <!--
-            卡片网格：每个 .intro-card-slot 是 YrySceneCard 的挂载点。
+            Feature 卡片网格：每个 .intro-feature-slot 是 YrySceneCard 的挂载点。
+            Vue 仅负责渲染容器骨架，由 index.js 的 mounted 钩子调用
+            window.YrySceneCard.mount() 注入实际卡片内容。
+            features 每项为 { name, desc, badge?, links: [] }（对齐 YrySceneCard props）。
+            --card-delay 在 :style 内按 index 线性递增 (基线 0.40s + 40ms * fIdx)，
+            YrySceneCard 读取该变量驱动交错入场动画，省去 12 条 nth-child CSS 规则。
+        -->
+        <div class="card-grid feature-grid">
+            <div v-for="(feat, fIdx) in overview.features"
+                 :key="fIdx"
+                 :id="'intro-feature-' + fIdx"
+                 :style="{ '--card-delay': (0.40 + fIdx * 0.04) + 's' }"
+                 class="intro-feature-slot"></div>
+        </div>
+
+        <p class="tagline" v-html="overview.tagline.html"></p>
+
+        <!-- ── Demo（演示视频） ────────────────────────── -->
+        <h2>{{ demo.title }}</h2>
+        <div class="demo-grid">
+            <div v-for="video in constants.demoVideos" :key="video.id" class="demo-cell">
+                <h4>{{ demo.items[video.id] }}</h4>
+                <div class="demo-video-wrap">
+                    <video :src="video.url" controls preload="metadata"></video>
+                </div>
+            </div>
+        </div>
+
+        <!--
+            Site 卡片网格：每个 .intro-card-slot 是 YrySceneCard 的挂载点。
             Vue 仅负责渲染容器骨架，由 index.js 的 mounted 钩子调用
             window.YrySceneCard.mount() 注入实际卡片内容。
         -->

@@ -24,8 +24,11 @@
      tags          (可选) 标签数组 · 内部使用 <yry-tag-chip> 渲染
      meta          (可选) 底部元信息
      demo          (可选) 效果演示链接 URL · 自动作为 "演示" 入口追加入底部链接列 (去重)
-     links         (可选) 自定义链接数组, 每项 { icon, label, href, target }
-                   · 非空时覆盖 data.js 的 defaults.defaultLinks (清单/架构/图谱/源码/测试/演示/审查 等默认全部可跳转)
+     links         (可选) 底部链接数组, 每项 { icon, label, href, target }
+                   · null/undefined (默认) → 回退到 data.js 的 defaults.defaultLinks
+                                            (清单 / 架构 / 图谱 / 源码 / 测试 / 演示 / 审查 等默认全部可跳转)
+                   · 显式传 []            → 不展示任何底部链接
+                   · 显式传 [...]         → 用传入数组覆盖 defaultLinks
                    · href 中可用 {name} 占位, 运行时被 props.name (URL 编码) 替换
 
    页面使用方式 (宿主页面):
@@ -61,8 +64,10 @@
     function _buildAndMount(tpl, ctx, cfg) {
         /* data.js 的 defaults.defaultLinks 作为组件级私有选项 _defaultLinks,
            供 computed.resolvedLinks 通过 this.$options._defaultLinks 访问。
-           props.links 非空时优先使用 props.links 覆盖; 否则回退到 _defaultLinks
-           (清单 / 架构 / 图谱 / 源码 / 测试 / 演示 / 审查 等全部默认可跳转)。 */
+           props.links 三态语义 (见上方 props.links 注释):
+             · null/undefined (默认) → 回退到 _defaultLinks
+             · []                  → 不展示任何底部链接
+             · [...]               → 用传入数组覆盖 */
         mountAPI.setComponentOptions({
             name: COMPONENT_NAME,
             components: { YryTagChip: window.YryTagChip },
@@ -75,16 +80,18 @@
                 tags:         { type: Array,  default: function () { return []; } },
                 meta:         { type: String, default: '' },
                 demo:         { type: String, default: '' },
-                links:        { type: Array,  default: function () { return []; } }
+                links:        { type: Array,  default: null }
             },
             computed: {
                 /* 解析后的底部链接列表:
-                   · 优先用 props.links; 否则回退到 data.js 的 _defaultLinks
+                   · 未传 links (null) 时回退到 data.js 的 _defaultLinks
+                   · 显式传 [] 时视为「不展示任何底部链接」(空数组,渲染时跳过)
+                   · 显式传 [...] 时使用传入数组覆盖
                    · href 中的 {name} 占位符会被 props.name (URL 编码) 替换
                    · props.demo 非空时, 若列表里还没有 "演示" 入口, 则自动追加
                    · 每项统一规整为 { icon, label, href, target } 四元组 */
                 resolvedLinks: function () {
-                    var raw = (this.links && this.links.length)
+                    var raw = Array.isArray(this.links)
                         ? this.links
                         : ((this.$options && this.$options._defaultLinks) || []);
                     var encodedName = encodeURIComponent(this.name || '');
@@ -124,7 +131,11 @@
             proceed();
         }
 
-        if (window.YryTagChip) {
+        /* YryTagChip 的 createAsyncMountAPI 会在初始化早期立即暴露占位
+           { mount }, 因此 window.YryTagChip 为 truthy 不代表组件已完全初始化。
+           通过检查 .name 属性（由 setComponentOptions 注入）来区分占位与
+           完整的 Vue 组件 options,避免将占位对象传给 components 注册表。 */
+        if (window.YryTagChip && window.YryTagChip.name) {
             proceed();
         } else {
             /* YryTagChip 未就绪: 监听 'yry-tag-chip-ready' 事件, 带超时保护 */
@@ -158,18 +169,6 @@
         });
     }
 
-    /* ── 入口: loader 已就绪则立即 bootstrap, 否则显式注入一次 ── */
-    if (typeof window.yryBootstrapFromCurrentScript === 'function') {
-        _bootstrap();
-    } else {
-        var loaderScript = document.createElement('script');
-        loaderScript.src = SELF_SRC
-            ? new URL('../shared/yry-loader.js', SELF_SRC).href
-            : '../shared/yry-loader.js';
-        loaderScript.onload = _bootstrap;
-        loaderScript.onerror = function () {
-            console.error('[' + COMPONENT_NAME + '] yry-loader.js 加载失败');
-        };
-        document.head.appendChild(loaderScript);
-    }
+    /* ── bootstrap: loader 已就绪则直接调用（loader 由 docs/index.html 预加载） ── */
+    _bootstrap();
 })();

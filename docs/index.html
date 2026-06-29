@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="data:image/png;base64,{{ iconBase64 }}" type="image/png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%234f46e5'/><text x='16' y='22' font-size='18' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>VL</text></svg>" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VideoLingo Documentation Center</title>
     <meta name="description" content="VideoLingo 文档中心，提供视频处理和分析的详细指南。">
@@ -48,6 +48,10 @@
 </main>
 
 <!-- CDN components (intro 卡片依赖 YrySceneCard，进而依赖 YryTagChip，须提前加载) -->
+<!-- yry-loader.js 预加载：让所有 CDN 组件的入口脚本可以无 fallback 直接调用
+     window.yryBootstrapFromCurrentScript()，消除每个组件内部 11 行重复的
+     "loader 是否已加载" 自检代码。 -->
+<script src="../cdn/shared/yry-loader.js"></script>
 <script src="../cdn/yry-tag-chip/index.js"></script>
 <script src="../cdn/yry-scene-card/index.js"></script>
 <!-- YryBackTop · 零配置自初始化,加载即创建回到顶部按钮 -->

@@ -1,9 +1,9 @@
 ---
-name: architecture-diagram
+name: rui-diagram
 description: Create polished dark-themed architecture diagrams as self-contained HTML+SVG files. Use when the user asks for system, infrastructure, cloud, security, or network topology diagrams.
 ---
 
-# Architecture Diagram Skill
+# Rui Diagram Skill
 
 Create professional technical architecture diagrams as self-contained HTML files with inline SVG graphics and CSS styling.
 

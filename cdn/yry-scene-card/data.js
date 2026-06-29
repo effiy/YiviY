@@ -16,7 +16,10 @@
  *                       每项 = { icon, label, href, target }
  *                         - href 中可用 {name} 占位, 运行时被 props.name (URL 编码) 替换
  *                         - target 缺省回退到 '_blank'
- *                       props.links 非空时优先使用 props.links 覆盖
+ *                       props.links 行为:
+ *                         · 传 null/undefined (默认) → 回退到下方 defaultLinks
+ *                         · 传 []                     → 显式「不展示任何底部链接」
+ *                         · 传 [...]                 → 用传入数组覆盖 defaultLinks
  *
  * 注: YryTagChip 依赖通过 'yry-tag-chip-ready' 事件等待,
  *     不在此处配置 (loader 内部管理 ready/error 事件名)。

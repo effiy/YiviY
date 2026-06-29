@@ -246,3 +246,27 @@
     margin: var(--vl-doc-space-md) 0;
 }
 .vl-doc .table-responsive table { margin: 0; }
+
+/* ── Shared Entrance Keyframes ──────────────────────────
+   跨 section 复用的入场动画, 由任一组件在 animation: 中按名引用。
+   命名采用 vl-doc- 前缀, 与 CSS 变量命名规范保持一致。 */
+@keyframes vl-doc-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes vl-doc-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes vl-doc-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

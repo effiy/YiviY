@@ -83,18 +83,6 @@
         });
     }
 
-    /* ── 入口: loader 已就绪则立即 bootstrap, 否则显式注入一次 ── */
-    if (typeof window.yryBootstrapFromCurrentScript === 'function') {
-        _bootstrap();
-    } else {
-        var loaderScript = document.createElement('script');
-        loaderScript.src = SELF_SRC
-            ? new URL('../shared/yry-loader.js', SELF_SRC).href
-            : '../shared/yry-loader.js';
-        loaderScript.onload = _bootstrap;
-        loaderScript.onerror = function () {
-            console.error('[' + COMPONENT_NAME + '] yry-loader.js 加载失败');
-        };
-        document.head.appendChild(loaderScript);
-    }
+    /* ── bootstrap: loader 已就绪则直接调用（loader 由 docs/index.html 预加载） ── */
+    _bootstrap();
 })();

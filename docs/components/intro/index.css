@@ -2,79 +2,72 @@
  * Intro
  * intro 组件专属样式：
  *   - .readme-hero / .readme-title / .readme-subtitle / .trendshift-*
- *   - .feature-list / .tagline / .hero-cta
+ *   - .feature-grid / .intro-feature-slot / .tagline / .hero-cta
  *   - .intro-lead  引导段大字
  * 跨 section 共享的 .card / .card-grid / .badge 等已统一收敛到
  * docs/styles/base.css，不在此处重复。
  *
+ * v4 改进：
+ *   - feature-list 重写为 feature-grid 卡片网格（YrySceneCard 渲染）
+ *   - 复用 docs/styles/base.css 中的 .card-grid（repeat(auto-fill, minmax(...)))
+ *   - feature-grid 增加紧凑列宽 minmax(180px, 1fr) 与较窄 gap，匹配
+ *     12 项特性卡的密度
+ *   - feature-grid 节点交错入场动画（--card-delay 由 Vue 模板按 fIdx 线性
+ *     推算后通过 :style 注入，YrySceneCard 通过 CSS variable 消费，
+ *     取代原 12 条 nth-child 规则）
+ *
+ * v4 改进（ui-ux-pro-max 优化）：
+ *   - Hero-Centric 全幅居中布局 + 流体 padding
+ *   - 标题字号提升至 clamp(28px, 5.5vw, 44px)，letter-spacing -0.03em
+ *   - 新增 text-wrap: balance 优化多行断行
+ *   - 入场动画缩短至 0.35s（micro-interactions 推荐 150-300ms 区间）
+ *   - 底部装饰分隔线（渐变色短线）增加视觉节奏
+ *   - CTA touch target ≥44px（WCAG 无障碍触控区域）
+ *   - 副标题 line-height 提升至 1.7（UX 推荐 1.5-1.75）
+ *
  * v3 改进（ui-ux-pro-max 优化）：
  *   - 响应式字体使用 clamp() 流体缩放，消除硬断点跳变
- *   - Hero 入场动画 + 特性列表 40ms 交错入场
- *   - CTA 按钮增强 hover/active/focus-visible 三态
- *   - trendshift 徽章添加 aspect-ratio 防 CLS
- *   - 特性标记由 ▸ 字符改为 CSS 圆点（跨平台一致）
- *   - 卡片插槽骨架屏 shimmer（卡片异步加载时）
- *   - 间距对齐 4pt 韵律系统（复用 --vl-doc-space-*）
- *   - 所有动画尊重 prefers-reduced-motion
- * ───────────────────────────────────────────────────── */
 
-/* ═══════════════════════════════════════════════════════
- * Entrance Keyframes
- * ═══════════════════════════════════════════════════════ */
-@keyframes introFadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes introFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-@keyframes introShimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-/* ═══════════════════════════════════════════════════════
- * Hero
- * ═══════════════════════════════════════════════════════ */
+/* Hero 容器 — 全幅 Hero-Centric 布局（ui-ux-pro-max v4：居中 + 流体 padding + 装饰分隔线） */
 .vl-doc .readme-hero {
     text-align: center;
-    padding: clamp(32px, 5vw, 56px) 20px clamp(28px, 4vw, 40px);
-    border-bottom: 1px solid var(--vl-doc-border);
-    margin-bottom: 40px;
+    padding: clamp(32px, 8vw, 64px) 0 clamp(28px, 6vw, 56px);
+    position: relative;
+}
+/* 底部装饰分隔线：渐变色的徽标式短线，增加视觉节奏 */
+.vl-doc .readme-hero::after {
+    content: '';
+    display: block;
+    width: clamp(60px, 12vw, 120px);
+    height: 3px;
+    margin: clamp(20px, 4vw, 36px) auto 0;
+    border-radius: 2px;
     background: linear-gradient(
-        180deg,
-        var(--vl-doc-bg-soft) 0%,
-        transparent 100%
+        90deg,
+        transparent,
+        var(--vl-doc-primary) 25%,
+        color-mix(in srgb, var(--vl-doc-primary) 60%, #6366f1) 75%,
+        transparent
     );
-    border-radius: var(--vl-doc-radius);
-    /* 首屏入场 */
-    animation: introFadeInUp 0.5s var(--vl-doc-ease-out) both;
+    opacity: 0.5;
 }
 
-/* Hero 子元素依次入场 */
+/* Hero 子元素依次入场（ui-ux-pro-max v4：缩短至 0.35s + 微调 stagger） */
 .vl-doc .readme-hero > * {
-    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) both;
+    animation: vl-doc-fade-in-up 0.35s var(--vl-doc-ease-out) both;
 }
-.vl-doc .readme-hero > :nth-child(1) { animation-delay: 0.06s; }
-.vl-doc .readme-hero > :nth-child(2) { animation-delay: 0.13s; }
-.vl-doc .readme-hero > :nth-child(3) { animation-delay: 0.20s; }
-.vl-doc .readme-hero > :nth-child(4) { animation-delay: 0.27s; }
+.vl-doc .readme-hero > :nth-child(1) { animation-delay: 0.05s; }
+.vl-doc .readme-hero > :nth-child(2) { animation-delay: 0.10s; }
+.vl-doc .readme-hero > :nth-child(3) { animation-delay: 0.15s; }
+.vl-doc .readme-hero > :nth-child(4) { animation-delay: 0.20s; }
 
 .vl-doc .readme-title {
-    font-size: clamp(26px, 5vw, 40px);
+    font-size: clamp(28px, 5.5vw, 44px);
     font-weight: 800;
-    margin: 0 0 12px;
-    letter-spacing: -0.02em;
-    line-height: 1.15;
+    margin: 0 0 14px;
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+    text-wrap: balance;
     background: linear-gradient(
         135deg,
         var(--vl-doc-primary) 0%,
@@ -97,9 +90,9 @@
 .vl-doc .readme-subtitle {
     font-size: clamp(14px, 2vw, 17px);
     color: var(--vl-doc-text-soft);
-    max-width: 640px;
+    max-width: 600px;
     margin: 0 auto clamp(14px, 2vw, 20px);
-    line-height: 1.65;
+    line-height: 1.7;
     text-wrap: pretty;
 }
 
@@ -128,8 +121,8 @@
 /* ── Hero CTA button ────────────────────────────────── */
 .vl-doc .hero-cta {
     display: inline-block;
-    margin: 8px 0 18px;
-    padding: 11px 26px;
+    margin: 10px 0 20px;
+    padding: 13px 30px;
     border-radius: var(--vl-doc-radius);
     background: var(--vl-doc-primary);
     color: #fff;
@@ -163,56 +156,37 @@
  * Overview
  * ═══════════════════════════════════════════════════════ */
 .vl-doc #intro > h2 {
-    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) 0.32s both;
+    animation: vl-doc-fade-in-up 0.4s var(--vl-doc-ease-out) 0.32s both;
 }
 
 /* ═══════════════════════════════════════════════════════
- * Feature List
+ * Feature Grid（YrySceneCard 渲染的 12 项特性卡）
+ * ───────────────────────────────────────────────────────
+ * 复用 docs/styles/base.css 中的 .card-grid 布局，
+ * 这里仅做密度与间距的差异化覆盖：
+ *   · 列宽更紧凑（180px vs 260px）— 12 项需要更密的网格
+ *   · gap 略小（12px vs 16px）— 紧凑视觉密度
  * ═══════════════════════════════════════════════════════ */
-.vl-doc .feature-list {
-    list-style: none;
-    padding: 0;
+.vl-doc #intro .feature-grid {
+    /* 覆盖 base.css 的 .card-grid 列宽：12 项特性需要更紧凑的网格 */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
     margin: 20px 0;
-    animation: introFadeIn 0.4s var(--vl-doc-ease-out) 0.36s both;
+    animation: vl-doc-fade-in 0.4s var(--vl-doc-ease-out) 0.36s both;
 }
 
-.vl-doc .feature-list li {
-    padding: 9px 0 9px 28px;
-    line-height: 1.7;
-    position: relative;
-    opacity: 0;
-    animation: introFadeInUp 0.35s var(--vl-doc-ease-out) forwards;
-}
-
-/* 40ms 交错入场（ui-ux-pro-max §7: stagger 30-50ms per item） */
-.vl-doc .feature-list li:nth-child(1)  { animation-delay: 0.40s; }
-.vl-doc .feature-list li:nth-child(2)  { animation-delay: 0.44s; }
-.vl-doc .feature-list li:nth-child(3)  { animation-delay: 0.48s; }
-.vl-doc .feature-list li:nth-child(4)  { animation-delay: 0.52s; }
-.vl-doc .feature-list li:nth-child(5)  { animation-delay: 0.56s; }
-.vl-doc .feature-list li:nth-child(6)  { animation-delay: 0.60s; }
-.vl-doc .feature-list li:nth-child(7)  { animation-delay: 0.64s; }
-.vl-doc .feature-list li:nth-child(8)  { animation-delay: 0.68s; }
-.vl-doc .feature-list li:nth-child(9)  { animation-delay: 0.72s; }
-.vl-doc .feature-list li:nth-child(10) { animation-delay: 0.76s; }
-.vl-doc .feature-list li:nth-child(11) { animation-delay: 0.80s; }
-.vl-doc .feature-list li:nth-child(12) { animation-delay: 0.84s; }
-
-/* CSS 圆点标记替代 ▸ Unicode 字符 — 跨平台渲染一致 */
-.vl-doc .feature-list li::before {
-    content: '';
-    position: absolute;
-    left: 4px;
-    top: 15px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--vl-doc-primary);
-}
-
-/* 特性列表 strong 颜色提升层级 */
-.vl-doc .feature-list li strong {
-    color: var(--vl-doc-text);
+/* 特性卡 slot 骨架屏 — 卡片异步加载时显示 shimmer */
+.vl-doc .intro-feature-slot:empty {
+    min-height: 110px;
+    border-radius: var(--vl-doc-radius);
+    background: linear-gradient(
+        90deg,
+        var(--vl-doc-bg-soft) 25%,
+        var(--vl-doc-bg) 50%,
+        var(--vl-doc-bg-soft) 75%
+    );
+    background-size: 200% 100%;
+    animation: vl-doc-shimmer 1.5s infinite;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -221,18 +195,66 @@
 .vl-doc .tagline {
     background: var(--vl-doc-bg-soft);
     padding: 16px 22px;
-    border-radius: var(--vl-doc-radius);
     border-left: 4px solid var(--vl-doc-primary);
-    margin: 24px 0;
+    border-radius: 0 var(--vl-doc-radius) var(--vl-doc-radius) 0;
+    color: var(--vl-doc-text);
+    font-size: 15px;
     line-height: 1.7;
-    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) 0.88s both;
+    margin: 24px 0;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+ * Demo（演示视频）
+ * ───────────────────────────────────────────────────────
+ * 自 translations/index.css 上移（2026-06-29）。
+ * 渲染 3 个 GitHub 视频源（双语字幕 / Cosy2 克隆 / GPT-SoVITS 配音），
+ * 跟随 overview 之后，作为用户进入文档后第一个视觉冲击。
+ * ═══════════════════════════════════════════════════════ */
+.vl-doc #intro .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+    animation: vl-doc-fade-in-up 0.4s var(--vl-doc-ease-out) 0.92s both;
+}
+
+.vl-doc #intro .demo-cell {
+    background: var(--vl-doc-bg);
+    border: 1px solid var(--vl-doc-border);
+    border-radius: var(--vl-doc-radius);
+    padding: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.vl-doc #intro .demo-cell:hover {
+    border-color: var(--vl-doc-primary);
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+
+.vl-doc #intro .demo-cell h4 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.vl-doc #intro .demo-video-wrap {
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+.vl-doc #intro .demo-video-wrap video {
+    width: 100%;
+    display: block;
 }
 
 /* ═══════════════════════════════════════════════════════
  * Card Grid
  * ═══════════════════════════════════════════════════════ */
 .vl-doc #intro .card-grid {
-    animation: introFadeIn 0.4s var(--vl-doc-ease-out) 0.92s both;
+    animation: vl-doc-fade-in 0.4s var(--vl-doc-ease-out) 0.92s both;
 }
 
 /* 卡片插槽骨架屏 — 卡片异步加载时显示 shimmer */
@@ -246,14 +268,14 @@
         var(--vl-doc-bg-soft) 75%
     );
     background-size: 200% 100%;
-    animation: introShimmer 1.5s infinite;
+    animation: vl-doc-shimmer 1.5s infinite;
 }
 
 /* ═══════════════════════════════════════════════════════
  * Callout
  * ═══════════════════════════════════════════════════════ */
 .vl-doc #intro .callout {
-    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) 0.96s both;
+    animation: vl-doc-fade-in-up 0.4s var(--vl-doc-ease-out) 0.96s both;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -264,15 +286,16 @@
     .vl-doc .readme-hero,
     .vl-doc .readme-hero > *,
     .vl-doc #intro > h2,
-    .vl-doc .feature-list,
-    .vl-doc .feature-list li,
+    .vl-doc #intro .feature-grid,
     .vl-doc .tagline,
+    .vl-doc #intro .demo-grid,
     .vl-doc #intro .card-grid,
     .vl-doc #intro .callout {
         animation: none;
         opacity: 1;
     }
-    .vl-doc .intro-card-slot:empty {
+    .vl-doc .intro-card-slot:empty,
+    .vl-doc .intro-feature-slot:empty {
         animation: none;
         background: var(--vl-doc-bg-soft);
     }
@@ -283,10 +306,10 @@
  * ═══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
     .vl-doc .readme-hero {
-        padding: clamp(24px, 6vw, 32px) 16px clamp(20px, 5vw, 28px);
+        padding: clamp(24px, 6vw, 36px) 16px clamp(20px, 5vw, 32px);
     }
     .vl-doc .readme-title {
-        font-size: clamp(22px, 6vw, 28px);
+        font-size: clamp(22px, 6vw, 30px);
     }
     .vl-doc .readme-subtitle {
         font-size: clamp(13px, 3.5vw, 15px);
@@ -300,13 +323,13 @@
 /* 极小屏 (< 375px) */
 @media (max-width: 374px) {
     .vl-doc .readme-hero {
-        padding: 20px 12px 18px;
+        padding: 22px 12px 18px;
     }
     .vl-doc .readme-title {
-        font-size: 20px;
+        font-size: 21px;
     }
     .vl-doc .hero-cta {
-        padding: 10px 20px;
+        padding: 12px 22px;
         font-size: 14px;
         width: 100%;
         text-align: center;

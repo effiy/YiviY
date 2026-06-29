@@ -2,10 +2,10 @@
     <div id="sidebar-root">
         <aside class="sidebar" :class="{ open: isOpen }" id="sidebar" ref="sidebarRef">
             <a class="sidebar-logo" href="#">
-                <span class="logo-icon">{{ logo.icon }}</span>
+                <span class="logo-icon">{{ constants.logo.icon }}</span>
                 <span>
-                    <span class="logo-text">{{ logo.text }}</span><br>
-                    <span class="logo-ver">{{ logo.version }}</span>
+                    <span class="logo-text">{{ constants.logo.text }}</span><br>
+                    <span class="logo-ver">{{ constants.logo.version }}</span>
                 </span>
             </a>
             <nav class="sidebar-nav">
@@ -18,8 +18,8 @@
                        :href="item.href">{{ item.label }}</a>
                 </div>
             </nav>
-            <div class="lang-switch" v-if="langs.length" role="radiogroup" aria-label="Language">
-                <button v-for="lang in langs"
+            <div class="lang-switch" v-if="constants.langs.length" role="radiogroup" aria-label="Language">
+                <button v-for="lang in constants.langs"
                         :key="lang.code"
                         class="lang-btn"
                         :class="{ active: lang.code === currentLang }"
@@ -32,9 +32,9 @@
                 </button>
             </div>
             <div class="sidebar-footer">
-                <template v-for="(link, idx) in footerLinks" :key="link.href">
+                <template v-for="(link, idx) in constants.footerLinks" :key="link.href">
                     <a :href="link.href" target="_blank">{{ link.label }}</a>
-                    <span v-if="idx < footerLinks.length - 1"> &middot; </span>
+                    <span v-if="idx < constants.footerLinks.length - 1"> &middot; </span>
                 </template>
             </div>
         </aside>

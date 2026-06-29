@@ -1,45 +1,34 @@
 <template id="translations-template">
     <section id="translations" :data-lang="currentLang">
 
-        <!-- ── Demo ──────────────────────────────────────── -->
-        <h2>{{ langContent.demo.title }}</h2>
-        <div class="demo-grid">
-            <div v-for="video in demoVideos" :key="video.id" class="demo-cell">
-                <h4>{{ langContent.demo.items[video.id] }}</h4>
-                <div class="demo-video-wrap">
-                    <video :src="video.url" controls preload="metadata"></video>
-                </div>
-            </div>
-        </div>
-
         <!-- ── Language Support ──────────────────────────── -->
         <h3>Language Support</h3>
-        <p v-html="langContent.languages.inputTitle.html"></p>
+        <p v-html="languages.inputTitle.html"></p>
         <div class="lang-grid">
-            <span v-for="lang in langContent.languages.inputLangs" :key="lang.flag" class="lang-pill">
+            <span v-for="lang in languages.inputLangs" :key="lang.flag" class="lang-pill">
                 <span class="lang-pill-flag">{{ lang.flag }}</span>
                 <span class="lang-pill-name">{{ lang.name }}</span>
                 <span class="lang-pill-rating">{{ lang.rating }}</span>
             </span>
         </div>
-        <p class="callout-text" v-html="langContent.languages.inputNote.html"></p>
-        <p><strong>{{ langContent.languages.outputNote }}</strong></p>
+        <p class="callout-text" v-html="languages.inputNote.html"></p>
+        <p><strong>{{ languages.outputNote }}</strong></p>
 
         <!-- ── Installation ──────────────────────────────── -->
-        <h2>{{ langContent.install.title }}</h2>
-        <p v-html="langContent.install.helpNote.html"></p>
+        <h2>{{ install.title }}</h2>
+        <p v-html="install.helpNote.html"></p>
 
         <div class="callout callout-warning">
-            <p><strong>{{ langContent.install.cuda.label }}</strong> {{ langContent.install.cuda.intro }}</p>
+            <p><strong>{{ install.cuda.label }}</strong> {{ install.cuda.intro }}</p>
             <ol class="callout-list">
-                <li v-for="(step, sIdx) in langContent.install.cuda.steps" :key="sIdx" v-html="step.html"></li>
+                <li v-for="(step, sIdx) in install.cuda.steps" :key="sIdx" v-html="step.html"></li>
             </ol>
         </div>
 
         <div class="callout callout-warning">
-            <p><strong>{{ langContent.install.ffmpeg.label }}</strong> {{ langContent.install.ffmpeg.intro }}</p>
+            <p><strong>{{ install.ffmpeg.label }}</strong> {{ install.ffmpeg.intro }}</p>
             <ul class="callout-list">
-                <li v-for="(inst, iIdx) in langContent.install.ffmpeg.installs" :key="iIdx">
+                <li v-for="(inst, iIdx) in install.ffmpeg.installs" :key="iIdx">
                     <strong>{{ inst.platform }}:</strong> <code>{{ inst.command }}</code>
                     <span v-if="inst.via"> ({{ inst.via }})</span>
                 </li>
@@ -47,25 +36,25 @@
         </div>
 
         <!-- ── Method: uv (Recommended) ──────────────────── -->
-        <h3>{{ langContent.methods.uv.title }}</h3>
-        <p v-html="langContent.methods.uv.intro.html"></p>
+        <h3>{{ methods.uv.title }}</h3>
+        <p v-html="methods.uv.intro.html"></p>
         <ol class="install-steps">
-            <li v-for="(step, sIdx) in langContent.methods.uv.steps" :key="sIdx">
+            <li v-for="(step, sIdx) in methods.uv.steps" :key="sIdx">
                 <p>{{ step.desc }}</p>
                 <pre><code>{{ step.command }}</code></pre>
             </li>
         </ol>
-        <p class="alt-note">{{ langContent.methods.uv.alt }}</p>
+        <p class="alt-note">{{ methods.uv.alt }}</p>
 
         <!-- ── Method: Conda ─────────────────────────────── -->
-        <h3>{{ langContent.methods.conda.title }}</h3>
+        <h3>{{ methods.conda.title }}</h3>
         <div class="callout callout-warning">
-            <p v-html="langContent.methods.conda.warning.html"></p>
+            <p v-html="methods.conda.warning.html"></p>
         </div>
         <details>
-            <summary>{{ langContent.methods.conda.summary }}</summary>
+            <summary>{{ methods.conda.summary }}</summary>
             <ol class="install-steps">
-                <li v-for="(step, sIdx) in langContent.methods.conda.steps" :key="sIdx">
+                <li v-for="(step, sIdx) in methods.conda.steps" :key="sIdx">
                     <p>{{ step.desc }}</p>
                     <pre><code>{{ step.command }}</code></pre>
                 </li>
@@ -73,31 +62,31 @@
         </details>
 
         <!-- ── Docker ────────────────────────────────────── -->
-        <h3>{{ langContent.methods.docker.title }}</h3>
-        <p>{{ langContent.methods.docker.intro }}</p>
-        <pre><code>{{ langContent.methods.docker.commands.join('\n') }}</code></pre>
+        <h3>{{ methods.docker.title }}</h3>
+        <p>{{ methods.docker.intro }}</p>
+        <pre><code>{{ methods.docker.commands.join('\n') }}</code></pre>
 
         <!-- ── API ───────────────────────────────────────── -->
-        <h2>{{ langContent.api.title }}</h2>
-        <p>{{ langContent.api.intro }}</p>
+        <h2>{{ api.title }}</h2>
+        <p>{{ api.intro }}</p>
         <ul class="api-list">
-            <li><strong>{{ langContent.api.llmLabel }}:</strong> <span v-html="langContent.api.llm.html"></span></li>
-            <li><strong>{{ langContent.api.whisperLabel }}:</strong> {{ langContent.api.whisper }}</li>
-            <li><strong>{{ langContent.api.ttsLabel }}:</strong> <span v-html="langContent.api.tts.html"></span></li>
+            <li><strong>{{ api.llmLabel }}:</strong> <span v-html="api.llm.html"></span></li>
+            <li><strong>{{ api.whisperLabel }}:</strong> {{ api.whisper }}</li>
+            <li><strong>{{ api.ttsLabel }}:</strong> <span v-html="api.tts.html"></span></li>
         </ul>
         <div class="callout callout-success">
-            <p v-html="langContent.api.note.html"></p>
+            <p v-html="api.note.html"></p>
         </div>
 
         <!-- ── Limitations ──────────────────────────────── -->
-        <h2>{{ langContent.limitations.title }}</h2>
+        <h2>{{ limitations.title }}</h2>
         <ol class="limitations-list">
-            <li v-for="(item, iIdx) in langContent.limitations.items" :key="iIdx" v-html="item.html"></li>
+            <li v-for="(item, iIdx) in limitations.items" :key="iIdx" v-html="item.html"></li>
         </ol>
 
         <!-- ── License ──────────────────────────────────── -->
-        <h2>{{ langContent.license.title }}</h2>
-        <p>{{ langContent.license.content }}</p>
+        <h2>{{ license.title }}</h2>
+        <p>{{ license.content }}</p>
         <p>
             <template v-for="(proj, pIdx) in constants.thanks" :key="proj.name">
                 <a :href="proj.url" target="_blank">{{ proj.name }}</a><span v-if="pIdx < constants.thanks.length - 1">, </span>
@@ -105,9 +94,9 @@
         </p>
 
         <!-- ── Contact ──────────────────────────────────── -->
-        <h2>{{ langContent.contact.title }}</h2>
+        <h2>{{ contact.title }}</h2>
         <ul class="contact-list">
-            <li v-for="(ch, cIdx) in langContent.contact.channels" :key="cIdx" v-html="ch.html"></li>
+            <li v-for="(ch, cIdx) in contact.channels" :key="cIdx" v-html="ch.html"></li>
         </ul>
 
     </section>

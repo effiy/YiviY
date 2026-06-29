@@ -11,13 +11,21 @@
  *       - cta         CTA 按钮文案（指向 videolingo.io）
  *       - ctaHref     CTA 跳转链接
  *       - lead        Hero 副标题（同时也是 Overview 的导语）
- *       - features    feature-list 项数组（每项 { html }）
+ *       - features    feature 卡片数组，每项对齐 YrySceneCard props：
+ *                       { name, desc, badge?, links: [] }
+ *                       （links: [] 显式抑制默认底部链接，由
+ *                         cdn/yry-scene-card 的 Array.isArray 三态语义支持）
+ *                       原 strong 标记的核心特性通过 badge 视觉强调。
  *       - tagline     总结条幅（{ html }）
+ *       - demo        演示视频章节（从 translations 上移至此）
+ *                       · title  章节标题（含 emoji）
+ *                       · items  按 demoVideos[i].id 索引的标题映射
  *   - cards           站点导航卡片（YrySceneCard props）
  *   - callout         底部提示条
  *
  *   - constants（顶层，语言无关）
  *       - social.trendshift  Hero 徽章链接
+ *       - demoVideos         演示视频数组 [{ id, url }]，id 与 demo.items 一一对应
  *
  * cards 字段对齐 YrySceneCard props：
  *   - name          卡片主标题
@@ -34,7 +42,13 @@ window.INTRO_CONFIG = {
     constants: {
         social: {
             trendshift: 'https://trendshift.io/repositories/12200'
-        }
+        },
+        /* 演示视频（URL 不变，标题按语言翻译） */
+        demoVideos: [
+            { id: 'dualSubtitles',    url: 'https://github.com/user-attachments/assets/a5c3d8d1-2b29-4ba9-b0d0-25896829d951' },
+            { id: 'cosyVoiceClone',   url: 'https://github.com/user-attachments/assets/e065fe4c-3694-477f-b4d6-316917df7c0a' },
+            { id: 'gptSovitsDubbing', url: 'https://github.com/user-attachments/assets/47d965b2-b4ab-4a0b-9d08-b49a7bf3508c' }
+        ]
     },
 
     /* ── 多语言内容 ───────────────────────────────────── */
@@ -48,20 +62,28 @@ window.INTRO_CONFIG = {
             ctaHref: 'https://videolingo.io',
             lead:  'VideoLingo is an all-in-one video translation, localization, and dubbing tool aimed at generating Netflix-quality subtitles. It eliminates stiff machine translations and multi-line subtitles while adding high-quality dubbing, enabling global knowledge sharing across language barriers.',
             features: [
-                { html: '🎥 YouTube video download via yt-dlp' },
-                { html: '<strong>🎙️ Word-level and Low-illusion subtitle recognition with WhisperX</strong>' },
-                { html: '<strong>📝 NLP and AI-powered subtitle segmentation</strong>' },
-                { html: '<strong>📚 Custom + AI-generated terminology for coherent translation</strong>' },
-                { html: '<strong>🔄 3-step Translate-Reflect-Adaptation for cinematic quality</strong>' },
-                { html: '<strong>✅ Netflix-standard, Single-line subtitles Only</strong>' },
-                { html: '<strong>🗣️ Dubbing with GPT-SoVITS, Azure, OpenAI, and more</strong>' },
-                { html: '🚀 One-click startup and processing in Streamlit' },
-                { html: '🌍 Multi-language support in Streamlit UI' },
-                { html: '📝 Detailed logging with progress resumption' },
-                { html: '🔍 Model searchbox with API auto-fetch — search and filter from your provider\'s full model list' },
-                { html: '⏯️ Task control — pause, resume, or stop processing at any step' }
+                { name: '🎥 yt-dlp',       desc: 'YouTube video download via yt-dlp',                                                                                    links: [] },
+                { name: '🎙️ WhisperX',     badge: 'Core', desc: 'Word-level and Low-illusion subtitle recognition with WhisperX',                                                  links: [] },
+                { name: '📝 NLP Split',    badge: 'Core', desc: 'NLP and AI-powered subtitle segmentation',                                                                       links: [] },
+                { name: '📚 Term Base',    badge: 'Core', desc: 'Custom + AI-generated terminology for coherent translation',                                                     links: [] },
+                { name: '🔄 3-Step T-R-A', badge: 'Core', desc: 'Translate-Reflect-Adaptation for cinematic quality',                                                            links: [] },
+                { name: '✅ Netflix 1-Line',badge: 'Core', desc: 'Netflix-standard, single-line subtitles only',                                                                   links: [] },
+                { name: '🗣️ Multi-TTS',    badge: 'Core', desc: 'Dubbing with GPT-SoVITS, Azure, OpenAI, and more',                                                              links: [] },
+                { name: '🚀 Streamlit UI',  desc: 'One-click startup and processing in Streamlit',                                                                       links: [] },
+                { name: '🌍 i18n',          desc: 'Multi-language support in Streamlit UI',                                                                             links: [] },
+                { name: '📝 Resume',        desc: 'Detailed logging with progress resumption',                                                                          links: [] },
+                { name: '🔍 Model Picker',  desc: 'Model searchbox with API auto-fetch — search and filter from your provider\'s full model list',                    links: [] },
+                { name: '⏯️ Task Control',  desc: 'Task control — pause, resume, or stop processing at any step',                                                       links: [] }
             ],
             tagline: { html: 'Difference from similar projects: <strong>Single-line subtitles only, superior translation quality, seamless dubbing experience</strong>' }
+        },
+        demo: {
+            title: '🎥 Demo',
+            items: {
+                dualSubtitles:    'Dual Subtitles',
+                cosyVoiceClone:   'Cosy2 Voice Clone',
+                gptSovitsDubbing: 'GPT-SoVITS Dubbing'
+            }
         },
         cards: [
             { name: 'Quick Start',      nameHref: '#quick-start',  nameTarget: '', desc: 'Get running in 3 minutes with uv or Docker' },
@@ -89,20 +111,28 @@ window.INTRO_CONFIG = {
             ctaHref: 'https://videolingo.io',
             lead:  'VideoLingo 是一站式视频翻译本地化配音工具，能够一键生成 Netflix 级别的高质量字幕，告别生硬机翻，告别多行字幕，还能加上高质量的克隆配音，让全世界的知识能够跨越语言的障碍共享。',
             features: [
-                { html: '🎥 使用 yt-dlp 从 Youtube 链接下载视频' },
-                { html: '<strong>🎙️ 使用 WhisperX 进行单词级和低幻觉字幕识别</strong>' },
-                { html: '<strong>📝 使用 NLP 和 AI 进行字幕分割</strong>' },
-                { html: '<strong>📚 自定义 + AI 生成术语库，保证翻译连贯性</strong>' },
-                { html: '<strong>🔄 三步直译、反思、意译，实现影视级翻译质量</strong>' },
-                { html: '<strong>✅ 按照 Netflix 标准检查单行长度，绝无双行字幕</strong>' },
-                { html: '<strong>🗣️ 支持 GPT-SoVITS、Azure、OpenAI 等多种配音方案</strong>' },
-                { html: '🚀 一键启动，在 streamlit 中一键出片' },
-                { html: '🌍 多语言支持就绪的 streamlit UI' },
-                { html: '📝 详细记录每步操作日志，支持随时中断和恢复进度' },
-                { html: '🔍 模型搜索选择器，自动从 API 获取完整模型列表，支持搜索筛选' },
-                { html: '⏯️ 任务控制 — 处理过程中可随时暂停、继续或停止' }
+                { name: '🎥 yt-dlp',       desc: '使用 yt-dlp 从 YouTube 链接下载视频',                            links: [] },
+                { name: '🎙️ WhisperX',     badge: '核心', desc: '单词级和低幻觉字幕识别',                                       links: [] },
+                { name: '📝 NLP 分割',      badge: '核心', desc: '基于 NLP 和 AI 的字幕分割',                                    links: [] },
+                { name: '📚 术语库',        badge: '核心', desc: '自定义 + AI 生成术语库，保证翻译连贯性',                       links: [] },
+                { name: '🔄 三步意译',      badge: '核心', desc: '直译、反思、意译，实现影视级翻译质量',                         links: [] },
+                { name: '✅ Netflix 单行',  badge: '核心', desc: '按 Netflix 标准检查单行长度，绝无双行字幕',                    links: [] },
+                { name: '🗣️ 多 TTS',        badge: '核心', desc: '支持 GPT-SoVITS、Azure、OpenAI 等多种配音方案',                links: [] },
+                { name: '🚀 一键启动',      desc: '在 Streamlit 中一键启动与处理',                                  links: [] },
+                { name: '🌍 多语言 UI',     desc: 'Streamlit UI 内置多语言支持',                                    links: [] },
+                { name: '📝 进度恢复',      desc: '详细日志，支持随时中断和恢复进度',                               links: [] },
+                { name: '🔍 模型选择器',    desc: '自动从 API 获取完整模型列表，支持搜索筛选',                     links: [] },
+                { name: '⏯️ 任务控制',      desc: '处理过程中可随时暂停、继续或停止',                               links: [] }
             ],
             tagline: { html: '与同类项目相比的优势：<strong>绝无多行字幕，最佳的翻译质量，无缝的配音体验</strong>' }
+        },
+        demo: {
+            title: '🎥 演示',
+            items: {
+                dualSubtitles:    '双语字幕',
+                cosyVoiceClone:   'Cosy2 声音克隆',
+                gptSovitsDubbing: 'GPT-SoVITS 配音'
+            }
         },
         cards: [
             { name: '快速上手',        nameHref: '#quick-start',  nameTarget: '', desc: '使用 uv 或 Docker 3 分钟快速启动' },
@@ -130,20 +160,28 @@ window.INTRO_CONFIG = {
             ctaHref: 'https://videolingo.io',
             lead:  'VideoLingo 是一個全方位的影片翻譯、本地化和配音工具，旨在生成 Netflix 品質的字幕。它消除了機器翻譯的生硬感和多行字幕，同時提供高品質配音，實現跨越語言障礙的全球知識共享。',
             features: [
-                { html: '🎥 通過 yt-dlp 下載 YouTube 影片' },
-                { html: '<strong>🎙️ 使用 WhisperX 進行詞級別和低幻覺字幕識別</strong>' },
-                { html: '<strong>📝 基於 NLP 和 AI 的字幕分段</strong>' },
-                { html: '<strong>📚 自定義 + AI 生成術語庫確保翻譯一致性</strong>' },
-                { html: '<strong>🔄 三步驟翻譯-反思-調適實現影院級品質</strong>' },
-                { html: '<strong>✅ Netflix 標準，僅單行字幕</strong>' },
-                { html: '<strong>🗣️ 使用 GPT-SoVITS、Azure、OpenAI 等進行配音</strong>' },
-                { html: '🚀 在 Streamlit 中一鍵啟動和處理' },
-                { html: '🌍 Streamlit UI 多語言支持' },
-                { html: '📝 詳細日誌記錄和進度恢復' },
-                { html: '🔍 模型搜尋選擇器，自動從 API 獲取完整模型清單，支援搜尋篩選' },
-                { html: '⏯️ 任務控制 — 處理過程中可隨時暫停、繼續或停止' }
+                { name: '🎥 yt-dlp',       desc: '透過 yt-dlp 下載 YouTube 影片',                                  links: [] },
+                { name: '🎙️ WhisperX',     badge: '核心', desc: '詞級別與低幻覺字幕識別',                                       links: [] },
+                { name: '📝 NLP 切割',      badge: '核心', desc: '基於 NLP 與 AI 的字幕切割',                                    links: [] },
+                { name: '📚 術語庫',        badge: '核心', desc: '自訂 + AI 生成術語庫，確保翻譯一致性',                         links: [] },
+                { name: '🔄 三步意譯',      badge: '核心', desc: '翻譯、反思、調適，實現電影級品質',                             links: [] },
+                { name: '✅ Netflix 單行',  badge: '核心', desc: 'Netflix 標準，僅單行字幕',                                     links: [] },
+                { name: '🗣️ 多 TTS',        badge: '核心', desc: '支援 GPT-SoVITS、Azure、OpenAI 等配音方案',                    links: [] },
+                { name: '🚀 一鍵啟動',      desc: '在 Streamlit 中一鍵啟動與處理',                                  links: [] },
+                { name: '🌍 多語系 UI',     desc: 'Streamlit UI 內建多語系支援',                                    links: [] },
+                { name: '📝 進度續傳',      desc: '詳細日誌，支援隨時中斷與恢復進度',                               links: [] },
+                { name: '🔍 模型選擇器',    desc: '自動從 API 取得完整模型清單，支援搜尋篩選',                     links: [] },
+                { name: '⏯️ 工作控制',      desc: '處理過程中可隨時暫停、繼續或停止',                               links: [] }
             ],
             tagline: { html: '與類似項目的區別：<strong>僅單行字幕、更優質的翻譯、無縫配音體驗</strong>' }
+        },
+        demo: {
+            title: '🎥 演示',
+            items: {
+                dualSubtitles:    '雙語字幕',
+                cosyVoiceClone:   'Cosy2 聲音克隆',
+                gptSovitsDubbing: 'GPT-SoVITS 配音'
+            }
         },
         cards: [
             { name: '快速上手',        nameHref: '#quick-start',  nameTarget: '', desc: '使用 uv 或 Docker 3 分鐘快速啟動' },
@@ -171,20 +209,28 @@ window.INTRO_CONFIG = {
             ctaHref: 'https://videolingo.io',
             lead:  'VideoLingoは、Netflixクオリティの字幕を生成することを目的とした、オールインワンの動画翻訳、ローカライゼーション、吹き替えツールです。機械的な翻訳や複数行の字幕を排除し、高品質な吹き替えを追加することで、言語の壁を越えた世界的な知識共有を可能にします。',
             features: [
-                { html: '🎥 yt-dlpによるYouTube動画のダウンロード' },
-                { html: '<strong>🎙️ WhisperXによる単語レベルの低誤認識字幕認識</strong>' },
-                { html: '<strong>📝 NLPとAIを活用した字幕セグメンテーション</strong>' },
-                { html: '<strong>📚 一貫性のある翻訳のためのカスタム＋AI生成用語</strong>' },
-                { html: '<strong>🔄 映画品質のための3ステップ（翻訳-反映-適応）プロセス</strong>' },
-                { html: '<strong>✅ Netflixスタンダードの1行字幕のみ</strong>' },
-                { html: '<strong>🗣️ GPT-SoVITS、Azure、OpenAIなどによる吹き替え</strong>' },
-                { html: '🚀 Streamlitでのワンクリック起動と処理' },
-                { html: '🌍 Streamlit UIの多言語サポート' },
-                { html: '📝 進捗再開機能付きの詳細なログ記録' },
-                { html: '🔍 モデル検索セレクター — APIからモデル一覧を自動取得、検索・フィルター対応' },
-                { html: '⏯️ タスクコントロール — 処理中いつでも一時停止・再開・中止が可能' }
+                { name: '🎥 yt-dlp',       desc: 'yt-dlp による YouTube 動画のダウンロード',                                links: [] },
+                { name: '🎙️ WhisperX',     badge: 'コア', desc: 'WhisperX による単語レベルの低誤認識字幕認識',                          links: [] },
+                { name: '📝 NLP 分割',      badge: 'コア', desc: 'NLP と AI を活用した字幕セグメンテーション',                            links: [] },
+                { name: '📚 用語集',        badge: 'コア', desc: 'カスタム + AI 生成用語集で一貫性のある翻訳',                            links: [] },
+                { name: '🔄 3 ステップ',    badge: 'コア', desc: '翻訳-反映-適応による映画品質プロセス',                                  links: [] },
+                { name: '✅ Netflix 1 行',  badge: 'コア', desc: 'Netflix スタンダードの 1 行字幕のみ',                                  links: [] },
+                { name: '🗣️ マルチ TTS',    badge: 'コア', desc: 'GPT-SoVITS、Azure、OpenAI など複数対応',                                links: [] },
+                { name: '🚀 ワンクリック',  desc: 'Streamlit でワンクリック起動と処理',                                       links: [] },
+                { name: '🌍 多言語 UI',     desc: 'Streamlit UI の多言語サポート',                                            links: [] },
+                { name: '📝 ログ再開',      desc: '進捗再開機能付きの詳細なログ記録',                                        links: [] },
+                { name: '🔍 モデル選択',    desc: 'API からモデル一覧を自動取得、検索・フィルター対応',                      links: [] },
+                { name: '⏯️ タスク制御',    desc: '処理中いつでも一時停止・再開・中止が可能',                                links: [] }
             ],
             tagline: { html: '類似プロジェクトとの違い：<strong>1行字幕のみ、優れた翻訳品質、シームレスな吹き替え体験</strong>' }
+        },
+        demo: {
+            title: '🎥 デモ',
+            items: {
+                dualSubtitles:    'デュアル字幕',
+                cosyVoiceClone:   'Cosy2 ボイスクローン',
+                gptSovitsDubbing: 'GPT-SoVITS 吹き替え'
+            }
         },
         cards: [
             { name: 'クイックスタート', nameHref: '#quick-start',  nameTarget: '', desc: 'uv または Docker で 3 分で起動' },
@@ -212,20 +258,28 @@ window.INTRO_CONFIG = {
             ctaHref: 'https://videolingo.io',
             lead:  'VideoLingo es una herramienta todo en uno para traducción, localización y doblaje de videos, diseñada para generar subtítulos de calidad Netflix. Elimina las traducciones mecánicas y los subtítulos de múltiples líneas mientras agrega doblaje de alta calidad, permitiendo compartir conocimiento globalmente a través de las barreras del idioma.',
             features: [
-                { html: '🎥 Descarga de videos de YouTube mediante yt-dlp' },
-                { html: '<strong>🎙️ Reconocimiento de subtítulos a nivel de palabra y baja ilusión con WhisperX</strong>' },
-                { html: '<strong>📝 Segmentación de subtítulos impulsada por NLP e IA</strong>' },
-                { html: '<strong>📚 Terminología personalizada + generada por IA para una traducción coherente</strong>' },
-                { html: '<strong>🔄 Proceso de 3 pasos Traducción-Reflexión-Adaptación para calidad cinematográfica</strong>' },
-                { html: '<strong>✅ Solo subtítulos de una línea, estándar Netflix</strong>' },
-                { html: '<strong>🗣️ Doblaje con GPT-SoVITS, Azure, OpenAI y más</strong>' },
-                { html: '🚀 Inicio y procesamiento con un clic en Streamlit' },
-                { html: '🌍 Soporte multilingüe en la interfaz de Streamlit' },
-                { html: '📝 Registro detallado con reanudación de progreso' },
-                { html: '🔍 Selector de modelos con búsqueda — obtiene automáticamente la lista completa de modelos desde tu API' },
-                { html: '⏯️ Control de tareas — pausa, reanuda o detén el procesamiento en cualquier paso' }
+                { name: '🎥 yt-dlp',         desc: 'Descarga de videos de YouTube mediante yt-dlp',                                       links: [] },
+                { name: '🎙️ WhisperX',       badge: 'Destacado', desc: 'Reconocimiento a nivel de palabra y baja ilusión con WhisperX',                   links: [] },
+                { name: '📝 Segment. NLP',    badge: 'Destacado', desc: 'Segmentación de subtítulos impulsada por NLP e IA',                                links: [] },
+                { name: '📚 Glosario',        badge: 'Destacado', desc: 'Terminología personalizada + IA para traducción coherente',                        links: [] },
+                { name: '🔄 3 Pasos T-R-A',   badge: 'Destacado', desc: 'Traducción-Reflexión-Adaptación para calidad cinematográfica',                     links: [] },
+                { name: '✅ Netflix 1 Línea', badge: 'Destacado', desc: 'Subtítulos de una sola línea, estándar Netflix',                                    links: [] },
+                { name: '🗣️ Multi-TTS',      badge: 'Destacado', desc: 'Doblaje con GPT-SoVITS, Azure, OpenAI y más',                                      links: [] },
+                { name: '🚀 Streamlit',       desc: 'Inicio y procesamiento con un clic en Streamlit',                                     links: [] },
+                { name: '🌍 Multi-idioma',    desc: 'Soporte multilingüe en la interfaz de Streamlit',                                     links: [] },
+                { name: '📝 Reanudar',        desc: 'Registro detallado con reanudación de progreso',                                      links: [] },
+                { name: '🔍 Selector',        desc: 'Selector de modelos con búsqueda y filtro automático desde tu API',                 links: [] },
+                { name: '⏯️ Control',         desc: 'Pausa, reanuda o detén el procesamiento en cualquier paso',                          links: [] }
             ],
             tagline: { html: 'Diferencia con proyectos similares: <strong>Solo subtítulos de una línea, calidad superior de traducción, experiencia de doblaje perfecta</strong>' }
+        },
+        demo: {
+            title: '🎥 Demo',
+            items: {
+                dualSubtitles:    'Subtítulos Duales',
+                cosyVoiceClone:   'Clon de Voz Cosy2',
+                gptSovitsDubbing: 'Doblaje GPT-SoVITS'
+            }
         },
         cards: [
             { name: 'Inicio rápido',    nameHref: '#quick-start',  nameTarget: '', desc: 'Funcionando en 3 minutos con uv o Docker' },
@@ -253,20 +307,28 @@ window.INTRO_CONFIG = {
             ctaHref: 'https://videolingo.io',
             lead:  'VideoLingo - это универсальный инструмент для перевода, локализации и дубляжа видео, направленный на создание субтитров качества Netflix. Он устраняет механические переводы и многострочные субтитры, добавляя высококачественный дубляж, что позволяет делиться знаниями по всему миру, преодолевая языковые барьеры.',
             features: [
-                { html: '🎥 Загрузка видео с YouTube через yt-dlp' },
-                { html: '<strong>🎙️ Пословное распознавание субтитров с низким уровнем искажений с помощью WhisperX</strong>' },
-                { html: '<strong>📝 Сегментация субтитров на основе NLP и ИИ</strong>' },
-                { html: '<strong>📚 Пользовательская + ИИ-генерируемая терминология для согласованного перевода</strong>' },
-                { html: '<strong>🔄 3-этапный процесс Перевод-Осмысление-Адаптация для кинематографического качества</strong>' },
-                { html: '<strong>✅ Только однострочные субтитры стандарта Netflix</strong>' },
-                { html: '<strong>🗣️ Дубляж с помощью GPT-SoVITS, Azure, OpenAI и других</strong>' },
-                { html: '🚀 Запуск и обработка в один клик в Streamlit' },
-                { html: '🌍 Многоязычная поддержка в интерфейсе Streamlit' },
-                { html: '📝 Подробное логирование с возможностью возобновления прогресса' },
-                { html: '🔍 Селектор моделей с поиском — автоматическое получение полного списка моделей от вашего API-провайдера' },
-                { html: '⏯️ Управление задачами — пауза, возобновление или остановка обработки на любом этапе' }
+                { name: '🎥 yt-dlp',         desc: 'Загрузка видео с YouTube через yt-dlp',                                                links: [] },
+                { name: '🎙️ WhisperX',       badge: 'Ядро', desc: 'Пословное распознавание субтитров с низким уровнем искажений',                     links: [] },
+                { name: '📝 NLP Сегмент.',   badge: 'Ядро', desc: 'Сегментация субтитров на основе NLP и ИИ',                                           links: [] },
+                { name: '📚 Глоссарий',      badge: 'Ядро', desc: 'Пользовательская + ИИ терминология для согласованного перевода',                     links: [] },
+                { name: '🔄 3 Этапа',        badge: 'Ядро', desc: 'Перевод-Осмысление-Адаптация для кинематографического качества',                     links: [] },
+                { name: '✅ Netflix 1 Строка',badge: 'Ядро', desc: 'Только однострочные субтитры стандарта Netflix',                                      links: [] },
+                { name: '🗣️ Мульти-TTS',     badge: 'Ядро', desc: 'Дубляж через GPT-SoVITS, Azure, OpenAI и другие',                                    links: [] },
+                { name: '🚀 Streamlit',       desc: 'Запуск и обработка в один клик в Streamlit',                                           links: [] },
+                { name: '🌍 Мульти-язык',    desc: 'Многоязычный интерфейс Streamlit',                                                     links: [] },
+                { name: '📝 Возобновление',  desc: 'Подробное логирование с возможностью возобновления прогресса',                        links: [] },
+                { name: '🔍 Выбор модели',   desc: 'Селектор моделей с автопоиском и фильтрацией от вашего API',                          links: [] },
+                { name: '⏯️ Управление',     desc: 'Пауза, возобновление или остановка обработки на любом этапе',                          links: [] }
             ],
             tagline: { html: 'Отличие от похожих проектов: <strong>Только однострочные субтитры, превосходное качество перевода, безупречный опыт дубляжа</strong>' }
+        },
+        demo: {
+            title: '🎥 Демонстрация',
+            items: {
+                dualSubtitles:    'Двойные Субтитры',
+                cosyVoiceClone:   'Клонирование Голоса Cosy2',
+                gptSovitsDubbing: 'GPT-SoVITS с моим голосом'
+            }
         },
         cards: [
             { name: 'Быстрый старт',    nameHref: '#quick-start',  nameTarget: '', desc: 'Запуск за 3 минуты с uv или Docker' },
@@ -294,20 +356,28 @@ window.INTRO_CONFIG = {
             ctaHref: 'https://videolingo.io',
             lead:  'VideoLingo est un outil tout-en-un de traduction, de localisation et de doublage vidéo visant à générer des sous-titres de qualité Netflix. Il élimine les traductions automatiques rigides et les sous-titres multi-lignes tout en ajoutant un doublage de haute qualité, permettant le partage des connaissances à l\'échelle mondiale au-delà des barrières linguistiques.',
             features: [
-                { html: '🎥 Téléchargement de vidéos YouTube via yt-dlp' },
-                { html: '<strong>🎙️ Reconnaissance de sous-titres au niveau des mots et à faible illusion avec WhisperX</strong>' },
-                { html: '<strong>📝 Segmentation des sous-titres basée sur le NLP et l\'IA</strong>' },
-                { html: '<strong>📚 Terminologie personnalisée + générée par IA pour une traduction cohérente</strong>' },
-                { html: '<strong>🔄 Processus en 3 étapes : Traduction-Réflexion-Adaptation pour une qualité cinématographique</strong>' },
-                { html: '<strong>✅ Sous-titres uniquement sur une ligne, aux normes Netflix</strong>' },
-                { html: '<strong>🗣️ Doublage avec GPT-SoVITS, Azure, OpenAI et plus</strong>' },
-                { html: '🚀 Démarrage et traitement en un clic dans Streamlit' },
-                { html: '🌍 Support multi-langues dans l\'interface utilisateur Streamlit' },
-                { html: '📝 Journalisation détaillée avec reprise de la progression' },
-                { html: '🔍 Sélecteur de modèles avec recherche — récupère automatiquement la liste complète des modèles depuis votre API' },
-                { html: '⏯️ Contrôle des tâches — mettez en pause, reprenez ou arrêtez le traitement à n\'importe quelle étape' }
+                { name: '🎥 yt-dlp',         desc: 'Téléchargement de vidéos YouTube via yt-dlp',                                                links: [] },
+                { name: '🎙️ WhisperX',       badge: 'Essentiel', desc: 'Reconnaissance au niveau des mots et à faible illusion avec WhisperX',             links: [] },
+                { name: '📝 Segm. NLP',      badge: 'Essentiel', desc: 'Segmentation des sous-titres basée sur le NLP et l\'IA',                            links: [] },
+                { name: '📚 Glossaire',      badge: 'Essentiel', desc: 'Terminologie personnalisée + IA pour traduction cohérente',                        links: [] },
+                { name: '🔄 3 Étapes',       badge: 'Essentiel', desc: 'Traduction-Réflexion-Adaptation pour qualité cinématographique',                    links: [] },
+                { name: '✅ Netflix 1 Ligne',badge: 'Essentiel', desc: 'Sous-titres sur une seule ligne, norme Netflix',                                   links: [] },
+                { name: '🗣️ Multi-TTS',      badge: 'Essentiel', desc: 'Doublage avec GPT-SoVITS, Azure, OpenAI et plus',                                  links: [] },
+                { name: '🚀 Streamlit',       desc: 'Démarrage et traitement en un clic dans Streamlit',                                   links: [] },
+                { name: '🌍 Multi-langue',    desc: 'Interface Streamlit multi-langues',                                                    links: [] },
+                { name: '📝 Reprise',         desc: 'Journalisation détaillée avec reprise de progression',                                links: [] },
+                { name: '🔍 Sélecteur',       desc: 'Sélecteur de modèles avec recherche et filtrage automatique depuis votre API',       links: [] },
+                { name: '⏯️ Contrôle',        desc: 'Pause, reprise ou arrêt à n\'importe quelle étape',                                    links: [] }
             ],
             tagline: { html: 'Différence par rapport aux projets similaires : <strong>Sous-titres sur une seule ligne uniquement, qualité de traduction supérieure, expérience de doublage transparente</strong>' }
+        },
+        demo: {
+            title: '🎥 Démo',
+            items: {
+                dualSubtitles:    'Sous-titres Doubles',
+                cosyVoiceClone:   'Clone de Voix Cosy2',
+                gptSovitsDubbing: 'Doublage GPT-SoVITS'
+            }
         },
         cards: [
             { name: 'Démarrage rapide', nameHref: '#quick-start',  nameTarget: '', desc: 'Opérationnel en 3 minutes avec uv ou Docker' },

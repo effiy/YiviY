@@ -2,57 +2,38 @@
  * Translations Vue 3 组件
  * ----------------------------------------------------------------------
  * 多语言 README 渲染器。语言切换由全局 VL_LANG 管理，
- * 本组件监听 vl-lang-changed 事件同步更新。
+ * 通过 mountDocComponent 的 i18n:true 选项实现透明切换——
+ * 当前语言的内容属性由 wrapI18n 在语言变更时自动替换到 Vue 实例。
  *
- * 数据 schema（data.js 内）：
- *   - default             默认语言 code（回退用）
- *   - constants           跨语言常量（URL / shell / thanks）
- *   - demoVideos          演示视频 URL 列表（标题按语言翻译）
- *   - content[code]       各语言完整 README 内容
+ * 模板直接访问扁平字段（如 languages.inputTitle），无需中间 computed。
  *
- * 计算属性 `langContent` 返回当前语言的扁平 content。
- * 语言切换时通过 #translations 的 data-lang 属性 + CSS
- * transition 提供平滑视觉过渡。
+ * 视觉过渡：切换语言时短暂添加 `is-lang-switching` body 类，由
+ * docs/styles/transitions.css 定义 180ms 的淡出过渡，
+ * 避免多语言内容替换时出现视觉跳变。
+ *
+ * 备注（2026-06-29）：演示视频 Demo 章节已上移至 docs/components/intro/
+ * （紧随 overview 之后），URL 常量同步迁入 INTRO_CONFIG.constants.demoVideos。
  */
 
-(function () {
-    'use strict';
+mountDocComponent({
+    name: 'DocTranslations',
+    templateId: 'translations-template',
+    dataKey: 'TRANSLATIONS_CONTENT',
+    i18n: true,
+    extra: {
+        mounted: function () {
+            var self = this;
 
-    mountDocComponent({
-        name: 'DocTranslations',
-        templateId: 'translations-template',
-        dataKey: 'TRANSLATIONS_CONTENT',
-        extra: {
-            data: function () {
-                var cfg = window.TRANSLATIONS_CONTENT || {};
-                return Object.assign({}, cfg, {
-                    currentLang: (window.VL_LANG && window.VL_LANG.current) || (cfg.default || 'en')
-                });
-            },
-            computed: {
-                langContent: function () {
-                    var map = this.content || {};
-                    return map[this.currentLang] || map[this.default] || {};
-                }
-            },
-            mounted: function () {
-                var self = this;
+            /* 订阅全局语言变更，触发 180ms 视觉过渡 */
+            document.addEventListener('vl-lang-changed', function (e) {
+                if (!e.detail || !e.detail.lang) return;
+                if (e.detail.lang === self.currentLang) return;
 
-                /* 订阅全局语言变更 */
-                document.addEventListener('vl-lang-changed', function (e) {
-                    if (!e.detail || !e.detail.lang) return;
-                    if (e.detail.lang === self.currentLang) return;
-
-                    /* 短暂的视觉过渡：添加 switching 类 → 更新语言 → 移除 */
-                    document.body.classList.add('is-lang-switching');
-                    self.currentLang = e.detail.lang;
-
-                    /* 过渡结束后清理 */
-                    setTimeout(function () {
-                        document.body.classList.remove('is-lang-switching');
-                    }, 180);
-                });
-            }
+                document.body.classList.add('is-lang-switching');
+                setTimeout(function () {
+                    document.body.classList.remove('is-lang-switching');
+                }, 180);
+            });
         }
-    });
-})();
+    }
+});

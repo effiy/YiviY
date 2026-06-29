@@ -32,12 +32,26 @@
     var _loaderCtx = null;    // yryLoadComponent 传入的 ctx (fetchTemplate/dispatchReady/...)
     var _cfg = null;          // 当前配置 (data.js + defaultConfig 浅合并结果)
 
-    /* ── 字段快捷访问 (data.js 把 runtime 配置嵌套在 defaults 中, 这里统一解包) ── */
-    function _duration()       { return _cfg.defaults.duration; }
-    function _maxToasts()      { return _cfg.defaults.maxToasts; }
-    function _templateId()     { return _cfg.defaults.templateId; }
-    function _hostId()         { return _cfg.defaults.hostId; }
-    function _loadTimeoutMs()  { return _cfg.defaults.loadTimeoutMs; }
+    /* ── toast 的默认配置（与 defaultConfig 字段一一对应；onerror fallback 直接复用,
+           避免 2 处定义漂移） ─────────────────────────────────────────── */
+    var DEFAULT_CONFIG = {
+        icons: {
+            default: 'ℹ',
+            success: '✓',
+            warn:    '⚠',
+            warning: '⚠',
+            error:   '✕',
+            info:    'ℹ'
+        },
+        typeAliases: { warning: 'warn' },
+        defaults: {
+            duration:      3500,
+            maxToasts:     5,
+            templateId:    'yry-toast-tpl',
+            hostId:        'yry-toast-host',
+            loadTimeoutMs: 5000
+        }
+    };
 
     /* ── 类型别名归一化 ─────────────────────────────────────────── */
     function normalizeType(type) {
@@ -54,10 +68,10 @@
             throw new Error('Vue 3 未加载, 请先引入 vue.global.prod.js');
         }
 
-        var host = document.getElementById(_hostId());
+        var host = document.getElementById(_cfg.defaults.hostId);
         if (!host) {
             host = document.createElement('div');
-            host.id = _hostId();
+            host.id = _cfg.defaults.hostId;
             document.body.appendChild(host);
         }
 
@@ -105,7 +119,7 @@
         var items = data.items;
 
         /* 上限保护: 超出则丢弃最旧的 */
-        while (items.length >= _maxToasts()) {
+        while (items.length >= _cfg.defaults.maxToasts) {
             var dropped = items.shift();
             if (dropped && dropped._tid) clearTimeout(dropped._tid);
         }
@@ -122,7 +136,7 @@
     /* ── 构造 item 并执行实际渲染 (内部函数, 所有路径走这里) ────── */
     function _doShow(text, type, title, duration, preAssignedId) {
         var t = normalizeType(type);
-        var d = typeof duration === 'number' ? duration : _duration();
+        var d = typeof duration === 'number' ? duration : _cfg.defaults.duration;
         var item = {
             id: preAssignedId || _nextId++,
             type: t,
@@ -139,7 +153,7 @@
 
         /* 模板未加载: 缓存后异步挂载 */
         _pending.push(item);
-        _loaderCtx.fetchTemplate(_templateId(), _loadTimeoutMs())
+        _loaderCtx.fetchTemplate(_cfg.defaults.templateId, _cfg.defaults.loadTimeoutMs)
             .then(mountApp)
             .catch(function (err) {
                 console.error('[YryToast] 模板加载失败:', err);
@@ -208,38 +222,14 @@
         readyEvent:    'yry-toast-ready',
         errorEvent:    'yry-toast-error',
         componentName: 'YryToast',
-        defaultConfig: {
-            icons: {
-                default: 'ℹ', success: '✓', warn: '⚠', warning: '⚠', error: '✕', info: 'ℹ'
-            },
-            typeAliases: { warning: 'warn' },
-            defaults: {
-                duration:      3500,
-                maxToasts:     5,
-                templateId:    'yry-toast-tpl',
-                hostId:        'yry-toast-host',
-                loadTimeoutMs: 5000
-            }
-        },
+        defaultConfig: DEFAULT_CONFIG,
         onReady: _onReady
     }, function () {
         /* yry-loader.js 加载失败 (例如 404) 时的回退:
            toast 是 nice-to-have 通知组件, 与其他组件 (reject queue) 不同,
            我们保留 API 调用路径不崩溃, 后续 show() 通过 stub fetchTemplate
            优雅失败 (实际渲染失败但不会抛异常污染调用方). */
-        _onReady({
-            icons: {
-                default: 'ℹ', success: '✓', warn: '⚠', warning: '⚠', error: '✕', info: 'ℹ'
-            },
-            typeAliases: { warning: 'warn' },
-            defaults: {
-                duration:      3500,
-                maxToasts:     5,
-                templateId:    'yry-toast-tpl',
-                hostId:        'yry-toast-host',
-                loadTimeoutMs: 5000
-            }
-        }, {
+        _onReady(DEFAULT_CONFIG, {
             getTemplateUrl: function () { return null; },
             fetchTemplate:  function () { return Promise.reject(new Error('yry-loader.js 未加载')); },
             dispatchReady:  function () {},

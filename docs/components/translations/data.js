@@ -13,17 +13,14 @@
  *   - translations/README.ru.md   → 'ru'
  *   - translations/README.fr.md   → 'fr'
  *
- * 设计原则：
- *   1. 顶部 constants 收集跨语言不变的 URL / shell 命令 / 第三方项目链接。
- *   2. 每种语言对应 content[code]，结构相同；只翻译文本，不翻译链接。
- *   3. 含 HTML 的文本使用 `{ html: '...' }` 包装，纯文本用 string。
- *   4. 命令块中跨语言不变的部分抽到 constants.shell。
+ * 设计原则（i18n:true 约定）：
+ *   1. 顶层 keys 中, 语言 code (en / zh-CN / ...) 对应各语言的扁平内容
+ *   2. 跨语言不变的 URL / shell 命令 / 第三方项目链接抽到 constants
+ *   3. 切换语言时由 mountDocComponent 的 wrapI18n 自动替换 Vue 实例属性
+ *   4. 含 HTML 的文本使用 `{ html: '...' }` 包装，纯文本用 string
  */
 
 window.TRANSLATIONS_CONTENT = {
-
-    /* ── 语言无关常量 ─────────────────────────────────── */
-    default: 'en',
 
     /* ── 跨语言常量（链接 / shell / 命令） ─────────────── */
     constants: {
@@ -72,26 +69,10 @@ window.TRANSLATIONS_CONTENT = {
         }
     },
 
-    /* ── 演示视频（URL 不变，标题按语言翻译） ─────────── */
-    demoVideos: [
-        { id: 'dualSubtitles',    url: 'https://github.com/user-attachments/assets/a5c3d8d1-2b29-4ba9-b0d0-25896829d951' },
-        { id: 'cosyVoiceClone',   url: 'https://github.com/user-attachments/assets/e065fe4c-3694-477f-b4d6-316917df7c0a' },
-        { id: 'gptSovitsDubbing', url: 'https://github.com/user-attachments/assets/47d965b2-b4ab-4a0b-9d08-b49a7bf3508c' }
-    ],
-
     /* ── 多语言内容 ───────────────────────────────────── */
-    content: {
 
-        /* ════════════════════════════════════════════════ */
-        'en': {
-            demo: {
-                title: '🎥 Demo',
-                items: {
-                    dualSubtitles:    'Dual Subtitles',
-                    cosyVoiceClone:   'Cosy2 Voice Clone',
-                    gptSovitsDubbing: 'GPT-SoVITS Dubbing'
-                }
-            },
+    /* ════════════════════════════════════════════════ */
+    'en': {
             languages: {
                 title: 'Language Support',
                 inputTitle: { html: '<strong>Input languages supported:</strong>' },
@@ -197,15 +178,7 @@ window.TRANSLATIONS_CONTENT = {
         },
 
         /* ════════════════════════════════════════════════ */
-        'zh-CN': {
-            demo: {
-                title: '🎥 演示',
-                items: {
-                    dualSubtitles:    '双语字幕',
-                    cosyVoiceClone:   'Cosy2 声音克隆',
-                    gptSovitsDubbing: 'GPT-SoVITS 配音'
-                }
-            },
+    'zh-CN': {
             languages: {
                 title: '语言支持',
                 inputTitle: { html: '<strong>输入语言支持：</strong>' },
@@ -312,15 +285,7 @@ window.TRANSLATIONS_CONTENT = {
         },
 
         /* ════════════════════════════════════════════════ */
-        'zh-TW': {
-            demo: {
-                title: '🎥 演示',
-                items: {
-                    dualSubtitles:    '雙語字幕',
-                    cosyVoiceClone:   'Cosy2 聲音克隆',
-                    gptSovitsDubbing: 'GPT-SoVITS 配音'
-                }
-            },
+    'zh-TW': {
             languages: {
                 title: '語言支持',
                 inputTitle: { html: '<strong>輸入語言支持（更多語言即將推出）：</strong>' },
@@ -426,15 +391,7 @@ window.TRANSLATIONS_CONTENT = {
         },
 
         /* ════════════════════════════════════════════════ */
-        'ja': {
-            demo: {
-                title: '🎥 デモ',
-                items: {
-                    dualSubtitles:    'デュアル字幕',
-                    cosyVoiceClone:   'Cosy2 ボイスクローン',
-                    gptSovitsDubbing: 'GPT-SoVITS 吹き替え'
-                }
-            },
+    'ja': {
             languages: {
                 title: '言語サポート',
                 inputTitle: { html: '<strong>入力言語サポート（さらに追加予定）：</strong>' },
@@ -540,15 +497,7 @@ window.TRANSLATIONS_CONTENT = {
         },
 
         /* ════════════════════════════════════════════════ */
-        'es': {
-            demo: {
-                title: '🎥 Demo',
-                items: {
-                    dualSubtitles:    'Subtítulos Duales',
-                    cosyVoiceClone:   'Clon de Voz Cosy2',
-                    gptSovitsDubbing: 'Doblaje GPT-SoVITS'
-                }
-            },
+    'es': {
             languages: {
                 title: 'Soporte de Idiomas',
                 inputTitle: { html: '<strong>Idiomas de entrada soportados (se añadirán más):</strong>' },
@@ -654,15 +603,7 @@ window.TRANSLATIONS_CONTENT = {
         },
 
         /* ════════════════════════════════════════════════ */
-        'ru': {
-            demo: {
-                title: '🎥 Демонстрация',
-                items: {
-                    dualSubtitles:    'Двойные Субтитры',
-                    cosyVoiceClone:   'Клонирование Голоса Cosy2',
-                    gptSovitsDubbing: 'GPT-SoVITS с моим голосом'
-                }
-            },
+    'ru': {
             languages: {
                 title: 'Поддержка языков',
                 inputTitle: { html: '<strong>Поддержка входных языков (будет добавлено больше):</strong>' },
@@ -768,15 +709,7 @@ window.TRANSLATIONS_CONTENT = {
         },
 
         /* ════════════════════════════════════════════════ */
-        'fr': {
-            demo: {
-                title: '🎥 Démo',
-                items: {
-                    dualSubtitles:    'Sous-titres Doubles',
-                    cosyVoiceClone:   'Clone de Voix Cosy2',
-                    gptSovitsDubbing: 'Doublage GPT-SoVITS'
-                }
-            },
+    'fr': {
             languages: {
                 title: 'Support des Langues',
                 inputTitle: { html: '<strong>Langues d\'entrée prises en charge (d\'autres à venir) :</strong>' },
@@ -880,5 +813,4 @@ window.TRANSLATIONS_CONTENT = {
                 ]
             }
         }
-    }
 };

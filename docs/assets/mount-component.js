@@ -102,8 +102,15 @@ function applyI18nSlice(vm, rawConfig, lang) {
 }
 
 /**
- * 为组件包裹 i18n 能力：修改 data() 以返回当前语言的扁平数据，
+ * 为组件包裹 i18n 能力：data() 返回当前语言的扁平数据（合并组件私有状态），
  * 并在 mounted 后监听语言变更以自动替换响应式属性。
+ *
+ * 设计：统一路径，不区分「简单模式 / 复杂模式」：
+ *   1. 取 window[dataKey] 作为 rawConfig，取 originalData() 作为 base
+ *   2. 若 rawConfig 无语言键，直接返回 base（无 i18n）
+ *   3. 否则用 resolveI18nData 解析出 resolved（剥离 lang 键，合并 constants + langSlice）
+ *   4. 把 base 上「非语言 code 且 resolved 未提供」的私有状态拷贝进 resolved
+ *   5. 返回新对象，避免 mutate window[dataKey]
  */
 function wrapI18n(Component, opts) {
     var dataKey = opts.dataKey;
@@ -111,27 +118,24 @@ function wrapI18n(Component, opts) {
 
     Component.data = function () {
         var rawConfig = window[dataKey] || {};
-        if (!hasLanguageKeys(rawConfig)) {
-            /* 数据未按语言键值对组织——回退原始行为 */
-            return originalData.call(this);
-        }
-        var currentLang = (window.VL_LANG && window.VL_LANG.current) || 'en';
         var base = originalData.call(this);
 
-        /* 若原始 data() 返回了额外私有状态（如 loading/error），
-           将 i18n 解析结果合并进去，而非替换整个对象。           */
-        if (hasLanguageKeys(base)) {
-            /* 简单模式：base 就是原始配置本身 */
-            return resolveI18nData(base, currentLang);
+        if (!hasLanguageKeys(rawConfig)) {
+            return base;
         }
-        /* 复杂模式：base 含组件私有状态，合并 i18n 属性 */
+
+        var currentLang = (window.VL_LANG && window.VL_LANG.current) || 'en';
         var resolved = resolveI18nData(rawConfig, currentLang);
-        for (var key in resolved) {
-            if (Object.prototype.hasOwnProperty.call(resolved, key)) {
-                base[key] = resolved[key];
-            }
+        var langCodes = getKnownLangCodes();
+
+        /* 拷贝 base 上的私有状态到 resolved（跳过 lang code 与 resolved 已提供的 key） */
+        for (var key in base) {
+            if (!Object.prototype.hasOwnProperty.call(base, key)) continue;
+            if (langCodes.indexOf(key) !== -1) continue;
+            if (Object.prototype.hasOwnProperty.call(resolved, key)) continue;
+            resolved[key] = base[key];
         }
-        return base;
+        return resolved;
     };
 
     var originalMounted = Component.mounted;
@@ -219,15 +223,15 @@ function mountDocComponent(opts) {
  * 沦为无法消除的噪声。新增「自带样式表」的组件时，在下方白名单追加
  * 组件目录名即可（保持与 docs/components/<name>/index.css 一一对应）。
  */
-var _COMPONENTS_WITH_CSS = {
-    'sidebar':       true,
-    'intro':         true,
-    'quick-start':   true,
-    'workflow':      true,
-    'translations':  true,
-    'code-activity': true,
-    'footer':        true
-};
+var _COMPONENTS_WITH_CSS = new Set([
+    'sidebar',
+    'intro',
+    'quick-start',
+    'workflow',
+    'translations',
+    'code-activity',
+    'footer'
+]);
 
 function injectComponentStylesheet() {
     var script = document.currentScript;
@@ -251,7 +255,7 @@ function injectComponentStylesheet() {
             break;
         }
     }
-    if (!compName || !_COMPONENTS_WITH_CSS[compName]) return;
+    if (!compName || !_COMPONENTS_WITH_CSS.has(compName)) return;
 
     var cssPath = scriptDir + 'index.css';
     var already = document.querySelector('link[rel="stylesheet"][href="' + cssPath + '"]');

@@ -1,7 +1,6 @@
 /* ─────────────────────────────────────────────────────
  * Translations
  * translations 组件专属样式（README 多语言内容渲染器）：
- *   - 演示块：   .demo-grid / .demo-cell / .demo-video-wrap
  *   - 语言列：   .lang-grid / .lang-pill / .lang-pill-*
  *   - 安装步骤： .install-steps* / .alt-note
  *   - 章节列表：.api-list / .limitations-list* / .contact-list*
@@ -12,48 +11,17 @@
  * 已迁出（2026-06-29）：
  *   - Hero (readme-hero / readme-title / readme-subtitle / trendshift-*)
  *     → docs/components/intro/index.css（首屏整合）
- *   - Overview (feature-list / tagline)
+ *   - Overview (feature-grid / tagline)
  *     → docs/components/intro/index.css
+ *   - Demo 演示视频块 (.demo-grid / .demo-cell / .demo-video-wrap)
+ *     → docs/components/intro/index.css（紧随 overview 之后）
  * ───────────────────────────────────────────────────── */
 
-/* ── Demo ─────────────────────────────────────────── */
-.vl-doc .demo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
-}
-
-.vl-doc .demo-cell {
-    background: var(--vl-doc-bg);
-    border: 1px solid var(--vl-doc-border);
-    border-radius: var(--vl-doc-radius);
-    padding: 16px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.vl-doc .demo-cell:hover {
-    border-color: var(--vl-doc-primary);
-    box-shadow: 0 4px 20px rgba(0,0,0,.08);
-}
-
-.vl-doc .demo-cell h4 {
-    margin: 0 0 10px;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.vl-doc .demo-video-wrap {
-    border-radius: 8px;
-    overflow: hidden;
-    background: #000;
-    box-shadow: 0 2px 8px rgba(0,0,0,.15);
-}
-
-.vl-doc .demo-video-wrap video {
-    width: 100%;
-    display: block;
-}
+/* ── Demo ───────────────────────────────────────────
+ * 演示视频块已迁至 docs/components/intro/index.css（2026-06-29），
+ * 紧随 overview 之后、site cards 之前。
+ * 保留此处注释作为迁移轨迹，避免后续误恢复。
+ * ───────────────────────────────────────────────────── */
 
 /* ── Language Support ─────────────────────────────── */
 .vl-doc .lang-grid {
