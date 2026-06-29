@@ -10,6 +10,7 @@ Detailed pre-generation verification. Run through this checklist before generati
 - [ ] One interaction pattern chosen (not trying to demo everything at once)
 - [ ] Card's `desc`, `tags`, `badge`, `links` are all represented in the demo concept
 - [ ] Language matches the source card data (use `en` for multi-language configs unless user specifies otherwise)
+- [ ] **Authenticity**: All referenced source files, functions, variants, and commands exist in the actual project codebase. Check the Project Source File Reference in `demo-types.md`.
 
 ### Output Planning
 - [ ] Scene directory determined (e.g., `docs/components/intro/`)
@@ -79,6 +80,7 @@ Detailed pre-generation verification. Run through this checklist before generati
 - [ ] Mock data is rich enough for the demo to feel realistic
 - [ ] `_meta` section present with `demoSlug`, `demoType`, `sceneName`, `generatedAt`
 - [ ] No external API endpoints referenced in mock data
+- [ ] **Authenticity**: Trace objects (if any) reference real project files from the Source File Reference table in `demo-types.md`. Variant lists match actual supported options. Code snippets are real working commands.
 
 ### Demo Area Content
 - [ ] Interactive element present and functional

@@ -75,13 +75,13 @@ ${item("动画", "CSS @keyframes + Vue Transition — 零额外依赖", dim)}
 
 ${hdr("使用场景")}
 ${scene("场景 1 — 为项目所有功能生成 demo")}
-${item("用户: \"generate demos for intro cards\"", "→ Phase 0 发现 11 张卡片 → Phase 1 分类 (A-F) → 用户确认 → Phase 2-5 并行生成", cyan)}
+${item("用户: \"generate demos for intro cards\"", "→ Phase 0 发现 12 张 card → Phase 1 分类 (A-F) → 用户确认 → Phase 2-5 生成，mock 数据必须追溯真实源码", cyan)}
 
 ${scene("场景 2 — 为单个工具创建演示")}
-${item("用户: \"create a demo page for yt-dlp\"", "→ 识别为 Type A → 搭建工具界面骨架 → 填充 mock 数据 → 验证", cyan)}
+${item("用户: \"create a demo page for yt-dlp\"", "→ 识别为 Type A → 搭建工具界面骨架 → 填充 mock 数据（trace 引用 _1_ytdlp.py 真实函数）→ 验证", cyan)}
 
 ${scene("场景 3 — 更新已有 demo")}
-${item("用户: \"update the code health demo\"", "→ Phase 0 检测已有 demo → 询问 skip/overwrite/update → 增量更新", cyan)}
+${item("用户: \"update the yt-dlp tool demo\"", "→ Phase 0 检测已有 demo → 询问 skip/overwrite/update → 增量更新", cyan)}
 `;
 
 console.log(help);

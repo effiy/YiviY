@@ -54,17 +54,19 @@ Pre-populate `history` with 1–2 fake past runs to demonstrate state.
 ```javascript
 {
   steps: [
-    { id: 's1', label: 'Detect', status: 'done' },
-    { id: 's2', label: 'Split', status: 'active' },
-    { id: 's3', label: 'Translate', status: 'pending' },
-    { id: 's4', label: 'Render', status: 'pending' },
+    { id: 's1', label: 'NLP Detect', status: 'done',
+      trace: { file: '_3_1_split_nlp.py', fileId: 'file:_3_1_split_nlp.py', func: 'split_sentences()', funcId: 'func:split_sentences', desc: 'NLP-based sentence boundary detection' } },
+    { id: 's2', label: 'Meaning Split', status: 'active',
+      trace: { file: '_3_2_split_meaning.py', fileId: 'file:_3_2_split_meaning.py', func: 'split_by_meaning()', funcId: 'func:split_by_meaning', desc: 'meaning-based semantic splitting' } },
+    { id: 's3', label: 'Single-Line Check', status: 'pending',
+      trace: { file: '_5_split_sub.py', fileId: 'file:_5_split_sub.py', func: 'enforce_single_line()', funcId: 'func:enforce_single_line', desc: 'Netflix single-line compliance check' } },
   ],
   sample: 'The pipeline demonstrates sentence-boundary handling for the demo card.',
-  timings: { 's1': 120, 's2': 80, 's3': 0, 's4': 0 },
+  timings: { 's1': 120, 's2': 80, 's3': 0 },
 }
 ```
 
-Adjust step count to 3–6 based on card density. Set `status` deterministically by `seed`.
+Adjust step count to 3–6 based on card density. Every step MUST have a `trace` object referencing a real project file from the Project Source File Reference table in `demo-types.md`. Set `status` deterministically by `seed`.
 
 #### Type C — Comparison
 
@@ -86,17 +88,19 @@ The number of variants equals the count parsed from any tag like `"6 engines"` o
 
 ```javascript
 {
-  states: ['Idle', 'Downloading', 'Processing', 'Done', 'Failed'],
-  current: 'Idle',
+  states: ['Running', 'Paused', 'Stopped'],
+  current: 'Running',
   transitions: [
-    { from: 'Idle', to: 'Downloading', trigger: 'start' },
-    { from: 'Downloading', to: 'Processing', trigger: 'fetched' },
-    { from: 'Processing', to: 'Done', trigger: 'success' },
-    { from: 'Processing', to: 'Failed', trigger: 'error' },
+    { from: 'Running', to: 'Paused', trigger: 'pause' },
+    { from: 'Paused', to: 'Running', trigger: 'resume' },
+    { from: 'Paused', to: 'Stopped', trigger: 'stop' },
+    { from: 'Stopped', to: 'Running', trigger: 'restart' },
   ],
   history: [],
 }
 ```
+
+States MUST match the actual pipeline execution states from the project (e.g., VideoLingo uses Running/Paused/Stopped for task control, with checkpoint save on pause and recovery on resume). Do not invent states that don't exist in the project.
 
 #### Type E — Dashboard
 
@@ -118,23 +122,23 @@ The number of variants equals the count parsed from any tag like `"6 engines"` o
 }
 ```
 
-Generate `metrics` based on the card's score-like tag text (if present), else create a balanced set spanning 50–100 range.
+Generate `metrics` based on the card's actual score-like tag text (e.g., "58 / 100" from a Report card). Dimension count MUST match the card's tag (e.g., "7 dimensions" → 7 items). Never fabricate scores; extract them from the card's tags and meta fields.
 
 #### Type F — Guide Walkthrough
 
 ```javascript
 {
   steps: [
-    { id: 'st1', label: 'Clone repo', code: 'git clone <url>' },
-    { id: 'st2', label: 'Install deps', code: 'pip install -r requirements.txt' },
-    { id: 'st3', label: 'Run server', code: 'streamlit run app.py' },
+    { id: 'st1', label: 'Clone repo', code: 'git clone https://github.com/Huanshere/VideoLingo.git\ncd VideoLingo' },
+    { id: 'st2', label: 'Install deps', code: 'python install.py' },
+    { id: 'st3', label: 'Launch app', code: 'python launch.py' },
   ],
   activeStep: 0,
   copyToClipboardSupported: false,
 }
 ```
 
-The number of steps is 3–5; each step has a single command in `code`.
+The number of steps is 3–5; each step has a single command in `code`. **Every command MUST be a real, working command from the actual project** — source them from the project's README, `install.py`, `launch.py`, `OneKeyStart.bat`, or `setup.py`. Never fabricate CLI commands.
 
 ### Step 4: Validate Determinism
 
@@ -180,3 +184,4 @@ Or as a JSON literal if the caller asks:
 - **Idempotent rerun**: same card + same seed yields byte-identical JSON. Verify by hashing.
 - **Faithful to card**: respect any quotes / counts in card.desc; e.g. if card.desc mentions "7 dimensions", mock metrics must have 7 items when they correspond.
 - **Schema stays inside rui-demos/types**: each field listed in Step 3 exists. Free-form additions require updating the type spec, not the mock.
+- **Trace to real code**: Type A and B trace objects MUST reference actual project source files and function names. Type C variants MUST be real supported options. Type F commands MUST be real project CLI commands. See the Project Source File Reference table in `demo-types.md`.

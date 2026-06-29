@@ -407,6 +407,7 @@ Dispatch one subagent per demo (up to 5 concurrently). Each subagent receives:
 > - At least one interactive element is present
 > - Responsive layout works at 375px+
 > - Card mounts via `YrySceneCard.mount()` (already in scaffold)
+> - **AUTHENTICITY**: All mock data must trace to real project files. Type A/B stage traces must reference actual Python source files and functions. Type C variants must be real supported options. Type F code snippets must be real working commands. Nothing fabricated.
 
 ### Error Handling
 
@@ -719,6 +720,18 @@ When generating demos for a multi-language project:
 - Add a language note in the info area if the feature supports i18n
 - Demo UI text should match the project's primary language
 
+### 8. Authenticity — Trace to Real Source Code
+Every demo must be grounded in the actual project codebase. Fabricated features, imaginary tools, or placeholder data that doesn't correspond to reality are forbidden:
+
+- **Type A (Tool)**: Each pipeline stage's `trace` object MUST reference a real source file and function from the project (e.g., `_1_ytdlp.py` → `extract_info()`, not imaginary files)
+- **Type B (Pipeline)**: Every step MUST correspond to an actual step in the project's pipeline. The step description MUST name the real Python module and function
+- **Type C (Comparison)**: Every variant MUST be a real supported option (real TTS engines, real languages, real formats). Count tags MUST match actual counts from the project config
+- **Type D (State Machine)**: States MUST match actual pipeline execution states. Transition rules MUST reflect real pause/resume/stop behavior
+- **Type E (Dashboard)**: Metrics, scores, and dimensions MUST come from actual report data in the card's `meta` field or from real project analysis
+- **Type F (Guide)**: Code snippets MUST be real, working commands. Config snippets MUST use actual project configuration keys
+
+**Litmus test**: Could a project contributor look at the demo and recognize their own codebase? If the demo references a file, function, or feature that doesn't exist, it fails.
+
 ---
 
 ## Key Patterns
@@ -951,11 +964,11 @@ For multi-language demo suites:
 
 **Process:**
 1. **Phase 0**: Read `INTRO_CONFIG.en.overview.features` → find NLP Split card. Scene: `intro`. No existing demos.
-2. **Phase 1**: Classify: tags include `purple` (`AI-driven`) + desc mentions "segmentation" "sentence-boundary" → Type B (Pipeline). Concept: "User sees sample text flow through animated NLP detection → sentence boundary identification → split output. Click any step to inspect intermediate state."
+2. **Phase 1**: Classify: tags include `purple` (`AI-driven`) + desc mentions "segmentation" "sentence-boundary" → Type B (Pipeline). Concept: "User sees sample text flow through animated NLP detection → sentence boundary identification → split output. Click any step to inspect intermediate state and trace to actual source files (`_3_1_split_nlp.py`, `_3_2_split_meaning.py`)."
 3. **Phase 2**: Create `docs/components/intro/demos/nlp-split/` with 4 scaffold files. CDN paths verified.
-4. **Phase 3**: Fill in pipeline-specific content: 3 steps (NLP Detect → Sentence Boundary → Split Output), auto-play button, I/O preview panels, sample English text as input.
+4. **Phase 3**: Fill in pipeline-specific content: 3 steps (NLP Detect → Sentence Boundary → Split Output), each with trace to real Python source files. Auto-play button, I/O preview panels, sample English text as input.
 5. **Phase 4**: Generate `docs/components/intro/demos/index.html` (or update if exists) with NLP Split card entry.
-6. **Phase 5**: Validate — all checks pass. Demo ready.
+6. **Phase 5**: Validate — all checks pass including authenticity (all trace files exist). Demo ready.
 
 ### Example 2: Batch Generation for a Scene
 

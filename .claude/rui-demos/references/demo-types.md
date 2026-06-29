@@ -2,6 +2,8 @@
 
 Full specification for each demo type: when to use it, what it looks like, and how to build it.
 
+> **⚠️ Authenticity Rule**: Every demo must be grounded in the actual project codebase. Mock data, stage names, variant lists, state transitions, metrics, and code snippets MUST trace to real project files, functions, and configuration. The litmus test: a project contributor should recognize their own codebase in the demo. See the canonical yt-dlp demos at `docs/views/yt-dlp/demos/` for the reference implementation — every trace object points to a real Python file and function.
+
 ## Table of Contents
 
 - [4-File Output Structure](#4-file-output-structure)
@@ -141,7 +143,7 @@ app.mount('#demo-app')
 
 ### Mock Data Shape
 
-`data.js` — assigned to `window.DEMO_MOCK_DATA`:
+`data.js` — assigned to `window.DEMO_MOCK_DATA`. Every trace object MUST reference a real project source file and function:
 
 ```javascript
 window.DEMO_MOCK_DATA = {
@@ -149,21 +151,33 @@ window.DEMO_MOCK_DATA = {
     sampleInputs: ['https://www.youtube.com/watch?v=example', 'https://vimeo.com/12345'],
     placeholder: 'Paste a URL to get started...',
 
-    // Staged progress simulation
+    // Retry/behavior simulation config (not magic numbers in Vue methods)
+    retryRate: { postPipeline: 0.15, fragmentStage: 0.2, fragmentStageIndex: 3, extraDelayMs: 400 },
+
+    // Staged progress — each stage has a trace to real source code
     progressStages: [
-        { pct: 20, text: 'Connecting...', delay: 400 },
-        { pct: 50, text: 'Processing...', delay: 600 },
-        { pct: 80, text: 'Finalizing...', delay: 400 },
-        { pct: 100, text: 'Done!', delay: 200 },
+        { pct: 10, text: 'Checking version + auto-updating...', delay: 300,
+          trace: { file: '_1_ytdlp.py', fileId: 'file:update_ytdlp', func: 'update_ytdlp()', funcId: 'func:update_ytdlp', desc: 'checks for updates once per session' } },
+        { pct: 30, text: 'Extracting video metadata...', delay: 500,
+          trace: { file: 'YoutubeDL.py', fileId: 'file:YoutubeDL.py', func: 'extract_info()', funcId: 'func:extract_info', desc: 'fetches title, formats, subtitles' } },
+        { pct: 60, text: 'Downloading fragments (8 concurrent)...', delay: 900,
+          trace: { file: 'YoutubeDL.py', fileId: 'file:YoutubeDL.py', func: 'process_info()', funcId: 'func:process_info', desc: 'dispatches fragment downloader' } },
+        { pct: 85, text: 'Post-processing: FFmpeg merge...', delay: 600,
+          trace: { file: 'YoutubeDL.py', fileId: 'file:YoutubeDL.py', func: 'post_process()', funcId: 'func:process_info', desc: 'merges video+audio streams' } },
+        { pct: 100, text: 'Sanitizing filename + writing output...', delay: 300,
+          trace: { file: 'utils/_utils.py', fileId: 'file:utils/_utils.py', func: 'sanitize_filename()', funcId: 'func:sanitize_filename', desc: 'writes cleaned file to output dir' } },
     ],
 
-    // Mock result structure (returned by generateMockResult)
+    // Config-driven options (never hardcode in Vue methods)
+    resolutionSizes: { '4K': '512 MB', '1080p': '128 MB', '720p': '72 MB', '480p': '24 MB' },
+
+    // Mock result structure
     mockResult: {
         title: 'Example Video Title',
         duration: '12:34',
-        format: '1080p · mp4',
-        size: '245 MB',
-        subtitles: ['en', 'zh-CN', 'ja'],
+        format: '1080p · mp4 (h264 + aac)',
+        size: '128 MB',
+        subtitles: { en: 'manual (vtt)', 'zh-CN': 'auto-translated (vtt)', ja: 'auto (vtt)' },
         extractedAt: '2026-06-29 14:30 UTC',
     },
 
@@ -175,8 +189,9 @@ window.DEMO_MOCK_DATA = {
 ### Example: yt-dlp Card
 
 **Card signals**: External links (5 custom), desc "download via yt-dlp", tags "1.2k sites" + "Python"
-**Demo concept**: Paste a YouTube URL → progress bar simulates download stages → shows mock video info + extracted subtitles
-**Key interaction**: URL input → staged progress → result panel with format info
+**Demo concept**: Paste a YouTube URL → progress bar simulates download stages → shows mock video info + extracted subtitles. Each stage displays the actual Python source file and function — clickable to open the code dependency graph.
+**Key interaction**: URL input → staged progress with clickable code traces → result panel with format info
+**Real source files traced**: `_1_ytdlp.py` (version check, format builder, file finder), `YoutubeDL.py` (extract_info, process_info, post_process), `utils/_utils.py` (sanitize_filename)
 
 ---
 
@@ -295,16 +310,18 @@ app.mount('#demo-app')
 
 ### Mock Data Shape
 
-`data.js` — assigned to `window.DEMO_MOCK_DATA`:
+`data.js` — assigned to `window.DEMO_MOCK_DATA`. Each step's trace MUST reference a real pipeline file and function:
 
 ```javascript
 window.DEMO_MOCK_DATA = {
-    // Pipeline steps definition
+    // Pipeline steps — each with a trace to real source code
     steps: [
-        { icon: '1', label: 'Step Name', description: 'What happens in this step', detail: 'Expanded explanation...' },
-        { icon: '2', label: 'Step Two', description: 'Second stage processing', detail: '...' },
-        { icon: '3', label: 'Step Three', description: 'Final transformation', detail: '...' },
-        // 3-6 steps total
+        { icon: '🔍', label: 'Step One', description: 'What happens', detail: 'Expanded explanation...',
+          trace: { file: '_3_1_split_nlp.py', fileId: 'file:_3_1_split_nlp.py', func: 'split_sentences()', funcId: 'func:split_sentences', desc: 'NLP-based sentence boundary detection' } },
+        { icon: '✂️', label: 'Step Two', description: 'Second stage', detail: '...',
+          trace: { file: '_3_2_split_meaning.py', fileId: 'file:_3_2_split_meaning.py', func: 'split_by_meaning()', funcId: 'func:split_by_meaning', desc: 'meaning-based semantic splitting' } },
+        { icon: '✅', label: 'Step Three', description: 'Final output', detail: '...',
+          trace: { file: '_5_split_sub.py', fileId: 'file:_5_split_sub.py', func: 'enforce_single_line()', funcId: 'func:enforce_single_line', desc: 'Netflix single-line compliance check' } },
     ],
 
     // Sample data for I/O preview
@@ -322,8 +339,9 @@ window.DEMO_MOCK_DATA = {
 ### Example: NLP Split Card
 
 **Card signals**: Tags "AI-driven" (purple) + "sentence-aware" (info), desc "segmentation · sentence-boundary"
-**Demo concept**: Shows sample text flowing through NLP detection → sentence boundary identification → split output
-**Key interaction**: Auto-play walks through the split pipeline; clicking a step shows the intermediate state
+**Demo concept**: Shows sample text flowing through NLP detection → sentence boundary identification → split output. Each step's trace links to the actual Python module (`_3_1_split_nlp.py`, `_3_2_split_meaning.py`).
+**Key interaction**: Auto-play walks through the split pipeline; clicking a step shows the intermediate state and code trace
+**Real source files traced**: `_3_1_split_nlp.py` (NLP segmentation), `_3_2_split_meaning.py` (meaning split), `_5_split_sub.py` (single-line enforcement)
 
 ---
 
@@ -421,8 +439,8 @@ window.DEMO_MOCK_DATA = {
 
 ### Example: Multi-TTS Card
 
-**Card signals**: Tags "6 engines" (cyan) + "voice-clone" (accent), desc lists engine names
-**Demo concept**: Tabs for each TTS engine showing its characteristics; comparison table for quality/speed/languages
+**Card signals**: Tags "6 engines" (cyan) + "voice-clone" (accent), desc lists engine names (GPT-SoVITS, Azure, OpenAI, Edge, F5-TTS)
+**Demo concept**: Tabs for each TTS engine showing its characteristics; comparison table for quality/speed/languages. Variant list MUST match the actual engines supported by VideoLingo (from `core/_10_gen_audio.py` and config).
 **Key interaction**: Switching tabs shows per-engine details; table highlights best-in-class values
 
 ---
@@ -533,9 +551,10 @@ window.DEMO_MOCK_DATA = {
 
 ### Example: Task Control Card
 
-**Card signals**: Tags "real-time" (accent) + "3 states" (cyan), desc "pause, resume, stop"
-**Demo concept**: Three-state machine (Running → Paused → Stopped) with clickable transitions; simulated task progress in the background
+**Card signals**: Tags "real-time" (accent) + "3 states" (cyan), desc "pause, resume, or stop at any pipeline step"
+**Demo concept**: Three-state machine (Running → Paused → Stopped) matching actual VideoLingo pipeline execution states. Clickable transitions with simulated task progress. Action log shows transition history with timestamps.
 **Key interaction**: Click states to transition; action log shows transition history
+**Real states match**: Running (pipeline executing), Paused (checkpoint saved, resources held), Stopped (cleanup complete, ready for restart)
 
 ---
 
@@ -612,28 +631,37 @@ Only Type E needs Chart.js. Load it conditionally:
 ```
 
 ```javascript
-// Mount Chart.js in Vue mounted() hook
+// Mount Chart.js in Vue mounted() hook — resolve theme tokens at runtime
 mounted() {
     this.$nextTick(() => {
         const ctx = document.getElementById('demo-chart')
         if (!ctx) return
-        new Chart(ctx, {
-            type: 'radar',  // or 'bar' for dimension breakdowns
+        const style = getComputedStyle(document.documentElement)
+        const accent = style.getPropertyValue('--yry-accent').trim() || '#38bdf8'
+        const accentMuted = style.getPropertyValue('--yry-accent-muted').trim() || 'rgba(56,189,248,0.2)'
+        const textMuted = style.getPropertyValue('--yry-text-muted').trim() || '#94a3b8'
+        const borderColor = style.getPropertyValue('--yry-border-color').trim() || 'rgba(148,163,184,0.15)'
+        const textColor = style.getPropertyValue('--yry-text').trim() || '#e2e8f0'
+        this._chart = new Chart(ctx, {
+            type: 'radar',
             data: {
                 labels: this.dimensions.map(d => d.name),
                 datasets: [{
                     label: 'Score',
                     data: this.dimensions.map(d => d.score),
-                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
-                    borderColor: '#38bdf8',
+                    backgroundColor: accentMuted,
+                    borderColor: accent,
                 }]
             },
             options: {
-                scales: { r: { min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.15)' }, pointLabels: { color: '#e2e8f0' } } },
+                scales: { r: { min: 0, max: 100, ticks: { color: textMuted }, grid: { color: borderColor }, pointLabels: { color: textColor } } },
                 plugins: { legend: { display: false } }
             }
         })
     })
+},
+beforeUnmount() {
+    if (this._chart) { this._chart.destroy(); this._chart = null; }
 }
 ```
 
@@ -691,9 +719,10 @@ window.DEMO_MOCK_DATA = {
 
 ### Example: Code Health Report Card
 
-**Card signals**: Badge 'Report', tags "58/100" (warn) + "7 dimensions" (info) + "26 actions" (cyan)
-**Demo concept**: Dashboard with overall score, radar chart of 7 dimensions, expandable improvement recommendations
+**Card signals**: Badge 'Report', tags "58/100" (warn) + "7 dimensions" (info) + "26 actions" (cyan), meta "Assessment date 2026-06-28"
+**Demo concept**: Dashboard with overall score, radar chart of 7 dimensions, expandable improvement recommendations. All metrics MUST use the actual scores and dimensions from the card data — never fabricate numbers.
 **Key interaction**: Hover chart for dimension scores; click recommendations to expand details
+**Data source**: Card `meta` field provides assessment date and context; `tags` provide scores and counts
 
 ---
 
@@ -802,8 +831,9 @@ window.DEMO_MOCK_DATA = {
 ### Example: Quick Start Card
 
 **Card signals**: Badge 'Guide', nameHref '#quick-start', tags "5 min" + "uv/Docker"
-**Demo concept**: 3-step walkthrough: install → configure → run, with copyable shell commands
+**Demo concept**: 3-step walkthrough: install → configure → run, with copyable shell commands. Every command MUST be a real, working command from the project (from `OneKeyStart.bat`, `install.py`, or README).
 **Key interaction**: Click through steps, copy each command, see expected output
+**Real commands source**: Project README, `install.py`, `launch.py`, `setup.py`
 
 ---
 
@@ -833,3 +863,30 @@ When a card matches multiple types, use this priority:
 4. **D (State Machine)** if the card is about controlling/managing (interactive state is the richest demo)
 5. **B (Pipeline)** if `purple` tag present or desc mentions process steps — pipeline visualizations are more engaging than static comparisons
 6. **C (Comparison)** if tag count > 2 variants — fallback for variety-focused cards
+
+### Project Source File Reference
+
+When generating mock data with trace objects, reference ONLY real project files. Below is the canonical VideoLingo pipeline — use these file names and function names in trace objects:
+
+| Pipeline Step | Source File | Key Functions |
+|--------------|-------------|---------------|
+| Video Download | `core/_1_ytdlp.py` | `download_video_ytdlp()`, `get_ytdlp()`, `find_video_files()`, `sanitize_filename()` |
+| ASR Transcription | `core/_2_asr.py` | `transcribe_audio()` |
+| NLP Split | `core/_3_1_split_nlp.py` | `split_sentences()` |
+| Meaning Split | `core/_3_2_split_meaning.py` | `split_by_meaning()` |
+| Summarize | `core/_4_1_summarize.py` | `summarize_text()` |
+| Translate | `core/_4_2_translate.py` | `translate_lines()` |
+| Subtitle Split | `core/_5_split_sub.py` | `enforce_single_line()` |
+| Generate Subtitles | `core/_6_gen_sub.py` | `generate_subtitles()` |
+| Sub into Video | `core/_7_sub_into_vid.py` | `embed_subtitles()` |
+| Audio Task | `core/_8_1_audio_task.py` | `generate_audio_task()` |
+| Dub Chunks | `core/_8_2_dub_chunks.py` | `dub_chunks()` |
+| Refer Audio | `core/_9_refer_audio.py` | `reference_audio()` |
+| Generate Audio (TTS) | `core/_10_gen_audio.py` | `generate_tts_audio()` |
+| Merge Audio | `core/_11_merge_audio.py` | `merge_audio_tracks()` |
+| Dub to Video | `core/_12_dub_to_vid.py` | `dub_to_video()` |
+| Streamlit UI | `st.py` | `main()` |
+| Setup / Install | `install.py`, `setup_env.py`, `launch.py` | — |
+| Prompts / Config | `core/prompts.py` | — |
+
+**Never invent** a source file or function name. If you don't know the exact function name, omit the trace object rather than guessing.
