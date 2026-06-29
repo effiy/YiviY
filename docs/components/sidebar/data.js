@@ -47,9 +47,8 @@ window.SIDEBAR_CONFIG = {
                 { label: 'Batch Processing', href: '#batch',           active: false },
                 { label: 'Custom TTS',       href: '#custom-tts',      active: false },
                 { label: 'Troubleshooting',  href: '#troubleshooting', active: false },
-                { label: 'Translations',     href: '#translations',    active: false }
-                /* Code Activity 现已嵌入到 Introduction 区域，由 intro 组件渲染，
-                   不再保留独立 sidebar 入口，避免重复导航。 */
+                { label: 'Translations',     href: '#translations',    active: false },
+                { label: 'Code Activity',    href: '#code-activity',   active: false }
             ]
         }
     ],

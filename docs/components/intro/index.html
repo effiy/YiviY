@@ -5,10 +5,6 @@
       - 渲染 title / lead / 卡片网格 / callout；
       - 在 mounted 钩子里调用 window.YrySceneCard.mount() 把每张卡片注入
         到 #intro-card-N 占位 div（YrySceneCard 通过 yry-loader 异步加载）。
-      - 在末尾的 #intro-code-activity-slot 内挂载「最近一周代码量变化」演示图表，
-        图表组件本身复用 components/code-activity/ 的 Vue 组件对象
-        （window.DocCodeActivityComponent），由本文件脚本按顺序加载 data.js /
-        index.js 后挂载。详见 index.js。
 -->
 <template id="intro-template">
     <section id="intro">
@@ -30,42 +26,8 @@
             <strong>{{ callout.strong }}</strong>
             {{ callout.text }}<a :href="callout.linkHref">{{ callout.linkText }}</a>.
         </div>
-        <!-- 演示区：最近一周代码量变化（嵌入自 code-activity 组件） -->
-        <div ref="codeActivitySlot"
-             id="intro-code-activity-slot"
-             class="intro-code-activity-slot"></div>
     </section>
 </template>
 
-<!--
-    演示图表的 Vue 模板（隐藏），与 code-activity 组件的 template 同 id，
-    Vue.createApp(window.DocCodeActivityComponent).mount(slot) 会按 id 查找。
-    在此处复制一份，避免再依赖 components/code-activity/index.html 的独立 include。
--->
-<template id="code-activity-template">
-    <section class="code-activity">
-        <h2>{{ labels.title }}</h2>
-        <div class="code-activity-wrapper">
-            <canvas ref="canvas"></canvas>
-            <p v-if="loading" class="code-activity-loading">{{ labels.loading }}</p>
-            <p v-if="error"   class="code-activity-error">{{ labels.error }}</p>
-        </div>
-    </section>
-</template>
-
-<!--
-    关键顺序：
-      1) 先设嵌入标记，告诉 code-activity/index.js 不要自动挂载到 <body>；
-      2) 加载 code-activity 的 data.js，让 window.CODE_ACTIVITY_CONFIG 就绪；
-      3) 加载 code-activity 的 index.js，让 window.DocCodeActivityComponent
-         （Vue 组件对象，含 data / methods / lifecycle）就绪；
-      4) 最后才加载 intro 的 data.js + index.js，由后者在 mounted 钩子里
-         Vue.createApp(window.DocCodeActivityComponent).mount(slot)。
-    include.js 会按 DOM 顺序串行执行，因此这个顺序在 include.js 加载场景下
-    保证一定可观察到；若直接以 <script src> 形式调试也要遵循此顺序。
--->
-<script>window.__docCodeActivityEmbedded = true;</script>
-<script src="../code-activity/data.js"></script>
-<script src="../code-activity/index.js"></script>
 <script src="data.js"></script>
 <script src="index.js"></script>
