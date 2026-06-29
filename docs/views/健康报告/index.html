@@ -1,667 +1,415 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VideoLingo 代码健康报告</title>
-<style>
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --border: #30363d;
-    --text: #c9d1d9;
-    --text-muted: #8b949e;
-    --accent: #58a6ff;
-    --critical: #f85149;
-    --high: #d29922;
-    --medium: #3fb950;
-    --low: #8b949e;
-    --radius: 8px;
-    --font-mono: 'SF Mono','Fira Code','Cascadia Code',monospace;
-  }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body {
-    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
-    background: var(--bg); color: var(--text); line-height:1.72; padding:40px 20px;
-  }
-  .container { max-width:1060px; margin:0 auto; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%234f46e5'/><text x='16' y='22' font-size='18' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>VL</text></svg>" type="image/svg+xml">
+    <title>VideoLingo 代码健康报告</title>
 
-  /* ===== COVER ===== */
-  .cover {
-    text-align:center; padding:64px 20px 48px;
-    border-bottom:2px solid var(--border); margin-bottom:0;
-  }
-  .cover .tag {
-    display:inline-block; padding:3px 14px; border-radius:20px;
-    background:rgba(88,166,255,0.12); color:var(--accent);
-    font-size:0.78em; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:16px;
-  }
-  .cover h1 { font-size:2.4em; font-weight:800; color:#fff; letter-spacing:-0.02em; }
-  .cover .subtitle { font-size:1.05em; color:var(--text-muted); margin-top:10px; }
-  .cover .meta-grid {
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:12px; margin-top:32px; text-align:center;
-  }
-  .cover .meta-item {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius); padding:14px;
-  }
-  .cover .meta-item .num { font-size:1.6em; font-weight:700; color:#fff; }
-  .cover .meta-item .label { font-size:0.75em; color:var(--text-muted); margin-top:3px; }
+    <!-- CDN Theme — Tech Innovation (dark, bold, modern) -->
+    <link rel="stylesheet" href="../../cdn/theme/tech-innovation.css">
 
-  /* ===== TOC ===== */
-  .toc {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius); padding:24px 28px; margin:48px 0 52px;
-  }
-  .toc h3 { margin:0 0 12px; font-size:0.9em; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; }
-  .toc ol { padding-left:18px; columns:2; column-gap:28px; }
-  .toc li { margin:4px 0; break-inside:avoid; }
-  .toc a { color:var(--accent); text-decoration:none; font-size:0.87em; }
-  .toc a:hover { text-decoration:underline; }
+    <!-- Docs CSS @import chain — tokens + base only (no sidebar layout for views) -->
+    <link rel="stylesheet" href="../../styles/tokens.css">
+    <link rel="stylesheet" href="../../styles/base.css">
 
-  /* ===== SECTION HEADINGS ===== */
-  .section { margin-bottom:56px; }
-  .section h2 {
-    font-size:1.45em; font-weight:700; padding-bottom:10px;
-    border-bottom:2px solid var(--border); margin-bottom:24px; color:#f0f6fc;
-    display:flex; align-items:center; gap:10px;
-  }
-  .section h2 .num {
-    display:inline-flex; align-items:center; justify-content:center;
-    width:30px; height:30px; border-radius:6px;
-    background:var(--accent); color:#fff; font-size:0.68em; flex-shrink:0;
-  }
-  .section h3 { font-size:1.1em; font-weight:600; margin:24px 0 12px; color:#e6edf3; }
-  .section h4 { font-size:0.95em; font-weight:600; margin:18px 0 8px; color:var(--text); }
+    <!-- Report-specific layout styles -->
+    <link rel="stylesheet" href="index.css">
 
-  /* ===== TABLES ===== */
-  .table-wrap { overflow-x:auto; margin:14px 0; }
-  table { width:100%; border-collapse:collapse; font-size:0.86em; }
-  th, td { padding:9px 12px; text-align:left; border-bottom:1px solid var(--border); vertical-align:top; }
-  th { background:var(--surface); color:var(--text-muted); font-weight:600; font-size:0.76em; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap; }
-  tr:hover td { background:rgba(88,166,255,0.03); }
-
-  /* ===== BADGES ===== */
-  .badge { display:inline-block; padding:2px 9px; border-radius:12px; font-size:0.73em; font-weight:600; white-space:nowrap; }
-  .badge.critical { background:rgba(248,81,73,0.15); color:var(--critical); }
-  .badge.high { background:rgba(210,153,34,0.15); color:var(--high); }
-  .badge.medium { background:rgba(63,185,80,0.15); color:var(--medium); }
-  .badge.info { background:rgba(88,166,255,0.15); color:var(--accent); }
-  .badge.low { background:rgba(139,148,158,0.12); color:var(--low); }
-
-  /* ===== CODE ===== */
-  pre {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius); padding:14px 16px; overflow-x:auto;
-    font-family:var(--font-mono); font-size:0.78em; line-height:1.55; margin:12px 0;
-  }
-  code { font-family:var(--font-mono); font-size:0.86em; background:rgba(110,118,129,0.2); padding:2px 5px; border-radius:4px; }
-  pre code { background:none; padding:0; font-size:inherit; }
-
-  /* ===== CALLOUT ===== */
-  .callout {
-    border-left:3px solid; border-radius:0 var(--radius) var(--radius) 0;
-    padding:12px 18px; margin:16px 0; background:var(--surface);
-  }
-  .callout.critical { border-color:var(--critical); background:rgba(248,81,73,0.06); }
-  .callout.high { border-color:var(--high); background:rgba(210,153,34,0.06); }
-  .callout.info { border-color:var(--accent); background:rgba(88,166,255,0.06); }
-  .callout.success { border-color:var(--medium); background:rgba(63,185,80,0.06); }
-  .callout strong { display:block; margin-bottom:3px; }
-  .callout ul, .callout ol { margin-top:4px; padding-left:18px; }
-  .callout li { margin:2px 0; }
-
-  /* ===== COMPARE ===== */
-  .compare { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0; }
-  .compare .bad, .compare .good { border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
-  .compare .bad .label, .compare .good .label { padding:7px 12px; font-weight:600; font-size:0.73em; text-transform:uppercase; letter-spacing:0.4px; }
-  .compare .bad .label { background:rgba(248,81,73,0.2); color:var(--critical); }
-  .compare .good .label { background:rgba(63,185,80,0.2); color:var(--medium); }
-  .compare pre { margin:0; border:none; border-radius:0; }
-
-  /* ===== SCORE PANELS ===== */
-  .score-panel {
-    background:var(--surface); border:2px solid var(--accent);
-    border-radius:var(--radius); padding:28px 32px; margin-bottom:28px;
-    display:flex; align-items:center; gap:32px; flex-wrap:wrap;
-  }
-  .score-panel .big-grade { font-size:5em; font-weight:900; color:var(--accent); line-height:1; }
-  .score-panel .score-info { flex:1; min-width:240px; }
-  .score-panel .score-info h3 { margin:0 0 8px; font-size:1.1em; color:#fff; }
-  .score-panel .score-info p { font-size:0.9em; color:var(--text-muted); }
-  .score-panel .score-meta { display:flex; gap:24px; flex-wrap:wrap; margin-top:14px; }
-  .score-panel .score-meta div { text-align:center; }
-  .score-panel .score-meta .val { font-size:1.5em; font-weight:700; }
-  .score-panel .score-meta .lbl { font-size:0.7em; color:var(--text-muted); }
-
-  /* ===== DIMENSION SCORE ROW ===== */
-  .dim-scores {
-    display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:28px;
-  }
-  @media(max-width:900px) { .dim-scores { grid-template-columns:repeat(4, 1fr); } }
-  @media(max-width:500px) { .dim-scores { grid-template-columns:repeat(2, 1fr); } }
-  .dim-score {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius); padding:14px 10px; text-align:center;
-  }
-  .dim-score .ds-name { font-size:0.68em; color:var(--text-muted); margin-bottom:4px; }
-  .dim-score .ds-grade { font-size:1.8em; font-weight:800; line-height:1.1; }
-  .dim-score .ds-num { font-size:0.8em; color:var(--text-muted); margin-top:2px; }
-
-  /* ===== TIMELINE ===== */
-  .timeline { position:relative; padding-left:28px; }
-  .timeline::before { content:''; position:absolute; left:7px; top:0; bottom:0; width:2px; background:var(--border); }
-  .tl-phase { position:relative; margin-bottom:28px; }
-  .tl-phase::before { content:''; position:absolute; left:-25px; top:5px; width:10px; height:10px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); }
-  .tl-phase h4 { margin:0 0 2px; font-size:1em; color:#fff; }
-  .tl-phase .tl-meta { font-size:0.76em; color:var(--text-muted); margin-bottom:8px; }
-  .tl-phase table { font-size:0.82em; }
-
-  /* ===== SVG CHART AREA ===== */
-  .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:20px 0; }
-  @media(max-width:800px) { .chart-grid { grid-template-columns:1fr; } }
-  .chart-card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius); padding:20px;
-  }
-  .chart-card h4 { margin:0 0 12px; font-size:0.9em; color:var(--text-muted); text-align:center; }
-  .chart-card svg { display:block; margin:0 auto; }
-
-  /* ===== GANTT ===== */
-  .gantt { margin:10px 0; overflow-x:auto; }
-  .gantt-row { display:flex; align-items:center; gap:8px; margin:5px 0; font-size:0.8em; white-space:nowrap; }
-  .gantt-label { width:200px; flex-shrink:0; text-align:right; font-size:0.92em; }
-  .gantt-bar { height:20px; border-radius:4px; display:inline-flex; align-items:center; padding:0 8px; font-size:0.8em; font-weight:600; }
-  .gantt-bar.p0 { background:var(--critical); color:#fff; }
-  .gantt-bar.p1 { background:var(--high); color:#000; }
-  .gantt-bar.p2 { background:var(--accent); color:#fff; }
-  .gantt-bar.p3 { background:var(--medium); color:#000; }
-
-  hr { border:none; border-top:1px solid var(--border); margin:36px 0 18px; }
-
-  /* ===== FULL-WIDTH CHART ===== */
-  .full-chart {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius); padding:24px; margin:20px 0; text-align:center;
-  }
-  .full-chart h4 { margin:0 0 16px; font-size:0.9em; color:var(--text-muted); }
-</style>
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
-<body>
-<div class="container">
+<body class="vl-doc">
 
-<!-- ══════════════════════ COVER ══════════════════════ -->
-<div class="cover">
-  <div class="tag">Technical Due Diligence</div>
-  <h1>VideoLingo 代码健康报告</h1>
-  <p class="subtitle">多维度静态分析 · 量化评分 · 根因诊断 · 治理路线图</p>
-  <div class="meta-grid">
-    <div class="meta-item"><div class="num">63</div><div class="label">Python 源文件</div></div>
-    <div class="meta-item"><div class="num">6,986</div><div class="label">总代码行</div></div>
-    <div class="meta-item"><div class="num">234</div><div class="label">函数/方法</div></div>
-    <div class="meta-item"><div class="num">7</div><div class="label">评估维度</div></div>
-    <div class="meta-item"><div class="num">26</div><div class="label">改进行动项</div></div>
-    <div class="meta-item"><div class="num">2026-06-28</div><div class="label">评估日期</div></div>
-  </div>
-</div>
-
-<!-- ══════════════════════ TOC ══════════════════════ -->
-<div class="toc">
-  <h3>目录</h3>
-  <ol>
-    <li><a href="#sec1">综合评分：七维评估仪表盘</a></li>
-    <li><a href="#sec2">维度 D1：文件规模与结构</a></li>
-    <li><a href="#sec3">维度 D2：代码重复率</a></li>
-    <li><a href="#sec4">维度 D3：命名语义化</a></li>
-    <li><a href="#sec5">维度 D4：嵌套深度与圈复杂度</a></li>
-    <li><a href="#sec6">维度 D5：函数长度与职责</a></li>
-    <li><a href="#sec7">维度 D6：注释与文档化</a></li>
-    <li><a href="#sec8">维度 D7：导入规范与模块耦合</a></li>
-    <li><a href="#sec9">根因分析：问题因果链</a></li>
-    <li><a href="#sec10">改进方案与落地排期</a></li>
-    <li><a href="#sec11">附录：工具链配置与基线快照</a></li>
-  </ol>
-</div>
-
-<!-- ═══════════════════════════════════════════════ -->
-<!--  §1 综合评分：七维评估仪表盘                      -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="section" id="sec1">
-  <h2><span class="num">1</span> 综合评分：七维评估仪表盘</h2>
-
-  <!-- 1.1 总分面板 -->
-  <div class="score-panel">
-    <div class="big-grade">C+</div>
-    <div class="score-info">
-      <h3>综合代码健康指数：58 / 100</h3>
-      <p>评分模型：7 个维度加权求和。等级映射：A(85-100) B(70-84) C(50-69) D(30-49) F(0-29)。<br>当前等级 <strong>C+</strong> 表示存在明显技术债务，需计划性治理。</p>
-      <div class="score-meta">
-        <div><div class="val" style="color:var(--critical);">F</div><div class="lbl">最差维度 D7</div></div>
-        <div><div class="val" style="color:var(--medium);">C</div><div class="lbl">最佳维度 D3</div></div>
-        <div><div class="val" style="color:var(--high);">3</div><div class="lbl">D 级维度</div></div>
-        <div><div class="val" style="color:var(--accent);">56h</div><div class="lbl">治理工时估算</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 1.2 七维评分卡 -->
-  <h3>1.1 七维评分卡</h3>
-  <div class="dim-scores">
-    <div class="dim-score">
-      <div class="ds-name">D1 文件规模</div>
-      <div class="ds-grade" style="color:var(--high);">D</div>
-      <div class="ds-num">40 / 100</div>
-    </div>
-    <div class="dim-score">
-      <div class="ds-name">D2 代码重复</div>
-      <div class="ds-grade" style="color:var(--high);">D</div>
-      <div class="ds-num">35 / 100</div>
-    </div>
-    <div class="dim-score">
-      <div class="ds-name">D3 命名语义化</div>
-      <div class="ds-grade" style="color:var(--medium);">C</div>
-      <div class="ds-num">55 / 100</div>
-    </div>
-    <div class="dim-score">
-      <div class="ds-name">D4 嵌套深度</div>
-      <div class="ds-grade" style="color:var(--high);">D+</div>
-      <div class="ds-num">42 / 100</div>
-    </div>
-    <div class="dim-score">
-      <div class="ds-name">D5 函数长度</div>
-      <div class="ds-grade" style="color:var(--high);">D</div>
-      <div class="ds-num">38 / 100</div>
-    </div>
-    <div class="dim-score">
-      <div class="ds-name">D6 注释文档</div>
-      <div class="ds-grade" style="color:var(--high);">D</div>
-      <div class="ds-num">30 / 100</div>
-    </div>
-    <div class="dim-score">
-      <div class="ds-name">D7 导入耦合</div>
-      <div class="ds-grade" style="color:var(--critical);">F</div>
-      <div class="ds-num">15 / 100</div>
-    </div>
-  </div>
-
-  <!-- 1.3 评分方法说明 -->
-  <h3>1.2 评分方法论</h3>
-  <table>
-    <tr><th>维度</th><th>权重</th><th>核心子指标</th><th>检测手段</th></tr>
-    <tr><td>D1 文件规模与结构</td><td>15%</td><td>文件行数分布、超大文件占比、模块职责单一性</td><td>AST + 人工</td></tr>
-    <tr><td>D2 代码重复率</td><td>15%</td><td>重复代码块数量、DRY 违规类型、共享模块缺失</td><td>模式匹配</td></tr>
-    <tr><td>D3 命名语义化</td><td>12%</td><td>单字母变量密度、模糊名称占比、良好命名比例</td><td>正则 + 人工</td></tr>
-    <tr><td>D4 嵌套深度与圈复杂度</td><td>15%</td><td>最大嵌套层级、高复杂度函数占比</td><td>AST 遍历</td></tr>
-    <tr><td>D5 函数长度与职责</td><td>13%</td><td>长函数数量、超标倍数、职责单一性</td><td>AST</td></tr>
-    <tr><td>D6 注释与文档化</td><td>12%</td><td>注释率、docstring 覆盖率、零注释文件占比</td><td>AST + 人工</td></tr>
-    <tr><td>D7 导入规范与模块耦合</td><td>18%</td><td>star import 使用率、核心模块被依赖数</td><td>正则 + 依赖图</td></tr>
-  </table>
-  <p style="font-size:0.82em;color:var(--text-muted);margin-top:6px;">
-    D7 权重最高 (18%)，因为 star import 是阻止所有静态分析工具引入的阻塞性风险。
-  </p>
-
-  <!-- 1.4 SVG 雷达图 -->
-  <div class="full-chart">
-    <h4>七维健康雷达图</h4>
-    <svg width="560" height="400" viewBox="0 0 560 400">
-      <defs>
-        <radialGradient id="radarFill" cx="50%" cy="50%">
-          <stop offset="0%" stop-color="#58a6ff" stop-opacity="0.25"/>
-          <stop offset="100%" stop-color="#58a6ff" stop-opacity="0.02"/>
-        </radialGradient>
-      </defs>
-      <!-- center = 280, 200; radius = 150 -->
-      <!-- 7 axes at angles: 0, 51.4, 102.9, 154.3, 205.7, 257.1, 308.6 degrees -->
-      <!-- pentagon grids at 20,40,60,80,100% of radius -->
-      <g transform="translate(280,200)">
-        <!-- Grid pentagons -->
-        <g stroke="#30363d" stroke-width="0.8" fill="none">
-          <polygon points="0,-30 23.5,-18.5 28.5,9.5 9.5,28.5 -18.5,23.5 -28.5,-9.5 -9.5,-28.5" opacity="0.3"/>
-          <polygon points="0,-60 47,-37 57,19 19,57 -37,47 -57,-19 -19,-57" opacity="0.3"/>
-          <polygon points="0,-90 70.5,-55.5 85.5,28.5 28.5,85.5 -55.5,70.5 -85.5,-28.5 -28.5,-85.5" opacity="0.3"/>
-          <polygon points="0,-120 94,-74 114,38 38,114 -74,94 -114,-38 -38,-114" opacity="0.3"/>
-          <polygon points="0,-150 117.5,-92.5 142.5,47.5 47.5,142.5 -92.5,117.5 -142.5,-47.5 -47.5,-142.5" opacity="0.3"/>
-        </g>
-        <!-- Axes -->
-        <g stroke="#30363d" stroke-width="1">
-          <line x1="0" y1="0" x2="0" y2="-155"/><!-- D1: top (90°) -->
-          <line x1="0" y1="0" x2="121.4" y2="-96.5"/><!-- D2: 51.4° -->
-          <line x1="0" y1="0" x2="147.2" y2="49.1"/><!-- D3: 102.9° -->
-          <line x1="0" y1="0" x2="49.1" y2="147.2"/><!-- D4: 154.3° -->
-          <line x1="0" y1="0" x2="-95.6" y2="121.4"/><!-- D5: 205.7° -->
-          <line x1="0" y1="0" x2="-147.2" y2="-49.1"/><!-- D6: 257.1° -->
-          <line x1="0" y1="0" x2="-49.1" y2="-147.2"/><!-- D7: 308.6° -->
-        </g>
-        <!-- Data polygon: D1=40 D2=35 D3=55 D4=42 D5=38 D6=30 D7=15 -->
-        <!-- Scale: score/100 * 150 = radius -->
-        <polygon points="0,-60 42.5,-33.8 81.0,27.0 20.6,61.8 -36.3,46.1 -44.2,-14.7 -7.4,-22.1"
-          fill="url(#radarFill)" stroke="#58a6ff" stroke-width="2"/>
-        <!-- Dots -->
-        <circle cx="0" cy="-60" r="4" fill="#d29922"/><!-- D1=40 -->
-        <circle cx="42.5" cy="-33.8" r="4" fill="#d29922"/><!-- D2=35 -->
-        <circle cx="81.0" cy="27.0" r="4" fill="#3fb950"/><!-- D3=55 -->
-        <circle cx="20.6" cy="61.8" r="4" fill="#d29922"/><!-- D4=42 -->
-        <circle cx="-36.3" cy="46.1" r="4" fill="#d29922"/><!-- D5=38 -->
-        <circle cx="-44.2" cy="-14.7" r="4" fill="#d29922"/><!-- D6=30 -->
-        <circle cx="-7.4" cy="-22.1" r="5" fill="#f85149"/><!-- D7=15 -->
-
-        <!-- Labels -->
-        <text x="0" y="-168" text-anchor="middle" fill="#8b949e" font-size="11">D1 文件规模 40</text>
-        <text x="138" y="-108" text-anchor="start" fill="#8b949e" font-size="11">D2 重复率 35</text>
-        <text x="155" y="52" text-anchor="start" fill="#8b949e" font-size="11">D3 命名 55</text>
-        <text x="55" y="160" text-anchor="start" fill="#8b949e" font-size="11">D4 嵌套 42</text>
-        <text x="-160" y="128" text-anchor="end" fill="#8b949e" font-size="11">D5 函数 38</text>
-        <text x="-160" y="-52" text-anchor="end" fill="#8b949e" font-size="11">D6 注释 30</text>
-        <text x="-55" y="-160" text-anchor="end" fill="#f85149" font-size="11">D7 导入 15 ⚠</text>
-      </g>
-    </svg>
-  </div>
-
-  <!-- 1.5 关键风险 KPI -->
-  <h3>1.3 关键风险指标 (KPI)</h3>
-  <div class="chart-grid">
-    <div class="chart-card">
-      <h4>各维度评分柱状图</h4>
-      <svg width="460" height="240" viewBox="0 0 460 240">
-        <!-- Grid lines -->
-        <g stroke="#30363d" stroke-width="0.6" stroke-dasharray="4,4">
-          <line x1="40" y1="200" x2="440" y2="200"/>
-          <line x1="40" y1="160" x2="440" y2="160"/>
-          <line x1="40" y1="120" x2="440" y2="120"/>
-          <line x1="40" y1="80" x2="440" y2="80"/>
-          <line x1="40" y1="40" x2="440" y2="40"/>
-        </g>
-        <!-- Y labels -->
-        <g fill="#8b949e" font-size="10" text-anchor="end">
-          <text x="35" y="204">0</text>
-          <text x="35" y="164">25</text>
-          <text x="35" y="124">50</text>
-          <text x="35" y="84">75</text>
-          <text x="35" y="44">100</text>
-        </g>
-        <!-- Threshold bands -->
-        <rect x="41" y="200" width="398" height="40" fill="rgba(248,81,73,0.08)"/>
-        <rect x="41" y="160" width="398" height="40" fill="rgba(210,153,34,0.08)"/>
-        <rect x="41" y="120" width="398" height="40" fill="rgba(210,153,34,0.04)"/>
-        <rect x="41" y="80" width="398" height="40" fill="rgba(88,166,255,0.06)"/>
-        <rect x="41" y="40" width="398" height="40" fill="rgba(63,185,80,0.06)"/>
-        <!-- Bars -->
-        <rect x="48" y="120" width="42" height="80" fill="#d29922" rx="3"/><!-- D1=40 -->
-        <rect x="100" y="130" width="42" height="70" fill="#d29922" rx="3"/><!-- D2=35 -->
-        <rect x="152" y="90" width="42" height="110" fill="#3fb950" rx="3"/><!-- D3=55 -->
-        <rect x="204" y="116" width="42" height="84" fill="#d29922" rx="3"/><!-- D4=42 -->
-        <rect x="256" y="124" width="42" height="76" fill="#d29922" rx="3"/><!-- D5=38 -->
-        <rect x="308" y="140" width="42" height="60" fill="#d29922" rx="3"/><!-- D6=30 -->
-        <rect x="360" y="170" width="42" height="30" fill="#f85149" rx="3"/><!-- D7=15 -->
-        <!-- Labels -->
-        <g fill="#8b949e" font-size="9" text-anchor="middle">
-          <text x="69" y="218">D1</text>
-          <text x="121" y="218">D2</text>
-          <text x="173" y="218">D3</text>
-          <text x="225" y="218">D4</text>
-          <text x="277" y="218">D5</text>
-          <text x="329" y="218">D6</text>
-          <text x="381" y="218">D7</text>
-        </g>
-        <!-- Value labels -->
-        <g fill="#fff" font-size="10" font-weight="600" text-anchor="middle">
-          <text x="69" y="115">40</text>
-          <text x="121" y="125">35</text>
-          <text x="173" y="85">55</text>
-          <text x="225" y="111">42</text>
-          <text x="277" y="119">38</text>
-          <text x="329" y="135">30</text>
-          <text x="381" y="165" fill="#f85149">15</text>
-        </g>
-        <!-- Zone labels -->
-        <text x="445" y="44" fill="#3fb950" font-size="9">A</text>
-        <text x="445" y="84" fill="#58a6ff" font-size="9">B</text>
-        <text x="445" y="124" fill="#d29922" font-size="9">C</text>
-        <text x="445" y="164" fill="#d29922" font-size="9">D</text>
-        <text x="445" y="204" fill="#f85149" font-size="9">F</text>
-      </svg>
+<template id="health-report-template">
+<div class="report report--health">
+    <!-- ═══════════════ COVER ═══════════════ -->
+    <div class="cover">
+        <div class="cover-tag">{{ cover.tag }}</div>
+        <h1>{{ cover.title }}</h1>
+        <p class="cover-subtitle">{{ cover.subtitle }}</p>
+        <div class="cover-meta-grid">
+            <div class="cover-meta-item" v-for="(item, i) in cover.metaItems" :key="i">
+                <div class="cover-meta-num">{{ item.num }}</div>
+                <div class="cover-meta-label">{{ item.label }}</div>
+            </div>
+        </div>
     </div>
 
-    <div class="chart-card">
-      <h4>风险热力分布</h4>
-      <svg width="460" height="240" viewBox="0 0 460 240">
-        <defs>
-          <linearGradient id="heatGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#3fb950"/>
-            <stop offset="40%" stop-color="#d29922"/>
-            <stop offset="100%" stop-color="#f85149"/>
-          </linearGradient>
-        </defs>
-        <g fill="#8b949e" font-size="10" text-anchor="end">
-          <text x="130" y="30">文件规模</text>
-          <text x="130" y="58">代码重复</text>
-          <text x="130" y="86">命名语义</text>
-          <text x="130" y="114">嵌套深度</text>
-          <text x="130" y="142">函数长度</text>
-          <text x="130" y="170">注释文档</text>
-          <text x="130" y="198">导入耦合</text>
-        </g>
-        <!-- Heat bars -->
-        <rect x="140" y="18" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
-        <rect x="140" y="18" width="80" height="18" rx="3" fill="#d29922" opacity="0.85"/><!-- 40% -->
-        <text x="350" y="32" fill="#d29922" font-size="11" font-weight="600">40 D</text>
+    <!-- ═══════════════ TOC ═══════════════ -->
+    <nav class="toc" aria-label="Table of Contents">
+        <h3>{{ toc.heading }}</h3>
+        <ol>
+            <li v-for="(item, i) in toc.items" :key="i">
+                <a :href="item.href">{{ item.label }}</a>
+            </li>
+        </ol>
+    </nav>
 
-        <rect x="140" y="46" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
-        <rect x="140" y="46" width="70" height="18" rx="3" fill="#d29922" opacity="0.85"/><!-- 35% -->
-        <text x="350" y="60" fill="#d29922" font-size="11" font-weight="600">35 D</text>
+    <!-- ═══════════════ §1 COMPREHENSIVE SCORE ═══════════════ -->
+    <section class="section" id="sec1">
+        <h2><span class="section-num">{{ sec1.num }}</span> {{ sec1.heading }}</h2>
 
-        <rect x="140" y="74" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
-        <rect x="140" y="74" width="110" height="18" rx="3" fill="#3fb950" opacity="0.85"/><!-- 55% -->
-        <text x="350" y="88" fill="#3fb950" font-size="11" font-weight="600">55 C</text>
+        <!-- Score Panel -->
+        <div class="score-panel">
+            <div class="score-big-grade">{{ sec1.score.grade }}</div>
+            <div class="score-info">
+                <h3>Comprehensive Code Health Index: {{ sec1.score.score }}</h3>
+                <p v-html="sec1.score.description"></p>
+                <div class="score-meta">
+                    <div v-for="(item, i) in sec1.score.metaItems" :key="i">
+                        <div class="score-meta-val" :style="{color: item.valColor}">{{ item.val }}</div>
+                        <div class="score-meta-lbl">{{ item.lbl }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <rect x="140" y="102" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
-        <rect x="140" y="102" width="84" height="18" rx="3" fill="#d29922" opacity="0.85"/><!-- 42% -->
-        <text x="350" y="116" fill="#d29922" font-size="11" font-weight="600">42 D+</text>
+        <!-- Seven-Dimension Score Cards -->
+        <h3>1.1 Seven-Dimension Score Card</h3>
+        <div class="dim-scores">
+            <div class="dim-score" v-for="(d, i) in sec1.dimensionCards" :key="i">
+                <div class="ds-name">{{ d.name }}</div>
+                <div class="ds-grade" :style="{color: d.color}">{{ d.grade }}</div>
+                <div class="ds-num">{{ d.score }} / 100</div>
+            </div>
+        </div>
 
-        <rect x="140" y="130" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
-        <rect x="140" y="130" width="76" height="18" rx="3" fill="#d29922" opacity="0.85"/><!-- 38% -->
-        <text x="350" y="144" fill="#d29922" font-size="11" font-weight="600">38 D</text>
+        <!-- Methodology Table -->
+        <h3>{{ sec1.methodologyTitle }}</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Dimension</th><th>Weight</th><th>Core Sub-Indicators</th><th>Detection Method</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>D1 File Size &amp; Structure</td><td>15%</td><td>File line distribution, oversized file ratio, module SRP</td><td>AST + Manual</td></tr>
+                    <tr><td>D2 Code Duplication</td><td>15%</td><td>Duplicate block count, DRY violation types, missing shared modules</td><td>Pattern Matching</td></tr>
+                    <tr><td>D3 Naming Semantics</td><td>12%</td><td>Single-char variable density, vague name ratio, good naming ratio</td><td>Regex + Manual</td></tr>
+                    <tr><td>D4 Nesting &amp; Cyclomatic Complexity</td><td>15%</td><td>Max nesting level, high-complexity function ratio</td><td>AST Traversal</td></tr>
+                    <tr><td>D5 Function Length &amp; Responsibility</td><td>13%</td><td>Long function count, excess multiplier, SRP adherence</td><td>AST</td></tr>
+                    <tr><td>D6 Comments &amp; Documentation</td><td>12%</td><td>Comment rate, docstring coverage, zero-comment file ratio</td><td>AST + Manual</td></tr>
+                    <tr><td>D7 Import Standards &amp; Module Coupling</td><td>18%</td><td>Star import usage rate, core module dependency count</td><td>Regex + Dep Graph</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size:0.82em;color:var(--vl-doc-text-muted);margin-top:6px;" v-html="sec1.methodologyNote"></p>
 
-        <rect x="140" y="158" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
-        <rect x="140" y="158" width="60" height="18" rx="3" fill="#d29922" opacity="0.85"/><!-- 30% -->
-        <text x="350" y="172" fill="#d29922" font-size="11" font-weight="600">30 D</text>
+        <!-- SVG Radar Chart -->
+        <div class="full-chart">
+            <h4>{{ sec1.radarTitle }}</h4>
+            <svg width="560" height="400" viewBox="0 0 560 400">
+                <defs>
+                    <radialGradient id="radarFill" cx="50%" cy="50%">
+                        <stop offset="0%" stop-color="#58a6ff" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="#58a6ff" stop-opacity="0.02"/>
+                    </radialGradient>
+                </defs>
+                <g transform="translate(280,200)">
+                    <!-- Grid polygons -->
+                    <g stroke="#30363d" stroke-width="0.8" fill="none">
+                        <polygon points="0,-30 23.5,-18.5 28.5,9.5 9.5,28.5 -18.5,23.5 -28.5,-9.5 -9.5,-28.5" opacity="0.3"/>
+                        <polygon points="0,-60 47,-37 57,19 19,57 -37,47 -57,-19 -19,-57" opacity="0.3"/>
+                        <polygon points="0,-90 70.5,-55.5 85.5,28.5 28.5,85.5 -55.5,70.5 -85.5,-28.5 -28.5,-85.5" opacity="0.3"/>
+                        <polygon points="0,-120 94,-74 114,38 38,114 -74,94 -114,-38 -38,-114" opacity="0.3"/>
+                        <polygon points="0,-150 117.5,-92.5 142.5,47.5 47.5,142.5 -92.5,117.5 -142.5,-47.5 -47.5,-142.5" opacity="0.3"/>
+                    </g>
+                    <!-- Axes -->
+                    <g stroke="#30363d" stroke-width="1">
+                        <line x1="0" y1="0" x2="0" y2="-155"/>
+                        <line x1="0" y1="0" x2="121.4" y2="-96.5"/>
+                        <line x1="0" y1="0" x2="147.2" y2="49.1"/>
+                        <line x1="0" y1="0" x2="49.1" y2="147.2"/>
+                        <line x1="0" y1="0" x2="-95.6" y2="121.4"/>
+                        <line x1="0" y1="0" x2="-147.2" y2="-49.1"/>
+                        <line x1="0" y1="0" x2="-49.1" y2="-147.2"/>
+                    </g>
+                    <!-- Data polygon: D1=40 D2=35 D3=55 D4=42 D5=38 D6=30 D7=15 -->
+                    <polygon points="0,-60 42.5,-33.8 81.0,27.0 20.6,61.8 -36.3,46.1 -44.2,-14.7 -7.4,-22.1"
+                        fill="url(#radarFill)" stroke="#58a6ff" stroke-width="2"/>
+                    <circle cx="0" cy="-60" r="4" fill="#d29922"/>
+                    <circle cx="42.5" cy="-33.8" r="4" fill="#d29922"/>
+                    <circle cx="81.0" cy="27.0" r="4" fill="#3fb950"/>
+                    <circle cx="20.6" cy="61.8" r="4" fill="#d29922"/>
+                    <circle cx="-36.3" cy="46.1" r="4" fill="#d29922"/>
+                    <circle cx="-44.2" cy="-14.7" r="4" fill="#d29922"/>
+                    <circle cx="-7.4" cy="-22.1" r="5" fill="#f85149"/>
+                    <!-- Labels -->
+                    <text x="0" y="-168" text-anchor="middle" fill="#8b949e" font-size="11">D1 文件规模 40</text>
+                    <text x="138" y="-108" text-anchor="start" fill="#8b949e" font-size="11">D2 重复率 35</text>
+                    <text x="155" y="52" text-anchor="start" fill="#8b949e" font-size="11">D3 命名 55</text>
+                    <text x="55" y="160" text-anchor="start" fill="#8b949e" font-size="11">D4 嵌套 42</text>
+                    <text x="-160" y="128" text-anchor="end" fill="#8b949e" font-size="11">D5 函数 38</text>
+                    <text x="-160" y="-52" text-anchor="end" fill="#8b949e" font-size="11">D6 注释 30</text>
+                    <text x="-55" y="-160" text-anchor="end" fill="#f85149" font-size="11">D7 导入 15 ⚠</text>
+                </g>
+            </svg>
+        </div>
 
-        <rect x="140" y="186" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
-        <rect x="140" y="186" width="30" height="18" rx="3" fill="#f85149" opacity="0.95"/><!-- 15% -->
-        <text x="350" y="200" fill="#f85149" font-size="11" font-weight="600">15 F ⚠</text>
+        <!-- KPI Charts -->
+        <h3>{{ sec1.kpiTitle }}</h3>
+        <div class="chart-grid">
+            <!-- Bar Chart -->
+            <div class="chart-card">
+                <h4>{{ sec1.barTitle }}</h4>
+                <svg width="460" height="240" viewBox="0 0 460 240">
+                    <g stroke="#30363d" stroke-width="0.6" stroke-dasharray="4,4">
+                        <line x1="40" y1="200" x2="440" y2="200"/>
+                        <line x1="40" y1="160" x2="440" y2="160"/>
+                        <line x1="40" y1="120" x2="440" y2="120"/>
+                        <line x1="40" y1="80" x2="440" y2="80"/>
+                        <line x1="40" y1="40" x2="440" y2="40"/>
+                    </g>
+                    <g fill="#8b949e" font-size="10" text-anchor="end">
+                        <text x="35" y="204">0</text><text x="35" y="164">25</text>
+                        <text x="35" y="124">50</text><text x="35" y="84">75</text>
+                        <text x="35" y="44">100</text>
+                    </g>
+                    <rect x="41" y="200" width="398" height="40" fill="rgba(248,81,73,0.08)"/>
+                    <rect x="41" y="160" width="398" height="40" fill="rgba(210,153,34,0.08)"/>
+                    <rect x="41" y="120" width="398" height="40" fill="rgba(210,153,34,0.04)"/>
+                    <rect x="41" y="80" width="398" height="40" fill="rgba(88,166,255,0.06)"/>
+                    <rect x="41" y="40" width="398" height="40" fill="rgba(63,185,80,0.06)"/>
+                    <rect x="48" y="120" width="42" height="80" fill="#d29922" rx="3"/>
+                    <rect x="100" y="130" width="42" height="70" fill="#d29922" rx="3"/>
+                    <rect x="152" y="90" width="42" height="110" fill="#3fb950" rx="3"/>
+                    <rect x="204" y="116" width="42" height="84" fill="#d29922" rx="3"/>
+                    <rect x="256" y="124" width="42" height="76" fill="#d29922" rx="3"/>
+                    <rect x="308" y="140" width="42" height="60" fill="#d29922" rx="3"/>
+                    <rect x="360" y="170" width="42" height="30" fill="#f85149" rx="3"/>
+                    <g fill="#8b949e" font-size="9" text-anchor="middle">
+                        <text x="69" y="218">D1</text><text x="121" y="218">D2</text>
+                        <text x="173" y="218">D3</text><text x="225" y="218">D4</text>
+                        <text x="277" y="218">D5</text><text x="329" y="218">D6</text>
+                        <text x="381" y="218">D7</text>
+                    </g>
+                    <g fill="#fff" font-size="10" font-weight="600" text-anchor="middle">
+                        <text x="69" y="115">40</text><text x="121" y="125">35</text>
+                        <text x="173" y="85">55</text><text x="225" y="111">42</text>
+                        <text x="277" y="119">38</text><text x="329" y="135">30</text>
+                        <text x="381" y="165" fill="#f85149">15</text>
+                    </g>
+                    <text x="445" y="44" fill="#3fb950" font-size="9">A</text>
+                    <text x="445" y="84" fill="#58a6ff" font-size="9">B</text>
+                    <text x="445" y="124" fill="#d29922" font-size="9">C</text>
+                    <text x="445" y="164" fill="#d29922" font-size="9">D</text>
+                    <text x="445" y="204" fill="#f85149" font-size="9">F</text>
+                </svg>
+            </div>
+            <!-- Heat Map -->
+            <div class="chart-card">
+                <h4>{{ sec1.heatTitle }}</h4>
+                <svg width="460" height="240" viewBox="0 0 460 240">
+                    <defs>
+                        <linearGradient id="heatGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#3fb950"/>
+                            <stop offset="40%" stop-color="#d29922"/>
+                            <stop offset="100%" stop-color="#f85149"/>
+                        </linearGradient>
+                    </defs>
+                    <g fill="#8b949e" font-size="10" text-anchor="end">
+                        <text x="130" y="30">文件规模</text><text x="130" y="58">代码重复</text>
+                        <text x="130" y="86">命名语义</text><text x="130" y="114">嵌套深度</text>
+                        <text x="130" y="142">函数长度</text><text x="130" y="170">注释文档</text>
+                        <text x="130" y="198">导入耦合</text>
+                    </g>
+                    <rect x="140" y="18" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
+                    <rect x="140" y="18" width="80" height="18" rx="3" fill="#d29922" opacity="0.85"/>
+                    <text x="350" y="32" fill="#d29922" font-size="11" font-weight="600">40 D</text>
+                    <rect x="140" y="46" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
+                    <rect x="140" y="46" width="70" height="18" rx="3" fill="#d29922" opacity="0.85"/>
+                    <text x="350" y="60" fill="#d29922" font-size="11" font-weight="600">35 D</text>
+                    <rect x="140" y="74" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
+                    <rect x="140" y="74" width="110" height="18" rx="3" fill="#3fb950" opacity="0.85"/>
+                    <text x="350" y="88" fill="#3fb950" font-size="11" font-weight="600">55 C</text>
+                    <rect x="140" y="102" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
+                    <rect x="140" y="102" width="84" height="18" rx="3" fill="#d29922" opacity="0.85"/>
+                    <text x="350" y="116" fill="#d29922" font-size="11" font-weight="600">42 D+</text>
+                    <rect x="140" y="130" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
+                    <rect x="140" y="130" width="76" height="18" rx="3" fill="#d29922" opacity="0.85"/>
+                    <text x="350" y="144" fill="#d29922" font-size="11" font-weight="600">38 D</text>
+                    <rect x="140" y="158" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
+                    <rect x="140" y="158" width="60" height="18" rx="3" fill="#d29922" opacity="0.85"/>
+                    <text x="350" y="172" fill="#d29922" font-size="11" font-weight="600">30 D</text>
+                    <rect x="140" y="186" width="200" height="18" rx="3" fill="url(#heatGrad)" opacity="0.6"/>
+                    <rect x="140" y="186" width="30" height="18" rx="3" fill="#f85149" opacity="0.95"/>
+                    <text x="350" y="200" fill="#f85149" font-size="11" font-weight="600">15 F ⚠</text>
+                    <rect x="140" y="218" width="12" height="12" rx="2" fill="#3fb950" opacity="0.8"/>
+                    <text x="158" y="228" fill="#8b949e" font-size="9">优秀</text>
+                    <rect x="192" y="218" width="12" height="12" rx="2" fill="#d29922" opacity="0.8"/>
+                    <text x="210" y="228" fill="#8b949e" font-size="9">需关注</text>
+                    <rect x="252" y="218" width="12" height="12" rx="2" fill="#f85149" opacity="0.8"/>
+                    <text x="270" y="228" fill="#8b949e" font-size="9">严重</text>
+                </svg>
+            </div>
+        </div>
+    </section>
 
-        <!-- Legend -->
-        <rect x="140" y="218" width="12" height="12" rx="2" fill="#3fb950" opacity="0.8"/>
-        <text x="158" y="228" fill="#8b949e" font-size="9">优秀</text>
-        <rect x="192" y="218" width="12" height="12" rx="2" fill="#d29922" opacity="0.8"/>
-        <text x="210" y="228" fill="#8b949e" font-size="9">需关注</text>
-        <rect x="252" y="218" width="12" height="12" rx="2" fill="#f85149" opacity="0.8"/>
-        <text x="270" y="228" fill="#8b949e" font-size="9">严重</text>
-      </svg>
-    </div>
-  </div>
+    <!-- ═══════════════ §2 D1: FILE SIZE ═══════════════ -->
+    <section class="section" id="sec2">
+        <h2><span class="section-num">2</span> {{ dimLabels.d1.name }} <span :class="'badge ' + dimLabels.d1.badgeStyle">{{ dimLabels.d1.score }}</span></h2>
 
-</div><!-- /sec1 -->
+        <h3>Score</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Sub-Indicator</th><th>Weight</th><th>Measured</th><th>Target</th><th>Score</th></tr>
+                <tr><td>Average file lines</td><td>25%</td><td>111 lines</td><td>&lt; 200</td><td><span class="badge badge-medium">85</span></td></tr>
+                <tr><td>Oversized files (&gt;250 lines) ratio</td><td>30%</td><td>11.1% (7/63)</td><td>&lt; 5%</td><td><span class="badge badge-high">20</span></td></tr>
+                <tr><td>Max file lines</td><td>15%</td><td>365 lines</td><td>&lt; 300</td><td><span class="badge badge-high">25</span></td></tr>
+                <tr><td>Multi-responsibility files</td><td>20%</td><td>3 files</td><td>0</td><td><span class="badge badge-high">30</span></td></tr>
+                <tr><td>Data file format appropriateness</td><td>10%</td><td>prompts.py 364 lines .py</td><td>YAML/JSON</td><td><span class="badge badge-high">20</span></td></tr>
+                <tr style="font-weight:600;"><td colspan="3">Weighted Total</td><td></td><td><span class="badge badge-high">40 D</span></td></tr>
+            </table>
+        </div>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!--  §2-8 各维度：评分 → 分析 → 图表                  -->
-<!-- ═══════════════════════════════════════════════ -->
+        <h3>Analysis</h3>
+        <p>Average file size is reasonable (111 lines), but there is a severe <strong>long-tail problem</strong>: 3 of the top 4 largest files are UI files, indicating Streamlit UI is coupled with business logic. prompts.py (364 lines) should not be a .py file — it's pure data and should use YAML.</p>
+        <div class="callout callout-warning">
+            <strong>Core Problem:</strong> UI files take on too many functional domains. sidebar_setting.py's single function page_setting() contains LLM config + ASR selection + TTS settings + subtitle styles + audio params — 5 completely different concerns crammed together.
+        </div>
 
-<!-- ===== D1: 文件规模 ===== -->
-<div class="section" id="sec2">
-  <h2><span class="num">2</span> D1 文件规模与结构 <span class="badge high">40/100 D</span></h2>
+        <h3>Charts</h3>
+        <div class="full-chart">
+            <h4>Top 10 File Size Distribution</h4>
+            <svg width="700" height="300" viewBox="0 0 700 300">
+                <g stroke="#30363d" stroke-width="0.6" stroke-dasharray="4,4">
+                    <line x1="210" y1="30" x2="210" y2="260"/>
+                    <line x1="210" y1="76" x2="680" y2="76"/>
+                    <line x1="210" y1="122" x2="680" y2="122"/>
+                    <line x1="210" y1="168" x2="680" y2="168"/>
+                    <line x1="210" y1="214" x2="680" y2="214"/>
+                    <line x1="210" y1="260" x2="680" y2="260"/>
+                </g>
+                <text x="205" y="80" fill="#8b949e" font-size="9" text-anchor="end">300</text>
+                <text x="205" y="126" fill="#8b949e" font-size="9" text-anchor="end">200</text>
+                <text x="205" y="172" fill="#8b949e" font-size="9" text-anchor="end">100</text>
+                <text x="205" y="218" fill="#8b949e" font-size="9" text-anchor="end">0</text>
 
-  <!-- 评分 -->
-  <h3>📊 评分</h3>
-  <table>
-    <tr><th>子指标</th><th>权重</th><th>实测值</th><th>目标值</th><th>得分</th></tr>
-    <tr><td>平均文件行数</td><td>25%</td><td>111 行</td><td>&lt; 200</td><td><span class="badge medium">85</span></td></tr>
-    <tr><td>超大文件（>250行）占比</td><td>30%</td><td>11.1% (7/63)</td><td>&lt; 5%</td><td><span class="badge high">20</span></td></tr>
-    <tr><td>最大文件行数</td><td>15%</td><td>365 行</td><td>&lt; 300</td><td><span class="badge high">25</span></td></tr>
-    <tr><td>单文件多职责</td><td>20%</td><td>3 个文件</td><td>0</td><td><span class="badge high">30</span></td></tr>
-    <tr><td>数据文件格式合理性</td><td>10%</td><td>prompts.py 364行 .py</td><td>YAML/JSON</td><td><span class="badge high">20</span></td></tr>
-    <tr style="font-weight:600;"><td colspan="3">加权总分</td><td></td><td><span class="badge high">40 D</span></td></tr>
-  </table>
+                <rect x="220" y="33" width="44" height="184" fill="#f85149" rx="3" opacity="0.85"/>
+                <rect x="270" y="33" width="44" height="183" fill="#f85149" rx="3" opacity="0.7"/>
+                <rect x="320" y="70" width="44" height="146" fill="#d29922" rx="3"/>
+                <rect x="370" y="72" width="44" height="144" fill="#d29922" rx="3"/>
+                <rect x="420" y="80" width="44" height="136" fill="#d29922" rx="3"/>
+                <rect x="470" y="99" width="44" height="117" fill="#d29922" rx="3"/>
+                <rect x="520" y="84" width="44" height="132" fill="#d29922" rx="3"/>
+                <rect x="570" y="104" width="44" height="112" fill="#d29922" rx="3"/>
+                <rect x="620" y="105" width="44" height="111" fill="#d29922" rx="3"/>
 
-  <!-- 分析 -->
-  <h3>🔍 分析</h3>
-  <p>平均文件大小合理（111行），但存在严重的<strong>长尾问题</strong>：前 4 大文件中 3 个是 UI 文件（sidebar_setting.py 365行、download_video_section.py 287行、st.py 271行），说明 Streamlit UI 与业务逻辑耦合。prompts.py（364行）不应是 .py 格式——它是纯数据文件，应用 YAML 管理。</p>
-  <div class="callout high">
-    <strong>核心问题：</strong>UI 文件承担了过多的功能域。sidebar_setting.py 的单个函数 page_setting() 包含 LLM配置+ASR选择+TTS设置+字幕样式+音频参数，5 个完全不同的关注点揉在一起。
-  </div>
+                <g fill="#8b949e" font-size="8" text-anchor="middle">
+                    <text x="242" y="28" fill="#f85149">365</text>
+                    <text x="292" y="28" fill="#f85149">364</text>
+                    <text x="342" y="65">291</text>
+                    <text x="392" y="67">287</text>
+                    <text x="442" y="75">271</text>
+                    <text x="492" y="94">232</text>
+                    <text x="542" y="79">263</text>
+                    <text x="592" y="99">222</text>
+                    <text x="642" y="100">220</text>
+                    <text x="242" y="275" transform="rotate(-35,242,275)" font-size="8">sidebar</text>
+                    <text x="292" y="275" transform="rotate(-35,292,275)" font-size="8">prompts</text>
+                    <text x="342" y="275" transform="rotate(-35,342,275)" font-size="8">_1_ytdlp</text>
+                    <text x="392" y="275" transform="rotate(-35,392,275)" font-size="8">download</text>
+                    <text x="442" y="275" transform="rotate(-35,442,275)" font-size="8">st.py</text>
+                    <text x="492" y="275" transform="rotate(-35,492,275)" font-size="8">_10_gen</text>
+                    <text x="542" y="275" transform="rotate(-35,542,275)" font-size="8">install</text>
+                    <text x="592" y="275" transform="rotate(-35,592,275)" font-size="8">setup_env</text>
+                    <text x="642" y="275" transform="rotate(-35,642,275)" font-size="8">sf_fish</text>
+                </g>
+                <line x1="210" y1="91" x2="680" y2="91" stroke="#f85149" stroke-width="1.5" stroke-dasharray="6,3"/>
+                <text x="685" y="95" fill="#f85149" font-size="9">250 line limit</text>
+            </svg>
+        </div>
 
-  <!-- 图表 -->
-  <h3>📈 图表</h3>
-  <div class="full-chart">
-    <h4>Top 10 文件规模分布</h4>
-    <svg width="700" height="300" viewBox="0 0 700 300">
-      <g stroke="#30363d" stroke-width="0.6" stroke-dasharray="4,4">
-        <line x1="210" y1="30" x2="210" y2="260"/>
-        <line x1="210" y1="76" x2="680" y2="76"/>
-        <line x1="210" y1="122" x2="680" y2="122"/>
-        <line x1="210" y1="168" x2="680" y2="168"/>
-        <line x1="210" y1="214" x2="680" y2="214"/>
-        <line x1="210" y1="260" x2="680" y2="260"/>
-      </g>
-      <text x="205" y="80" fill="#8b949e" font-size="9" text-anchor="end">300</text>
-      <text x="205" y="126" fill="#8b949e" font-size="9" text-anchor="end">200</text>
-      <text x="205" y="172" fill="#8b949e" font-size="9" text-anchor="end">100</text>
-      <text x="205" y="218" fill="#8b949e" font-size="9" text-anchor="end">0</text>
+        <h3>Good/Bad Comparison</h3>
+        <div class="compare">
+            <div class="compare-bad">
+                <div class="compare-label">Bad: God-object UI file (365 lines)</div>
+                <pre><code># sidebar_setting.py
+def page_setting():  # 302 lines!
+    # LLM + ASR + TTS + subtitles + audio...
+    # All crammed in one function</code></pre>
+            </div>
+            <div class="compare-good">
+                <div class="compare-label">Good: Split by functional domain</div>
+                <pre><code># settings/llm_panel.py (~50 lines)
+# settings/asr_panel.py (~45 lines)
+# settings/tts_panel.py (~60 lines)
+# settings/subtitle_panel.py (~40 lines)
+# Independently testable, independently modifiable</code></pre>
+            </div>
+        </div>
 
-      <!-- Bars: max 365 -> 184px, each 50px wide, 56px gap -->
-      <rect x="220" y="33" width="44" height="184" fill="#f85149" rx="3" opacity="0.85"/><!-- 365 -->
-      <rect x="270" y="33" width="44" height="183" fill="#f85149" rx="3" opacity="0.7"/><!-- 364 -->
-      <rect x="320" y="70" width="44" height="146" fill="#d29922" rx="3"/><!-- 291 -->
-      <rect x="370" y="72" width="44" height="144" fill="#d29922" rx="3"/><!-- 287 -->
-      <rect x="420" y="80" width="44" height="136" fill="#d29922" rx="3"/><!-- 271 -->
-      <rect x="470" y="99" width="44" height="117" fill="#d29922" rx="3"/><!-- 232 -->
-      <rect x="520" y="84" width="44" height="132" fill="#d29922" rx="3"/><!-- 263 -->
-      <rect x="570" y="104" width="44" height="112" fill="#d29922" rx="3"/><!-- 222 -->
-      <rect x="620" y="105" width="44" height="111" fill="#d29922" rx="3"/><!-- 220 -->
-      <!-- Labels -->
-      <g fill="#8b949e" font-size="8" text-anchor="middle">
-        <text x="242" y="28" fill="#f85149">365</text>
-        <text x="292" y="28" fill="#f85149">364</text>
-        <text x="342" y="65">291</text>
-        <text x="392" y="67">287</text>
-        <text x="442" y="75">271</text>
-        <text x="492" y="94">232</text>
-        <text x="542" y="79">263</text>
-        <text x="592" y="99">222</text>
-        <text x="642" y="100">220</text>
-        <!-- Abbreviated file names at bottom -->
-        <text x="242" y="275" transform="rotate(-35,242,275)" font-size="8">sidebar</text>
-        <text x="292" y="275" transform="rotate(-35,292,275)" font-size="8">prompts</text>
-        <text x="342" y="275" transform="rotate(-35,342,275)" font-size="8">_1_ytdlp</text>
-        <text x="392" y="275" transform="rotate(-35,392,275)" font-size="8">download</text>
-        <text x="442" y="275" transform="rotate(-35,442,275)" font-size="8">st.py</text>
-        <text x="492" y="275" transform="rotate(-35,492,275)" font-size="8">_10_gen</text>
-        <text x="542" y="275" transform="rotate(-35,542,275)" font-size="8">install</text>
-        <text x="592" y="275" transform="rotate(-35,592,275)" font-size="8">setup_env</text>
-        <text x="642" y="275" transform="rotate(-35,642,275)" font-size="8">sf_fish</text>
-      </g>
-      <!-- 250 line threshold -->
-      <line x1="210" y1="91" x2="680" y2="91" stroke="#f85149" stroke-width="1.5" stroke-dasharray="6,3"/>
-      <text x="685" y="95" fill="#f85149" font-size="9">250行上限</text>
-    </svg>
-  </div>
+        <div class="table-wrap">
+            <table>
+                <tr><th>ID</th><th>Action Item</th><th>Priority</th><th>Hours</th></tr>
+                <tr><td>A1.1</td><td>Split page_setting() into 5 independent panel files</td><td><span class="badge badge-critical">P0</span></td><td>4h</td></tr>
+                <tr><td>A1.2</td><td>prompts.py → config/prompts.yaml</td><td><span class="badge badge-high">P2</span></td><td>2h</td></tr>
+            </table>
+        </div>
+    </section>
 
-  <!-- 例子 -->
-  <h3>📋 好/坏对比</h3>
-  <div class="compare">
-    <div class="bad">
-      <div class="label">❌ 坏：大杂烩式 UI 文件 (365行)</div>
-      <pre><code># sidebar_setting.py
-def page_setting():  # 302 行！
-    # LLM + ASR + TTS + 字幕 + 音频...
-    # 全塞在一个函数</code></pre>
-    </div>
-    <div class="good">
-      <div class="label">✅ 好：按功能域拆分目录</div>
-      <pre><code># settings/llm_panel.py (~50行)
-# settings/asr_panel.py (~45行)
-# settings/tts_panel.py (~60行)
-# settings/subtitle_panel.py (~40行)
-# 独立测试，独立修改</code></pre>
-    </div>
-  </div>
+    <!-- ═══════════════ §3 D2: DUPLICATION ═══════════════ -->
+    <section class="section" id="sec3">
+        <h2><span class="section-num">3</span> {{ dimLabels.d2.name }} <span :class="'badge ' + dimLabels.d2.badgeStyle">{{ dimLabels.d2.score }}</span></h2>
 
-  <table>
-    <tr><th>ID</th><th>行动项</th><th>优先级</th><th>工时</th></tr>
-    <tr><td>A1.1</td><td>拆分 page_setting() 为 5 个独立面板文件</td><td><span class="badge critical">P0</span></td><td>4h</td></tr>
-    <tr><td>A1.2</td><td>prompts.py → config/prompts.yaml</td><td><span class="badge high">P2</span></td><td>2h</td></tr>
-  </table>
-</div>
+        <h3>Score</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Sub-Indicator</th><th>Weight</th><th>Measured</th><th>Target</th><th>Score</th></tr>
+                <tr><td>Function-level duplication (&gt;80% similar)</td><td>40%</td><td>4 pairs / ~120 lines</td><td>0 pairs</td><td><span class="badge badge-critical">10</span></td></tr>
+                <tr><td>Duplicate constant definitions</td><td>25%</td><td>2 files ~20 lines</td><td>0</td><td><span class="badge badge-high">25</span></td></tr>
+                <tr><td>Boilerplate duplication</td><td>20%</td><td>15+ files ~80 lines</td><td>&lt; 5 files</td><td><span class="badge badge-high">30</span></td></tr>
+                <tr><td>Shared module completeness</td><td>15%</td><td>0 shared utils</td><td>≥ 3</td><td><span class="badge badge-critical">10</span></td></tr>
+                <tr style="font-weight:600;"><td colspan="3">Weighted Total</td><td></td><td><span class="badge badge-high">35 D</span></td></tr>
+            </table>
+        </div>
 
-<!-- ===== D2: 代码重复 ===== -->
-<div class="section" id="sec3">
-  <h2><span class="num">3</span> D2 代码重复率 <span class="badge high">35/100 D</span></h2>
+        <h3>Analysis</h3>
+        <p>4 key duplication pairs totaling ~130 directly eliminable lines. The most severe is <code>merge_audio</code> and <code>get_ref_audio</code> functions between TTS backends — near-line-by-line identical implementations with different function names. This means one bug requires two fixes, drastically increasing maintenance cost.</p>
 
-  <!-- 评分 -->
-  <h3>📊 评分</h3>
-  <table>
-    <tr><th>子指标</th><th>权重</th><th>实测值</th><th>目标值</th><th>得分</th></tr>
-    <tr><td>函数级重复（>80% 相似）</td><td>40%</td><td>4 对 / ~120行</td><td>0 对</td><td><span class="badge critical">10</span></td></tr>
-    <tr><td>常量重复定义</td><td>25%</td><td>2 文件 ~20行</td><td>0</td><td><span class="badge high">25</span></td></tr>
-    <tr><td>样板代码重复</td><td>20%</td><td>15+ 文件 ~80行</td><td>&lt; 5 文件</td><td><span class="badge high">30</span></td></tr>
-    <tr><td>共享模块完善度</td><td>15%</td><td>0 个共享 util</td><td>≥ 3 个</td><td><span class="badge critical">10</span></td></tr>
-    <tr style="font-weight:600;"><td colspan="3">加权总分</td><td></td><td><span class="badge high">35 D</span></td></tr>
-  </table>
+        <h4>Duplication Inventory</h4>
+        <div class="table-wrap">
+            <table>
+                <tr><th>ID</th><th>Files Involved</th><th>Lines</th><th>Severity</th></tr>
+                <tr><td>DR-1</td><td>sf_fishtts.py :101-120 + _302_f5tts.py :53-76</td><td>~60</td><td><span class="badge badge-critical">Critical</span></td></tr>
+                <tr><td>DR-2</td><td>_7_sub_into_vid.py :22-29 + _12_dub_to_vid.py :19-29</td><td>~40</td><td><span class="badge badge-high">High</span></td></tr>
+                <tr><td>DR-3</td><td>whisperX_302.py + elevenlabs_asr.py</td><td>~30</td><td><span class="badge badge-high">High</span></td></tr>
+                <tr><td>DR-4</td><td>Multiple TTS backend file write patterns</td><td>~20</td><td><span class="badge badge-medium">Medium</span></td></tr>
+            </table>
+        </div>
 
-  <!-- 分析 -->
-  <h3>🔍 分析</h3>
-  <p>有 4 对关键重复，合计约 130 行可直接消除。最严重的是 TTS 后端间的 <code>merge_audio</code> 和 <code>get_ref_audio</code> 函数——两个文件中的实现几乎逐行相同，仅函数名不同。这意味着一处 bug 需要在两处修复，极大增加维护成本。</p>
+        <h3>Charts</h3>
+        <div class="full-chart">
+            <h4>Code Duplication Heatmap (File Pair Similarity)</h4>
+            <svg width="680" height="220" viewBox="0 0 680 220">
+                <g fill="#8b949e" font-size="10" text-anchor="end">
+                    <text x="110" y="65">DR-1 TTS merge_audio</text>
+                    <text x="110" y="110">DR-2 Subtitle/video constants</text>
+                    <text x="110" y="155">DR-3 ASR audio loading</text>
+                    <text x="110" y="200">DR-4 TTS file writing</text>
+                </g>
+                <rect x="120" y="48" width="440" height="22" rx="4" fill="rgba(248,81,73,0.15)"/>
+                <rect x="120" y="48" width="418" height="22" rx="4" fill="#f85149" opacity="0.8"/>
+                <text x="570" y="64" fill="#f85149" font-size="11" font-weight="600">95% similar</text>
+                <rect x="120" y="93" width="440" height="22" rx="4" fill="rgba(210,153,34,0.1)"/>
+                <rect x="120" y="93" width="374" height="22" rx="4" fill="#d29922" opacity="0.8"/>
+                <text x="570" y="109" fill="#d29922" font-size="11" font-weight="600">85% similar</text>
+                <rect x="120" y="138" width="440" height="22" rx="4" fill="rgba(210,153,34,0.1)"/>
+                <rect x="120" y="138" width="330" height="22" rx="4" fill="#d29922" opacity="0.8"/>
+                <text x="570" y="154" fill="#d29922" font-size="11" font-weight="600">75% similar</text>
+                <rect x="120" y="183" width="440" height="22" rx="4" fill="rgba(139,148,158,0.08)"/>
+                <rect x="120" y="183" width="198" height="22" rx="4" fill="#8b949e" opacity="0.6"/>
+                <text x="570" y="199" fill="#8b949e" font-size="11" font-weight="600">45% similar</text>
+                <text x="120" y="32" fill="#8b949e" font-size="9">0%</text>
+                <text x="560" y="32" fill="#8b949e" font-size="9">100%</text>
+            </svg>
+        </div>
 
-  <h4>重复清单</h4>
-  <table>
-    <tr><th>编号</th><th>涉及文件</th><th>行数</th><th>严重度</th></tr>
-    <tr><td>DR-1</td><td>sf_fishtts.py :101-120 + _302_f5tts.py :53-76</td><td>~60</td><td><span class="badge critical">严重</span></td></tr>
-    <tr><td>DR-2</td><td>_7_sub_into_vid.py :22-29 + _12_dub_to_vid.py :19-29</td><td>~40</td><td><span class="badge high">高</span></td></tr>
-    <tr><td>DR-3</td><td>whisperX_302.py + elevenlabs_asr.py</td><td>~30</td><td><span class="badge high">高</span></td></tr>
-    <tr><td>DR-4</td><td>多个 TTS 后端文件写入模式</td><td>~20</td><td><span class="badge medium">中</span></td></tr>
-  </table>
-
-  <!-- 图表 -->
-  <h3>📈 图表</h3>
-  <div class="full-chart">
-    <h4>代码重复热力图（文件对相似度）</h4>
-    <svg width="680" height="220" viewBox="0 0 680 220">
-      <!-- Y-axis: 4 duplication pairs -->
-      <g fill="#8b949e" font-size="10" text-anchor="end">
-        <text x="110" y="65">DR-1 TTS merge_audio</text>
-        <text x="110" y="110">DR-2 字幕/视频常量</text>
-        <text x="110" y="155">DR-3 ASR 音频加载</text>
-        <text x="110" y="200">DR-4 TTS 文件写入</text>
-      </g>
-      <!-- Bars -->
-      <rect x="120" y="48" width="440" height="22" rx="4" fill="rgba(248,81,73,0.15)"/>
-      <rect x="120" y="48" width="418" height="22" rx="4" fill="#f85149" opacity="0.8"/><!-- 95% -->
-      <text x="570" y="64" fill="#f85149" font-size="11" font-weight="600">95% 相似</text>
-
-      <rect x="120" y="93" width="440" height="22" rx="4" fill="rgba(210,153,34,0.1)"/>
-      <rect x="120" y="93" width="374" height="22" rx="4" fill="#d29922" opacity="0.8"/><!-- 85% -->
-      <text x="570" y="109" fill="#d29922" font-size="11" font-weight="600">85% 相似</text>
-
-      <rect x="120" y="138" width="440" height="22" rx="4" fill="rgba(210,153,34,0.1)"/>
-      <rect x="120" y="138" width="330" height="22" rx="4" fill="#d29922" opacity="0.8"/><!-- 75% -->
-      <text x="570" y="154" fill="#d29922" font-size="11" font-weight="600">75% 相似</text>
-
-      <rect x="120" y="183" width="440" height="22" rx="4" fill="rgba(139,148,158,0.08)"/>
-      <rect x="120" y="183" width="198" height="22" rx="4" fill="#8b949e" opacity="0.6"/><!-- 45% -->
-      <text x="570" y="199" fill="#8b949e" font-size="11" font-weight="600">45% 相似</text>
-
-      <text x="120" y="32" fill="#8b949e" font-size="9">0%</text>
-      <text x="560" y="32" fill="#8b949e" font-size="9">100%</text>
-    </svg>
-  </div>
-
-  <!-- 例子 -->
-  <h3>📋 好/坏对比</h3>
-  <div class="compare">
-    <div class="bad">
-      <div class="label">❌ 各自实现相同的 merge_audio</div>
-      <pre><code># sf_fishtts.py
+        <h3>Good/Bad Comparison</h3>
+        <div class="compare">
+            <div class="compare-bad">
+                <div class="compare-label">Bad: Each implements its own merge_audio</div>
+                <pre><code># sf_fishtts.py
 def merge_audio(files, output):
     combined = AudioSegment.empty()
     silence = AudioSegment.silent(duration=100)
@@ -670,19 +418,19 @@ def merge_audio(files, output):
         combined += audio + silence
     combined.export(output, format="wav", ...)
 
-# _302_f5tts.py — 完全相同！
+# _302_f5tts.py — identical!
 def _merge_audio(files, output: str) -> bool:
-    # ... 逐行相同</code></pre>
-    </div>
-    <div class="good">
-      <div class="label">✅ 提取共享模块</div>
-      <pre><code># 新建 core/tts_backend/audio_utils.py
+    # ... line by line identical</code></pre>
+            </div>
+            <div class="compare-good">
+                <div class="compare-label">Good: Extract shared module</div>
+                <pre><code># New: core/tts_backend/audio_utils.py
 def merge_wav_files(
     files: list[str], output: str,
     silence_ms: int = 100,
     sample_rate: int = 16000,
 ) -> bool:
-    """合并多个 WAV 文件为单声道输出。"""
+    """Merge multiple WAV files into mono output."""
     combined = AudioSegment.empty()
     silence = AudioSegment.silent(duration=silence_ms)
     for f in files:
@@ -691,184 +439,166 @@ def merge_wav_files(
         parameters=["-acodec","pcm_s16le",
                     "-ar",str(sample_rate),"-ac","1"])
     ...</code></pre>
-    </div>
-  </div>
+            </div>
+        </div>
 
-  <table>
-    <tr><th>ID</th><th>行动</th><th>消除行数</th><th>优</th><th>工时</th></tr>
-    <tr><td>A2.1</td><td>新建 audio_utils.py</td><td>~60</td><td><span class="badge critical">P0</span></td><td>2h</td></tr>
-    <tr><td>A2.2</td><td>新建 video_utils.py</td><td>~40</td><td><span class="badge critical">P0</span></td><td>1.5h</td></tr>
-    <tr><td>A2.3</td><td>新建 audio_loader.py</td><td>~30</td><td><span class="badge high">P1</span></td><td>1.5h</td></tr>
-  </table>
-</div>
+        <div class="table-wrap">
+            <table>
+                <tr><th>ID</th><th>Action</th><th>Lines Eliminated</th><th>Priority</th><th>Hours</th></tr>
+                <tr><td>A2.1</td><td>Create audio_utils.py</td><td>~60</td><td><span class="badge badge-critical">P0</span></td><td>2h</td></tr>
+                <tr><td>A2.2</td><td>Create video_utils.py</td><td>~40</td><td><span class="badge badge-critical">P0</span></td><td>1.5h</td></tr>
+                <tr><td>A2.3</td><td>Create audio_loader.py</td><td>~30</td><td><span class="badge badge-high">P1</span></td><td>1.5h</td></tr>
+            </table>
+        </div>
+    </section>
 
-<!-- ===== D3: 命名语义化 ===== -->
-<div class="section" id="sec4">
-  <h2><span class="num">4</span> D3 命名语义化 <span class="badge medium">55/100 C</span></h2>
+    <!-- ═══════════════ §4 D3: NAMING SEMANTICS ═══════════════ -->
+    <section class="section" id="sec4">
+        <h2><span class="section-num">4</span> {{ dimLabels.d3.name }} <span :class="'badge ' + dimLabels.d3.badgeStyle">{{ dimLabels.d3.score }}</span></h2>
 
-  <!-- 评分 -->
-  <h3>📊 评分</h3>
-  <table>
-    <tr><th>子指标</th><th>权重</th><th>实测值</th><th>目标值</th><th>得分</th></tr>
-    <tr><td>单字母变量（非惯例）</td><td>25%</td><td>~15 处</td><td>&lt; 5</td><td><span class="badge high">40</span></td></tr>
-    <tr><td>过度泛化名称（result/data/info/item）</td><td>35%</td><td>50+ 处</td><td>&lt; 20</td><td><span class="badge high">35</span></td></tr>
-    <tr><td>语义明确的良好命名比例</td><td>30%</td><td>~60%</td><td>> 80%</td><td><span class="badge medium">60</span></td></tr>
-    <tr><td>命名前缀一致性（df_/is_/has_）</td><td>10%</td><td>~15% 使用</td><td>> 40%</td><td><span class="badge high">25</span></td></tr>
-    <tr style="font-weight:600;"><td colspan="3">加权总分</td><td></td><td><span class="badge medium">55 C</span></td></tr>
-  </table>
+        <h3>Score</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Sub-Indicator</th><th>Weight</th><th>Measured</th><th>Target</th><th>Score</th></tr>
+                <tr><td>Single-char variables (non-idiomatic)</td><td>25%</td><td>~15 occurrences</td><td>&lt; 5</td><td><span class="badge badge-high">40</span></td></tr>
+                <tr><td>Over-generalized names (result/data/info/item)</td><td>35%</td><td>50+ occurrences</td><td>&lt; 20</td><td><span class="badge badge-high">35</span></td></tr>
+                <tr><td>Semantically clear naming ratio</td><td>30%</td><td>~60%</td><td>&gt; 80%</td><td><span class="badge badge-medium">60</span></td></tr>
+                <tr><td>Naming prefix consistency (df_/is_/has_)</td><td>10%</td><td>~15% usage</td><td>&gt; 40%</td><td><span class="badge badge-high">25</span></td></tr>
+                <tr style="font-weight:600;"><td colspan="3">Weighted Total</td><td></td><td><span class="badge badge-medium">55 C</span></td></tr>
+            </table>
+        </div>
 
-  <!-- 分析 -->
-  <h3>🔍 分析</h3>
-  <p>这是 7 个维度中得分最高的，说明项目在命名方面有一定基础。但 50+ 处过度泛化名称（result/data/info/item）和 15 处非惯例单字母变量仍然拖低分数。</p>
+        <h3>Analysis</h3>
+        <p>This is the highest-scoring dimension, indicating the project has a good naming foundation. However, 50+ over-generalized names (result/data/info/item) and 15 non-idiomatic single-char variables still drag the score down.</p>
 
-  <!-- 图表：坏 vs 好命名对比 -->
-  <h3>📈 图表</h3>
-  <div class="full-chart">
-    <h4>命名质量分布</h4>
-    <svg width="620" height="180" viewBox="0 0 620 180">
-      <!-- Donut chart approximation -->
-      <circle cx="180" cy="95" r="70" fill="none" stroke="#30363d" stroke-width="20"/>
-      <circle cx="180" cy="95" r="70" fill="none" stroke="#f85149" stroke-width="20"
-        stroke-dasharray="13 427" stroke-dashoffset="0" transform="rotate(-90,180,95)"/><!-- 3% -->
-      <circle cx="180" cy="95" r="70" fill="none" stroke="#d29922" stroke-width="20"
-        stroke-dasharray="44 396" stroke-dashoffset="-13" transform="rotate(-90,180,95)"/><!-- 10% -->
-      <circle cx="180" cy="95" r="70" fill="none" stroke="#58a6ff" stroke-width="20"
-        stroke-dasharray="118 322" stroke-dashoffset="-57" transform="rotate(-90,180,95)"/><!-- 27% -->
-      <circle cx="180" cy="95" r="70" fill="none" stroke="#3fb950" stroke-width="20"
-        stroke-dasharray="264 176" stroke-dashoffset="-175" transform="rotate(-90,180,95)"/><!-- 60% -->
-      <text x="180" y="90" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">命名</text>
-      <text x="180" y="108" text-anchor="middle" fill="#8b949e" font-size="10">质量分布</text>
+        <h3>Charts</h3>
+        <div class="full-chart">
+            <h4>Naming Quality Distribution</h4>
+            <svg width="620" height="180" viewBox="0 0 620 180">
+                <circle cx="180" cy="95" r="70" fill="none" stroke="#30363d" stroke-width="20"/>
+                <circle cx="180" cy="95" r="70" fill="none" stroke="#f85149" stroke-width="20" stroke-dasharray="13 427" transform="rotate(-90,180,95)"/>
+                <circle cx="180" cy="95" r="70" fill="none" stroke="#d29922" stroke-width="20" stroke-dasharray="44 396" stroke-dashoffset="-13" transform="rotate(-90,180,95)"/>
+                <circle cx="180" cy="95" r="70" fill="none" stroke="#58a6ff" stroke-width="20" stroke-dasharray="118 322" stroke-dashoffset="-57" transform="rotate(-90,180,95)"/>
+                <circle cx="180" cy="95" r="70" fill="none" stroke="#3fb950" stroke-width="20" stroke-dasharray="264 176" stroke-dashoffset="-175" transform="rotate(-90,180,95)"/>
+                <text x="180" y="90" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Naming</text>
+                <text x="180" y="108" text-anchor="middle" fill="#8b949e" font-size="10">Quality Distribution</text>
+                <g font-size="10">
+                    <rect x="300" y="45" width="10" height="10" rx="2" fill="#3fb950"/>
+                    <text x="316" y="54" fill="#8b949e">Semantically clear 60%</text>
+                    <rect x="300" y="70" width="10" height="10" rx="2" fill="#58a6ff"/>
+                    <text x="316" y="79" fill="#8b949e">Acceptable 27%</text>
+                    <rect x="300" y="95" width="10" height="10" rx="2" fill="#d29922"/>
+                    <text x="316" y="104" fill="#8b949e">Vague 10%</text>
+                    <rect x="300" y="120" width="10" height="10" rx="2" fill="#f85149"/>
+                    <text x="316" y="129" fill="#8b949e">Single-char 3%</text>
+                </g>
+            </svg>
+        </div>
 
-      <!-- Legend -->
-      <g font-size="10">
-        <rect x="300" y="45" width="10" height="10" rx="2" fill="#3fb950"/>
-        <text x="316" y="54" fill="#8b949e">语义清晰 60%</text>
-        <rect x="300" y="70" width="10" height="10" rx="2" fill="#58a6ff"/>
-        <text x="316" y="79" fill="#8b949e">可接受 27%</text>
-        <rect x="300" y="95" width="10" height="10" rx="2" fill="#d29922"/>
-        <text x="316" y="104" fill="#8b949e">模糊命名 10%</text>
-        <rect x="300" y="120" width="10" height="10" rx="2" fill="#f85149"/>
-        <text x="316" y="129" fill="#8b949e">单字母 3%</text>
-      </g>
-    </svg>
-  </div>
+        <h3>Good/Bad Comparison</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Type</th><th>Bad Name</th><th>Location</th><th>Suggestion</th><th>Good Example</th><th>Location</th></tr>
+                <tr><td>Single-char</td><td><code>r</code></td><td>_4_2_translate.py:85</td><td><code>translation</code></td><td><code>previous_content_prompt</code></td><td>_4_2_translate.py:44</td></tr>
+                <tr><td>Vague</td><td><code>out</code></td><td>_7_sub_into_vid.py:54</td><td><code>video_writer</code></td><td><code>normalized_dub_audio</code></td><td>_12_dub_to_vid.py:50</td></tr>
+                <tr><td>Generic</td><td><code>result</code></td><td>25+ occurrences</td><td><code>asr_result</code> etc.</td><td><code>df_translate_for_audio</code></td><td>_6_gen_sub.py:160</td></tr>
+                <tr><td>Ambiguous</td><td><code>data</code></td><td>10+ occurrences</td><td><code>response_json</code> etc.</td><td><code>transcribe_start_time</code></td><td>whisperX_local.py:112</td></tr>
+            </table>
+        </div>
 
-  <!-- 例子 -->
-  <h3>📋 好/坏对比</h3>
-  <table>
-    <tr><th>类型</th><th>坏命名</th><th>位置</th><th>建议</th><th>好命名范例</th><th>位置</th></tr>
-    <tr><td>单字母</td><td><code>r</code></td><td>_4_2_translate.py:85</td><td><code>translation</code></td><td><code>previous_content_prompt</code></td><td>_4_2_translate.py:44</td></tr>
-    <tr><td>模糊</td><td><code>out</code></td><td>_7_sub_into_vid.py:54</td><td><code>video_writer</code></td><td><code>normalized_dub_audio</code></td><td>_12_dub_to_vid.py:50</td></tr>
-    <tr><td>泛化</td><td><code>result</code></td><td>25+ 处</td><td><code>asr_result</code> 等</td><td><code>df_translate_for_audio</code></td><td>_6_gen_sub.py:160</td></tr>
-    <tr><td>歧义</td><td><code>data</code></td><td>10+ 处</td><td><code>response_json</code> 等</td><td><code>transcribe_start_time</code></td><td>whisperX_local.py:112</td></tr>
-  </table>
+        <table>
+            <tr><th>ID</th><th>Action</th><th>Priority</th><th>Hours</th></tr>
+            <tr><td>A3.1</td><td>Rename 15 non-idiomatic single-char variables</td><td><span class="badge badge-high">P1</span></td><td>1h</td></tr>
+            <tr><td>A3.2</td><td>Specificize 50+ over-generalized names</td><td><span class="badge badge-medium">P3</span></td><td>3h</td></tr>
+        </table>
+    </section>
 
-  <table>
-    <tr><th>ID</th><th>行动</th><th>优</th><th>工时</th></tr>
-    <tr><td>A3.1</td><td>重命名 15 处非惯例单字母变量</td><td><span class="badge high">P1</span></td><td>1h</td></tr>
-    <tr><td>A3.2</td><td>具体化 50+ 处过度泛化名称</td><td><span class="badge medium">P3</span></td><td>3h</td></tr>
-  </table>
-</div>
+    <!-- ═══════════════ §5 D4: NESTING DEPTH ═══════════════ -->
+    <section class="section" id="sec5">
+        <h2><span class="section-num">5</span> {{ dimLabels.d4.name }} <span :class="'badge ' + dimLabels.d4.badgeStyle">{{ dimLabels.d4.score }}</span></h2>
 
-<!-- ===== D4: 嵌套深度 ===== -->
-<div class="section" id="sec5">
-  <h2><span class="num">5</span> D4 嵌套深度与圈复杂度 <span class="badge high">42/100 D+</span></h2>
+        <h3>Score</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Sub-Indicator</th><th>Weight</th><th>Measured</th><th>Target</th><th>Score</th></tr>
+                <tr><td>Max nesting depth</td><td>30%</td><td>11 levels</td><td>≤ 4</td><td><span class="badge badge-critical">5</span></td></tr>
+                <tr><td>Deep nesting files (&gt;7 levels) ratio</td><td>25%</td><td>4.8% (3/63)</td><td>0%</td><td><span class="badge badge-critical">15</span></td></tr>
+                <tr><td>Medium nesting files (4-5 levels) ratio</td><td>20%</td><td>28.6% (18/63)</td><td>&lt; 20%</td><td><span class="badge badge-high">40</span></td></tr>
+                <tr><td>Low nesting files (≤3 levels) ratio</td><td>25%</td><td>55.6% (35/63)</td><td>&gt; 70%</td><td><span class="badge badge-medium">65</span></td></tr>
+                <tr style="font-weight:600;"><td colspan="3">Weighted Total</td><td></td><td><span class="badge badge-high">42 D+</span></td></tr>
+            </table>
+        </div>
 
-  <!-- 评分 -->
-  <h3>📊 评分</h3>
-  <table>
-    <tr><th>子指标</th><th>权重</th><th>实测值</th><th>目标值</th><th>得分</th></tr>
-    <tr><td>最大嵌套深度</td><td>30%</td><td>11 层</td><td>≤ 4</td><td><span class="badge critical">5</span></td></tr>
-    <tr><td>深嵌套文件（>7层）占比</td><td>25%</td><td>4.8% (3/63)</td><td>0%</td><td><span class="badge critical">15</span></td></tr>
-    <tr><td>中嵌套文件（4-5层）占比</td><td>20%</td><td>28.6% (18/63)</td><td>&lt; 20%</td><td><span class="badge high">40</span></td></tr>
-    <tr><td>低嵌套文件（≤3层）占比</td><td>25%</td><td>55.6% (35/63)</td><td>> 70%</td><td><span class="badge medium">65</span></td></tr>
-    <tr style="font-weight:600;"><td colspan="3">加权总分</td><td></td><td><span class="badge high">42 D+</span></td></tr>
-  </table>
+        <h3>Analysis</h3>
+        <p>Nesting shows <strong>polarization</strong>: 55.6% of files have good nesting (≤3 levels), but 3 files have extreme 8+ level nesting. tts_main.py's 8-level elif chain is a classic "missing strategy pattern" syndrome — each new TTS engine adds another elif level.</p>
 
-  <!-- 分析 -->
-  <h3>🔍 分析</h3>
-  <p>嵌套问题呈<strong>两极分化</strong>：55.6% 的文件嵌套良好（≤3层），但 3 个文件存在 8+ 层的极端嵌套。tts_main.py 的 8 层 elif 链是典型的"策略模式缺失"综合征——每增加一个 TTS 引擎就要多加一层 elif。</p>
+        <h3>Charts</h3>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h4>Nesting Depth Distribution (Files)</h4>
+                <svg width="460" height="200" viewBox="0 0 460 200">
+                    <rect x="40" y="40" width="80" height="130" rx="4" fill="#3fb950" opacity="0.7"/>
+                    <text x="80" y="115" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">35</text>
+                    <text x="80" y="180" text-anchor="middle" fill="#8b949e" font-size="10">1-3 levels</text>
+                    <rect x="135" y="70" width="55" height="100" rx="4" fill="#58a6ff" opacity="0.7"/>
+                    <text x="162" y="130" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">18</text>
+                    <text x="162" y="180" text-anchor="middle" fill="#8b949e" font-size="10">4-5 levels</text>
+                    <rect x="205" y="100" width="40" height="70" rx="4" fill="#d29922" opacity="0.8"/>
+                    <text x="225" y="145" text-anchor="middle" fill="#000" font-size="12" font-weight="700">7</text>
+                    <text x="225" y="180" text-anchor="middle" fill="#8b949e" font-size="10">6-7 levels</text>
+                    <rect x="260" y="130" width="35" height="40" rx="4" fill="#f85149" opacity="0.9"/>
+                    <text x="277" y="158" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">3</text>
+                    <text x="277" y="180" text-anchor="middle" fill="#8b949e" font-size="10">8+ levels</text>
+                    <text x="380" y="120" fill="#f85149" font-size="12" font-weight="700">Risk →</text>
+                </svg>
+            </div>
+            <div class="chart-card">
+                <h4>Deepest Nesting TOP 5</h4>
+                <svg width="460" height="200" viewBox="0 0 460 200">
+                    <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,4">
+                        <line x1="140" y1="30" x2="440" y2="30"/>
+                        <line x1="140" y1="60" x2="440" y2="60"/>
+                        <line x1="140" y1="90" x2="440" y2="90"/>
+                        <line x1="140" y1="120" x2="440" y2="120"/>
+                        <line x1="140" y1="150" x2="440" y2="150"/>
+                    </g>
+                    <g fill="#8b949e" font-size="9" text-anchor="end">
+                        <text x="135" y="34">tts_main.py</text><text x="135" y="64">sidebar_setting</text>
+                        <text x="135" y="94">split_by_connector</text><text x="135" y="124">download_video</text>
+                        <text x="135" y="154">batch_processor</text>
+                    </g>
+                    <rect x="142" y="22" width="297" height="14" rx="3" fill="#f85149"/>
+                    <text x="445" y="33" fill="#f85149" font-size="10" font-weight="600">11</text>
+                    <rect x="142" y="52" width="243" height="14" rx="3" fill="#f85149"/>
+                    <text x="445" y="63" fill="#f85149" font-size="10" font-weight="600">9</text>
+                    <rect x="142" y="82" width="216" height="14" rx="3" fill="#f85149"/>
+                    <text x="445" y="93" fill="#f85149" font-size="10" font-weight="600">8</text>
+                    <rect x="142" y="112" width="189" height="14" rx="3" fill="#d29922"/>
+                    <text x="445" y="123" fill="#d29922" font-size="10" font-weight="600">7</text>
+                    <rect x="142" y="142" width="189" height="14" rx="3" fill="#d29922"/>
+                    <text x="445" y="153" fill="#d29922" font-size="10" font-weight="600">7</text>
+                    <line x1="142" y1="42" x2="250" y2="42" stroke="#3fb950" stroke-width="2" stroke-dasharray="6,3"/>
+                    <text x="255" y="45" fill="#3fb950" font-size="8">Target ≤4</text>
+                </svg>
+            </div>
+        </div>
 
-  <!-- 图表 -->
-  <h3>📈 图表</h3>
-  <div class="chart-grid">
-    <div class="chart-card">
-      <h4>嵌套深度分布（文件数）</h4>
-      <svg width="460" height="200" viewBox="0 0 460 200">
-        <!-- Pie slices approximated as stacked bars -->
-        <rect x="40" y="40" width="80" height="130" rx="4" fill="#3fb950" opacity="0.7"/>
-        <text x="80" y="115" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">35</text>
-        <text x="80" y="180" text-anchor="middle" fill="#8b949e" font-size="10">1-3层</text>
-
-        <rect x="135" y="70" width="55" height="100" rx="4" fill="#58a6ff" opacity="0.7"/>
-        <text x="162" y="130" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">18</text>
-        <text x="162" y="180" text-anchor="middle" fill="#8b949e" font-size="10">4-5层</text>
-
-        <rect x="205" y="100" width="40" height="70" rx="4" fill="#d29922" opacity="0.8"/>
-        <text x="225" y="145" text-anchor="middle" fill="#000" font-size="12" font-weight="700">7</text>
-        <text x="225" y="180" text-anchor="middle" fill="#8b949e" font-size="10">6-7层</text>
-
-        <rect x="260" y="130" width="35" height="40" rx="4" fill="#f85149" opacity="0.9"/>
-        <text x="277" y="158" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">3</text>
-        <text x="277" y="180" text-anchor="middle" fill="#8b949e" font-size="10">8+层</text>
-
-        <!-- Risk arrow -->
-        <text x="380" y="120" fill="#f85149" font-size="12" font-weight="700">→ 风险递增</text>
-      </svg>
-    </div>
-
-    <div class="chart-card">
-      <h4>最深嵌套 TOP 5</h4>
-      <svg width="460" height="200" viewBox="0 0 460 200">
-        <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,4">
-          <line x1="140" y1="30" x2="440" y2="30"/>
-          <line x1="140" y1="60" x2="440" y2="60"/>
-          <line x1="140" y1="90" x2="440" y2="90"/>
-          <line x1="140" y1="120" x2="440" y2="120"/>
-          <line x1="140" y1="150" x2="440" y2="150"/>
-        </g>
-        <g fill="#8b949e" font-size="9" text-anchor="end">
-          <text x="135" y="34">tts_main.py</text>
-          <text x="135" y="64">sidebar_setting</text>
-          <text x="135" y="94">split_by_connector</text>
-          <text x="135" y="124">download_video</text>
-          <text x="135" y="154">batch_processor</text>
-        </g>
-        <!-- 11, 9, 8, 7, 7 → max 11 = 300px scale, each unit ~27px -->
-        <rect x="142" y="22" width="297" height="14" rx="3" fill="#f85149"/><!-- 11 -->
-        <text x="445" y="33" fill="#f85149" font-size="10" font-weight="600">11</text>
-        <rect x="142" y="52" width="243" height="14" rx="3" fill="#f85149"/><!-- 9 -->
-        <text x="445" y="63" fill="#f85149" font-size="10" font-weight="600">9</text>
-        <rect x="142" y="82" width="216" height="14" rx="3" fill="#f85149"/><!-- 8 -->
-        <text x="445" y="93" fill="#f85149" font-size="10" font-weight="600">8</text>
-        <rect x="142" y="112" width="189" height="14" rx="3" fill="#d29922"/><!-- 7 -->
-        <text x="445" y="123" fill="#d29922" font-size="10" font-weight="600">7</text>
-        <rect x="142" y="142" width="189" height="14" rx="3" fill="#d29922"/><!-- 7 -->
-        <text x="445" y="153" fill="#d29922" font-size="10" font-weight="600">7</text>
-        <!-- 4-layer limit line -->
-        <line x1="142" y1="42" x2="250" y2="42" stroke="#3fb950" stroke-width="2" stroke-dasharray="6,3"/>
-        <text x="255" y="45" fill="#3fb950" font-size="8">目标≤4</text>
-      </svg>
-    </div>
-  </div>
-
-  <!-- 例子 -->
-  <h3>📋 好/坏对比</h3>
-  <div class="compare">
-    <div class="bad">
-      <div class="label">❌ 坏：8 层 elif 地狱 (tts_main.py)</div>
-      <pre><code>for i, task in enumerate(tasks, 1):
+        <h3>Good/Bad Comparison</h3>
+        <div class="compare">
+            <div class="compare-bad">
+                <div class="compare-label">Bad: 8-level elif hell (tts_main.py)</div>
+                <pre><code>for i, task in enumerate(tasks, 1):
     try:
         if tts_method == 'edge_tts':
             edge_tts(task)
         elif tts_method == 'azure_tts':
             azure_tts(task)
         elif tts_method == 'openai_tts':
-            # ... 8 层 elif</code></pre>
-    </div>
-    <div class="good">
-      <div class="label">✅ 好：注册表模式 (深度 2)</div>
-      <pre><code>TTS_ENGINES = {
+            # ... 8 elif levels</code></pre>
+            </div>
+            <div class="compare-good">
+                <div class="compare-label">Good: Registry pattern (depth 2)</div>
+                <pre><code>TTS_ENGINES = {
     'edge_tts': edge_tts,
     'azure_tts': azure_tts,
     'openai_tts': openai_tts, ...
@@ -878,610 +608,546 @@ def tts_main(tasks, method):
     if not engine: raise ValueError(...)
     for task in tasks:
         engine(task)</code></pre>
-    </div>
-  </div>
+            </div>
+        </div>
 
-  <table>
-    <tr><th>ID</th><th>行动</th><th>目标</th><th>优</th><th>工时</th></tr>
-    <tr><td>A4.1</td><td>注册表模式重构 tts_main.py</td><td>11→2层</td><td><span class="badge critical">P0</span></td><td>3h</td></tr>
-    <tr><td>A4.2</td><td>Guard Clause 重构 split_by_connector.py</td><td>8→3层</td><td><span class="badge high">P1</span></td><td>2h</td></tr>
-    <tr><td>A4.3</td><td>拆分 sidebar_setting.py 条件渲染</td><td>9→3层</td><td><span class="badge high">P1</span></td><td>2h</td></tr>
-  </table>
-</div>
+        <table>
+            <tr><th>ID</th><th>Action</th><th>Target</th><th>Priority</th><th>Hours</th></tr>
+            <tr><td>A4.1</td><td>Registry pattern refactor tts_main.py</td><td>11→2 levels</td><td><span class="badge badge-critical">P0</span></td><td>3h</td></tr>
+            <tr><td>A4.2</td><td>Guard Clause refactor split_by_connector.py</td><td>8→3 levels</td><td><span class="badge badge-high">P1</span></td><td>2h</td></tr>
+            <tr><td>A4.3</td><td>Split sidebar_setting.py conditional rendering</td><td>9→3 levels</td><td><span class="badge badge-high">P1</span></td><td>2h</td></tr>
+        </table>
+    </section>
 
-<!-- ===== D5: 函数长度 ===== -->
-<div class="section" id="sec6">
-  <h2><span class="num">6</span> D5 函数长度与职责 <span class="badge high">38/100 D</span></h2>
+    <!-- ═══════════════ §6 D5: FUNCTION LENGTH ═══════════════ -->
+    <section class="section" id="sec6">
+        <h2><span class="section-num">6</span> {{ dimLabels.d5.name }} <span :class="'badge ' + dimLabels.d5.badgeStyle">{{ dimLabels.d5.score }}</span></h2>
 
-  <!-- 评分 -->
-  <h3>📊 评分</h3>
-  <table>
-    <tr><th>子指标</th><th>权重</th><th>实测值</th><th>目标值</th><th>得分</th></tr>
-    <tr><td>超长函数（>100行）数量</td><td>35%</td><td>4 个</td><td>0</td><td><span class="badge critical">5</span></td></tr>
-    <tr><td>长函数（50-100行）数量</td><td>25%</td><td>6 个</td><td>&lt; 3</td><td><span class="badge high">25</span></td></tr>
-    <tr><td>最大函数超标倍数</td><td>25%</td><td>6.0x (302行)</td><td>≤ 1x</td><td><span class="badge critical">0</span></td></tr>
-    <tr><td>平均函数行数</td><td>15%</td><td>29.8 行</td><td>&lt; 25</td><td><span class="badge medium">65</span></td></tr>
-    <tr style="font-weight:600;"><td colspan="3">加权总分</td><td></td><td><span class="badge high">38 D</span></td></tr>
-  </table>
+        <h3>Score</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Sub-Indicator</th><th>Weight</th><th>Measured</th><th>Target</th><th>Score</th></tr>
+                <tr><td>Overly long functions (&gt;100 lines) count</td><td>35%</td><td>4</td><td>0</td><td><span class="badge badge-critical">5</span></td></tr>
+                <tr><td>Long functions (50-100 lines) count</td><td>25%</td><td>6</td><td>&lt; 3</td><td><span class="badge badge-high">25</span></td></tr>
+                <tr><td>Max function excess multiplier</td><td>25%</td><td>6.0x (302 lines)</td><td>≤ 1x</td><td><span class="badge badge-critical">0</span></td></tr>
+                <tr><td>Average function line count</td><td>15%</td><td>29.8 lines</td><td>&lt; 25</td><td><span class="badge badge-medium">65</span></td></tr>
+                <tr style="font-weight:600;"><td colspan="3">Weighted Total</td><td></td><td><span class="badge badge-high">38 D</span></td></tr>
+            </table>
+        </div>
 
-  <!-- 分析 -->
-  <h3>🔍 分析</h3>
-  <div class="callout critical">
-    <strong>page_setting() 是整个项目中结构最差的函数。</strong>302 行包含 5+ 个完全不同的功能域。这是 Streamlit 声明式 API 鼓励的反模式：把所有 widget 放在一个函数中就能跑，于是开发者无差别地往里堆。
-  </div>
+        <h3>Analysis</h3>
+        <div class="callout callout-warning" style="border-left-color: #f85149; background: rgba(248,81,73,0.06);">
+            <strong>page_setting() is the worst-structured function in the entire project.</strong> 302 lines containing 5+ completely different functional domains. This is an anti-pattern encouraged by Streamlit's declarative API: put all widgets in one function and it just works, so developers indiscriminately pile in.
+        </div>
 
-  <!-- 图表 -->
-  <h3>📈 图表</h3>
-  <div class="full-chart">
-    <h4>Top 10 函数长度瀑布图</h4>
-    <svg width="680" height="260" viewBox="0 0 680 260">
-      <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,4">
-        <line x1="170" y1="40" x2="650" y2="40"/>
-        <line x1="170" y1="75" x2="650" y2="75"/>
-        <line x1="170" y1="110" x2="650" y2="110"/>
-        <line x1="170" y1="145" x2="650" y2="145"/>
-        <line x1="170" y1="180" x2="650" y2="180"/>
-        <line x1="170" y1="215" x2="650" y2="215"/>
-      </g>
-      <g fill="#8b949e" font-size="9" text-anchor="end">
-        <text x="165" y="44">page_setting</text>
-        <text x="165" y="79">_render_download_ui</text>
-        <text x="165" y="114">main (install)</text>
-        <text x="165" y="149">download_video_ytdlp</text>
-        <text x="165" y="184">transcribe_audio</text>
-        <text x="165" y="219">process_srt</text>
-      </g>
-      <!-- Scale: 302 = max, each unit ~0.52px per line -->
-      <!-- Cap display at 300px max -->
-      <rect x="175" y="31" width="300" height="14" rx="3" fill="#f85149"/><!-- 302 -->
-      <text x="482" y="43" fill="#f85149" font-size="10" font-weight="600">302 行 (超标 6.0x)</text>
-      <rect x="175" y="66" width="200" height="14" rx="3" fill="#f85149"/><!-- 202 -->
-      <text x="382" y="78" fill="#f85149" font-size="10" font-weight="600">202 行 (超标 4.0x)</text>
-      <rect x="175" y="101" width="117" height="14" rx="3" fill="#d29922"/><!-- 118 -->
-      <text x="299" y="113" fill="#d29922" font-size="10" font-weight="600">118 行</text>
-      <rect x="175" y="136" width="115" height="14" rx="3" fill="#d29922"/><!-- 116 -->
-      <text x="297" y="148" fill="#d29922" font-size="10" font-weight="600">116 行</text>
-      <rect x="175" y="171" width="88" height="14" rx="3" fill="#d29922"/><!-- 89 -->
-      <text x="270" y="183" fill="#d29922" font-size="10" font-weight="600">89 行</text>
-      <rect x="175" y="206" width="81" height="14" rx="3" fill="#d29922"/><!-- 82 -->
-      <text x="263" y="218" fill="#d29922" font-size="10" font-weight="600">82 行</text>
-      <!-- 50-line threshold -->
-      <line x1="225" y1="24" x2="225" y2="235" stroke="#3fb950" stroke-width="2" stroke-dasharray="6,3"/>
-      <text x="230" y="22" fill="#3fb950" font-size="9">50行上限</text>
-      <!-- Other top functions as smaller bars -->
-      <g fill="#8b949e" font-size="9" text-anchor="end">
-        <text x="165" y="248">analyze_connectors</text>
-        <text x="165" y="258">gen_dub_chunks</text>
-      </g>
-      <rect x="175" y="238" width="74" height="8" rx="3" fill="#58a6ff" opacity="0.6"/><!-- 75 -->
-      <rect x="175" y="250" width="71" height="8" rx="3" fill="#58a6ff" opacity="0.6"/><!-- 72 -->
-    </svg>
-  </div>
+        <h3>Charts</h3>
+        <div class="full-chart">
+            <h4>Top 10 Function Length Waterfall Chart</h4>
+            <svg width="680" height="260" viewBox="0 0 680 260">
+                <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,4">
+                    <line x1="170" y1="40" x2="650" y2="40"/>
+                    <line x1="170" y1="75" x2="650" y2="75"/>
+                    <line x1="170" y1="110" x2="650" y2="110"/>
+                    <line x1="170" y1="145" x2="650" y2="145"/>
+                    <line x1="170" y1="180" x2="650" y2="180"/>
+                    <line x1="170" y1="215" x2="650" y2="215"/>
+                </g>
+                <g fill="#8b949e" font-size="9" text-anchor="end">
+                    <text x="165" y="44">page_setting</text>
+                    <text x="165" y="79">_render_download_ui</text>
+                    <text x="165" y="114">main (install)</text>
+                    <text x="165" y="149">download_video_ytdlp</text>
+                    <text x="165" y="184">transcribe_audio</text>
+                    <text x="165" y="219">process_srt</text>
+                </g>
+                <rect x="175" y="31" width="300" height="14" rx="3" fill="#f85149"/>
+                <text x="482" y="43" fill="#f85149" font-size="10" font-weight="600">302 lines (6.0x)</text>
+                <rect x="175" y="66" width="200" height="14" rx="3" fill="#f85149"/>
+                <text x="382" y="78" fill="#f85149" font-size="10" font-weight="600">202 lines (4.0x)</text>
+                <rect x="175" y="101" width="117" height="14" rx="3" fill="#d29922"/>
+                <text x="299" y="113" fill="#d29922" font-size="10" font-weight="600">118 lines</text>
+                <rect x="175" y="136" width="115" height="14" rx="3" fill="#d29922"/>
+                <text x="297" y="148" fill="#d29922" font-size="10" font-weight="600">116 lines</text>
+                <rect x="175" y="171" width="88" height="14" rx="3" fill="#d29922"/>
+                <text x="270" y="183" fill="#d29922" font-size="10" font-weight="600">89 lines</text>
+                <rect x="175" y="206" width="81" height="14" rx="3" fill="#d29922"/>
+                <text x="263" y="218" fill="#d29922" font-size="10" font-weight="600">82 lines</text>
+                <line x1="225" y1="24" x2="225" y2="235" stroke="#3fb950" stroke-width="2" stroke-dasharray="6,3"/>
+                <text x="230" y="22" fill="#3fb950" font-size="9">50-line limit</text>
+            </svg>
+        </div>
 
-  <table>
-    <tr><th>ID</th><th>行动</th><th>优</th><th>工时</th></tr>
-    <tr><td>A5.1</td><td>拆分 page_setting() → 5 个面板子函数</td><td><span class="badge critical">P0</span></td><td>4h</td></tr>
-    <tr><td>A5.2</td><td>拆分 _render_download_ui() → 4 个子函数</td><td><span class="badge critical">P0</span></td><td>3h</td></tr>
-  </table>
-</div>
+        <table>
+            <tr><th>ID</th><th>Action</th><th>Priority</th><th>Hours</th></tr>
+            <tr><td>A5.1</td><td>Split page_setting() → 5 panel sub-functions</td><td><span class="badge badge-critical">P0</span></td><td>4h</td></tr>
+            <tr><td>A5.2</td><td>Split _render_download_ui() → 4 sub-functions</td><td><span class="badge badge-critical">P0</span></td><td>3h</td></tr>
+        </table>
+    </section>
 
-<!-- ===== D6: 注释 ===== -->
-<div class="section" id="sec7">
-  <h2><span class="num">7</span> D6 注释与文档化 <span class="badge high">30/100 D</span></h2>
+    <!-- ═══════════════ §7 D6: COMMENTS & DOCS ═══════════════ -->
+    <section class="section" id="sec7">
+        <h2><span class="section-num">7</span> {{ dimLabels.d6.name }} <span :class="'badge ' + dimLabels.d6.badgeStyle">{{ dimLabels.d6.score }}</span></h2>
 
-  <!-- 评分 -->
-  <h3>📊 评分</h3>
-  <table>
-    <tr><th>子指标</th><th>权重</th><th>实测值</th><th>目标值</th><th>得分</th></tr>
-    <tr><td>总注释率</td><td>30%</td><td>6.2%</td><td>10-30%</td><td><span class="badge critical">15</span></td></tr>
-    <tr><td>零注释文件占比</td><td>25%</td><td>14.3% (9/63)</td><td>&lt; 5%</td><td><span class="badge critical">20</span></td></tr>
-    <tr><td>模块 docstring 覆盖率</td><td>20%</td><td>12.7% (8/63)</td><td>> 50%</td><td><span class="badge critical">10</span></td></tr>
-    <tr><td>函数 docstring 覆盖率</td><td>25%</td><td>10.7% (25/234)</td><td>> 60%</td><td><span class="badge critical">8</span></td></tr>
-    <tr style="font-weight:600;"><td colspan="3">加权总分</td><td></td><td><span class="badge high">30 D</span></td></tr>
-  </table>
+        <h3>Score</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Sub-Indicator</th><th>Weight</th><th>Measured</th><th>Target</th><th>Score</th></tr>
+                <tr><td>Overall comment rate</td><td>30%</td><td>6.2%</td><td>10-30%</td><td><span class="badge badge-critical">15</span></td></tr>
+                <tr><td>Zero-comment file ratio</td><td>25%</td><td>14.3% (9/63)</td><td>&lt; 5%</td><td><span class="badge badge-critical">20</span></td></tr>
+                <tr><td>Module docstring coverage</td><td>20%</td><td>12.7% (8/63)</td><td>&gt; 50%</td><td><span class="badge badge-critical">10</span></td></tr>
+                <tr><td>Function docstring coverage</td><td>25%</td><td>10.7% (25/234)</td><td>&gt; 60%</td><td><span class="badge badge-critical">8</span></td></tr>
+                <tr style="font-weight:600;"><td colspan="3">Weighted Total</td><td></td><td><span class="badge badge-high">30 D</span></td></tr>
+            </table>
+        </div>
 
-  <!-- 分析 -->
-  <h3>🔍 分析</h3>
-  <p>6.2% 的注释率仅为行业标准下限的 60%。更严重的是 docstring 覆盖率仅 10.7%——意味着 90% 的函数没有参数说明、返回值说明或使用示例。对于 AI/ML 管线项目，注释应重点解释<strong>设计决策（Why）</strong>而非代码逻辑（What）。</p>
-  <div class="callout info">
-    <strong>9 个零注释文件：</strong>whisperX_302.py (68行), _4_1_summarize.py (70行), video_processor.py (104行), fish_tts.py (40行), azure_tts.py (23行), delete_retry_dubbing.py (30行), setup.py (14行), _3_1_split_nlp.py (14行), spacy_utils/__init__.py (13行)
-  </div>
+        <h3>Analysis</h3>
+        <p>6.2% comment rate is only 60% of industry standard minimum. More critically, docstring coverage is only 10.7% — meaning 90% of functions lack parameter documentation, return value documentation, or usage examples. For AI/ML pipeline projects, comments should focus on explaining <strong>design decisions (Why)</strong> rather than code logic (What).</p>
+        <div class="callout callout-warning" style="border-left-color: #58a6ff; background: rgba(88,166,255,0.06);">
+            <strong>9 zero-comment files:</strong> whisperX_302.py (68 lines), _4_1_summarize.py (70 lines), video_processor.py (104 lines), fish_tts.py (40 lines), azure_tts.py (23 lines), delete_retry_dubbing.py (30 lines), setup.py (14 lines), _3_1_split_nlp.py (14 lines), spacy_utils/__init__.py (13 lines)
+        </div>
 
-  <table>
-    <tr><th>ID</th><th>行动</th><th>优</th><th>工时</th></tr>
-    <tr><td>A6.1</td><td>为 9 个零注释文件添加 docstring</td><td><span class="badge high">P1</span></td><td>3h</td></tr>
-    <tr><td>A6.2</td><td>管线步骤（_1~_12）添加输入/输出/依赖说明</td><td><span class="badge high">P2</span></td><td>4h</td></tr>
-  </table>
-</div>
+        <table>
+            <tr><th>ID</th><th>Action</th><th>Priority</th><th>Hours</th></tr>
+            <tr><td>A6.1</td><td>Add docstrings to 9 zero-comment files</td><td><span class="badge badge-high">P1</span></td><td>3h</td></tr>
+            <tr><td>A6.2</td><td>Add I/O/dependency documentation to pipeline steps (_1~_12)</td><td><span class="badge badge-high">P2</span></td><td>4h</td></tr>
+        </table>
+    </section>
 
-<!-- ===== D7: 导入耦合 ===== -->
-<div class="section" id="sec8">
-  <h2><span class="num">8</span> D7 导入规范与模块耦合 <span class="badge critical">15/100 F</span></h2>
+    <!-- ═══════════════ §8 D7: IMPORT COUPLING ═══════════════ -->
+    <section class="section" id="sec8">
+        <h2><span class="section-num">8</span> {{ dimLabels.d7.name }} <span :class="'badge ' + dimLabels.d7.badgeStyle">{{ dimLabels.d7.score }}</span></h2>
 
-  <!-- 评分 -->
-  <h3>📊 评分</h3>
-  <table>
-    <tr><th>子指标</th><th>权重</th><th>实测值</th><th>目标值</th><th>得分</th></tr>
-    <tr><td>Star import 文件占比</td><td>40%</td><td>58.7% (37/63)</td><td>0%</td><td><span class="badge critical">0</span></td></tr>
-    <tr><td>核心模块被依赖数</td><td>25%</td><td>38 个模块依赖 core.utils</td><td>&lt; 10</td><td><span class="badge critical">5</span></td></tr>
-    <tr><td>重复导入实例</td><td>15%</td><td>6 处</td><td>0</td><td><span class="badge high">30</span></td></tr>
-    <tr><td>可能未使用导入</td><td>10%</td><td>3 处</td><td>0</td><td><span class="badge high">40</span></td></tr>
-    <tr><td>导入组织规范性</td><td>10%</td><td>混乱</td><td>isort 排序</td><td><span class="badge critical">10</span></td></tr>
-    <tr style="font-weight:600;"><td colspan="3">加权总分</td><td></td><td><span class="badge critical">15 F</span></td></tr>
-  </table>
+        <h3>Score</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Sub-Indicator</th><th>Weight</th><th>Measured</th><th>Target</th><th>Score</th></tr>
+                <tr><td>Star import file ratio</td><td>40%</td><td>58.7% (37/63)</td><td>0%</td><td><span class="badge badge-critical">0</span></td></tr>
+                <tr><td>Core module dependency count</td><td>25%</td><td>38 modules depend on core.utils</td><td>&lt; 10</td><td><span class="badge badge-critical">5</span></td></tr>
+                <tr><td>Duplicate import instances</td><td>15%</td><td>6 occurrences</td><td>0</td><td><span class="badge badge-high">30</span></td></tr>
+                <tr><td>Potentially unused imports</td><td>10%</td><td>3 occurrences</td><td>0</td><td><span class="badge badge-high">40</span></td></tr>
+                <tr><td>Import organization standardization</td><td>10%</td><td>Chaotic</td><td>isort ordering</td><td><span class="badge badge-critical">10</span></td></tr>
+                <tr style="font-weight:600;"><td colspan="3">Weighted Total</td><td></td><td><span class="badge badge-critical">15 F</span></td></tr>
+            </table>
+        </div>
 
-  <!-- 分析 -->
-  <h3>🔍 分析</h3>
-  <div class="callout critical">
-    <strong>这是项目的 #1 架构风险。37/63 文件使用 star import，是所有其他质量问题的放大器。</strong><br><br>
-    star import 使 mypy 完全失效；IDE 无法精确跳转；修改 core.utils 的爆炸半径未知。<br>
-    消除 star import 是<strong>解锁 ruff、mypy、radon 等所有自动化工具的前提条件</strong>。
-  </div>
+        <h3>Analysis</h3>
+        <div class="callout callout-warning" style="border-left-color: #f85149; background: rgba(248,81,73,0.06);">
+            <strong>This is the project's #1 architectural risk. 37/63 files use star imports — the amplifier of all other quality problems.</strong><br><br>
+            Star imports completely disable mypy; IDE cannot precisely navigate; modifying core.utils has an unknown blast radius.<br>
+            Eliminating star imports is <strong>the prerequisite for unlocking all automated tools: ruff, mypy, radon, etc.</strong>
+        </div>
 
-  <!-- 图表 -->
-  <h3>📈 图表</h3>
-  <div class="full-chart">
-    <h4>模块依赖星型反模式</h4>
-    <svg width="640" height="320" viewBox="0 0 640 320">
-      <!-- Center: core.utils -->
-      <circle cx="280" cy="160" r="35" fill="#f85149" opacity="0.9"/>
-      <text x="280" y="156" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">core.</text>
-      <text x="280" y="170" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">utils</text>
-      <text x="280" y="210" text-anchor="middle" fill="#f85149" font-size="10">38 个模块依赖</text>
+        <h3>Charts</h3>
+        <div class="full-chart">
+            <h4>Module Dependency Star Anti-Pattern</h4>
+            <svg width="640" height="320" viewBox="0 0 640 320">
+                <circle cx="280" cy="160" r="35" fill="#f85149" opacity="0.9"/>
+                <text x="280" y="156" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">core.</text>
+                <text x="280" y="170" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">utils</text>
+                <text x="280" y="210" text-anchor="middle" fill="#f85149" font-size="10">38 modules depend on it</text>
+                <g font-size="7" fill="#8b949e">
+                    <circle cx="280" cy="40" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="280" y="43" text-anchor="middle" fill="#fff" font-size="7">_1</text>
+                    <circle cx="360" cy="55" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="360" y="58" text-anchor="middle" fill="#fff" font-size="7">_2</text>
+                    <circle cx="420" cy="90" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="420" y="93" text-anchor="middle" fill="#fff" font-size="7">_3</text>
+                    <circle cx="450" cy="160" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="450" y="163" text-anchor="middle" fill="#fff" font-size="7">_4</text>
+                    <circle cx="420" cy="230" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="420" y="233" text-anchor="middle" fill="#fff" font-size="7">_5</text>
+                    <circle cx="480" cy="120" r="16" fill="#58a6ff" opacity="0.7"/>
+                    <text x="480" y="123" text-anchor="middle" fill="#fff" font-size="7">st.py</text>
+                    <circle cx="360" cy="270" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="360" y="273" text-anchor="middle" fill="#fff" font-size="7">batch</text>
+                    <circle cx="140" cy="230" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="140" y="233" text-anchor="middle" fill="#fff" font-size="7">edge</text>
+                    <circle cx="100" cy="160" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="100" y="163" text-anchor="middle" fill="#fff" font-size="7">azure</text>
+                    <circle cx="140" cy="90" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="140" y="93" text-anchor="middle" fill="#fff" font-size="7">openai</text>
+                    <circle cx="200" cy="50" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="200" y="53" text-anchor="middle" fill="#fff" font-size="7">fish</text>
+                    <circle cx="90" cy="55" r="14" fill="#d29922" opacity="0.7"/>
+                    <text x="90" y="58" text-anchor="middle" fill="#fff" font-size="7">sf</text>
+                </g>
+                <g stroke="#30363d" stroke-width="0.6" opacity="0.5">
+                    <line x1="295" y1="130" x2="280" y2="54"/>
+                    <line x1="310" y1="140" x2="360" y2="68"/>
+                    <line x1="315" y1="155" x2="410" y2="100"/>
+                    <line x1="312" y1="170" x2="438" y2="165"/>
+                    <line x1="308" y1="185" x2="412" y2="225"/>
+                    <line x1="280" y1="195" x2="360" y2="258"/>
+                    <line x1="265" y1="195" x2="155" y2="225"/>
+                    <line x1="248" y1="185" x2="112" y2="168"/>
+                    <line x1="248" y1="140" x2="152" y2="100"/>
+                    <line x1="265" y1="130" x2="200" y2="62"/>
+                    <line x1="250" y1="130" x2="102" y2="68"/>
+                    <line x1="290" y1="130" x2="468" y2="125"/>
+                </g>
+                <text x="480" y="280" fill="#8b949e" font-size="9">Modules depending on core.utils</text>
+                <text x="520" y="300" fill="#8b949e" font-size="8">Source: from core.utils import *</text>
+                <rect x="30" y="275" width="200" height="35" rx="4" fill="rgba(248,81,73,0.1)" stroke="#f85149" stroke-width="1"/>
+                <text x="130" y="295" text-anchor="middle" fill="#fff" font-size="18" font-weight="800">37 / 63</text>
+                <text x="130" y="307" text-anchor="middle" fill="#f85149" font-size="8">files use star import</text>
+            </svg>
+        </div>
 
-      <!-- Orbiting modules -->
-      <g font-size="7" fill="#8b949e">
-        <!-- Top layer: pipeline steps -->
-        <circle cx="280" cy="40" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="280" y="43" text-anchor="middle" fill="#fff" font-size="7">_1</text>
-        <circle cx="360" cy="55" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="360" y="58" text-anchor="middle" fill="#fff" font-size="7">_2</text>
-        <circle cx="420" cy="90" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="420" y="93" text-anchor="middle" fill="#fff" font-size="7">_3</text>
-        <circle cx="450" cy="160" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="450" y="163" text-anchor="middle" fill="#fff" font-size="7">_4</text>
-        <circle cx="420" cy="230" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="420" y="233" text-anchor="middle" fill="#fff" font-size="7">_5</text>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h4>Star Import Usage Distribution</h4>
+                <svg width="460" height="170" viewBox="0 0 460 170">
+                    <rect x="20" y="30" width="130" height="110" rx="6" fill="rgba(248,81,73,0.15)" stroke="#f85149" stroke-width="1.5"/>
+                    <text x="85" y="75" text-anchor="middle" fill="#f85149" font-size="28" font-weight="800">26</text>
+                    <text x="85" y="95" text-anchor="middle" fill="#8b949e" font-size="8">from core.utils</text>
+                    <text x="85" y="107" text-anchor="middle" fill="#8b949e" font-size="8">import *</text>
+                    <rect x="165" y="30" width="110" height="110" rx="6" fill="rgba(248,81,73,0.12)" stroke="#f85149" stroke-width="1"/>
+                    <text x="220" y="75" text-anchor="middle" fill="#f85149" font-size="28" font-weight="800">14</text>
+                    <text x="220" y="95" text-anchor="middle" fill="#8b949e" font-size="8">from core.utils</text>
+                    <text x="220" y="107" text-anchor="middle" fill="#8b949e" font-size="8">.models import *</text>
+                    <rect x="290" y="30" width="80" height="110" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
+                    <text x="330" y="75" text-anchor="middle" fill="#d29922" font-size="28" font-weight="800">2</text>
+                    <text x="330" y="95" text-anchor="middle" fill="#8b949e" font-size="8">from core</text>
+                    <text x="330" y="107" text-anchor="middle" fill="#8b949e" font-size="8">import *</text>
+                    <rect x="385" y="30" width="60" height="110" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
+                    <text x="415" y="75" text-anchor="middle" fill="#d29922" font-size="28" font-weight="800">2</text>
+                    <text x="415" y="95" text-anchor="middle" fill="#8b949e" font-size="8">other</text>
+                    <text x="415" y="107" text-anchor="middle" fill="#8b949e" font-size="8">*</text>
+                </svg>
+            </div>
+            <div class="chart-card">
+                <h4>Star Import Migration Progress</h4>
+                <svg width="460" height="170" viewBox="0 0 460 170">
+                    <rect x="30" y="50" width="300" height="40" rx="6" fill="#f85149" opacity="0.8"/>
+                    <text x="180" y="75" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Current: 37 files (58.7%)</text>
+                    <rect x="30" y="100" width="200" height="30" rx="6" fill="#d29922" opacity="0.7"/>
+                    <text x="130" y="120" text-anchor="middle" fill="#000" font-size="11" font-weight="600">After Phase 1: 17 files</text>
+                    <rect x="240" y="100" width="80" height="30" rx="6" fill="#58a6ff" opacity="0.7"/>
+                    <text x="280" y="120" text-anchor="middle" fill="#fff" font-size="11" font-weight="600">Phase 2: 2</text>
+                    <rect x="330" y="100" width="100" height="30" rx="6" fill="#3fb950" opacity="0.7"/>
+                    <text x="380" y="120" text-anchor="middle" fill="#000" font-size="11" font-weight="600">Phase 3: 0</text>
+                    <text x="30" y="42" fill="#8b949e" font-size="9">Migration path:</text>
+                </svg>
+            </div>
+        </div>
 
-        <!-- Right: ui -->
-        <circle cx="480" cy="120" r="16" fill="#58a6ff" opacity="0.7"/>
-        <text x="480" y="123" text-anchor="middle" fill="#fff" font-size="7">st.py</text>
-
-        <!-- Bottom: batch -->
-        <circle cx="360" cy="270" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="360" y="273" text-anchor="middle" fill="#fff" font-size="7">batch</text>
-
-        <!-- Left: backends -->
-        <circle cx="140" cy="230" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="140" y="233" text-anchor="middle" fill="#fff" font-size="7">edge</text>
-        <circle cx="100" cy="160" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="100" y="163" text-anchor="middle" fill="#fff" font-size="7">azure</text>
-        <circle cx="140" cy="90" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="140" y="93" text-anchor="middle" fill="#fff" font-size="7">openai</text>
-
-        <!-- More backends -->
-        <circle cx="200" cy="50" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="200" y="53" text-anchor="middle" fill="#fff" font-size="7">fish</text>
-        <circle cx="90" cy="55" r="14" fill="#d29922" opacity="0.7"/>
-        <text x="90" y="58" text-anchor="middle" fill="#fff" font-size="7">sf</text>
-
-        <!-- Lines from center to modules -->
-        <g stroke="#30363d" stroke-width="0.6" opacity="0.5">
-          <line x1="295" y1="130" x2="280" y2="54"/>
-          <line x1="310" y1="140" x2="360" y2="68"/>
-          <line x1="315" y1="155" x2="410" y2="100"/>
-          <line x1="312" y1="170" x2="438" y2="165"/>
-          <line x1="308" y1="185" x2="412" y2="225"/>
-          <line x1="280" y1="195" x2="360" y2="258"/>
-          <line x1="265" y1="195" x2="155" y2="225"/>
-          <line x1="248" y1="185" x2="112" y2="168"/>
-          <line x1="248" y1="140" x2="152" y2="100"/>
-          <line x1="265" y1="130" x2="200" y2="62"/>
-          <line x1="250" y1="130" x2="102" y2="68"/>
-          <line x1="290" y1="130" x2="468" y2="125"/>
-        </g>
-      </g>
-      <!-- Legend -->
-      <text x="480" y="280" fill="#8b949e" font-size="9">依赖 core.utils 的模块</text>
-      <text x="520" y="300" fill="#8b949e" font-size="8">来源: from core.utils import *</text>
-
-      <!-- Star import stats -->
-      <rect x="30" y="275" width="200" height="35" rx="4" fill="rgba(248,81,73,0.1)" stroke="#f85149" stroke-width="1"/>
-      <text x="130" y="295" text-anchor="middle" fill="#fff" font-size="18" font-weight="800">37 / 63</text>
-      <text x="130" y="307" text-anchor="middle" fill="#f85149" font-size="8">文件使用 star import</text>
-    </svg>
-  </div>
-
-  <div class="chart-grid">
-    <div class="chart-card">
-      <h4>Star Import 使用分布</h4>
-      <svg width="460" height="170" viewBox="0 0 460 170">
-        <rect x="20" y="30" width="130" height="110" rx="6" fill="rgba(248,81,73,0.15)" stroke="#f85149" stroke-width="1.5"/>
-        <text x="85" y="75" text-anchor="middle" fill="#f85149" font-size="28" font-weight="800">26</text>
-        <text x="85" y="95" text-anchor="middle" fill="#8b949e" font-size="8">from core.utils</text>
-        <text x="85" y="107" text-anchor="middle" fill="#8b949e" font-size="8">import *</text>
-
-        <rect x="165" y="30" width="110" height="110" rx="6" fill="rgba(248,81,73,0.12)" stroke="#f85149" stroke-width="1"/>
-        <text x="220" y="75" text-anchor="middle" fill="#f85149" font-size="28" font-weight="800">14</text>
-        <text x="220" y="95" text-anchor="middle" fill="#8b949e" font-size="8">from core.utils</text>
-        <text x="220" y="107" text-anchor="middle" fill="#8b949e" font-size="8">.models import *</text>
-
-        <rect x="290" y="30" width="80" height="110" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
-        <text x="330" y="75" text-anchor="middle" fill="#d29922" font-size="28" font-weight="800">2</text>
-        <text x="330" y="95" text-anchor="middle" fill="#8b949e" font-size="8">from core</text>
-        <text x="330" y="107" text-anchor="middle" fill="#8b949e" font-size="8">import *</text>
-
-        <rect x="385" y="30" width="60" height="110" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
-        <text x="415" y="75" text-anchor="middle" fill="#d29922" font-size="28" font-weight="800">2</text>
-        <text x="415" y="95" text-anchor="middle" fill="#8b949e" font-size="8">other</text>
-        <text x="415" y="107" text-anchor="middle" fill="#8b949e" font-size="8">*</text>
-      </svg>
-    </div>
-
-    <div class="chart-card">
-      <h4>Star Import 迁移进度</h4>
-      <svg width="460" height="170" viewBox="0 0 460 170">
-        <!-- Pie-like using stacked bar -->
-        <rect x="30" y="50" width="300" height="40" rx="6" fill="#f85149" opacity="0.8"/>
-        <text x="180" y="75" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">当前：37 文件使用 star import (58.7%)</text>
-
-        <rect x="30" y="100" width="200" height="30" rx="6" fill="#d29922" opacity="0.7"/>
-        <text x="130" y="120" text-anchor="middle" fill="#000" font-size="11" font-weight="600">阶段1后：17 文件</text>
-
-        <rect x="240" y="100" width="80" height="30" rx="6" fill="#58a6ff" opacity="0.7"/>
-        <text x="280" y="120" text-anchor="middle" fill="#fff" font-size="11" font-weight="600">阶段2后：2</text>
-
-        <rect x="330" y="100" width="100" height="30" rx="6" fill="#3fb950" opacity="0.7"/>
-        <text x="380" y="120" text-anchor="middle" fill="#000" font-size="11" font-weight="600">阶段3后：0</text>
-
-        <text x="30" y="42" fill="#8b949e" font-size="9">迁移路径：</text>
-      </svg>
-    </div>
-  </div>
-
-  <h3>📋 好/坏对比</h3>
-  <div class="compare">
-    <div class="bad">
-      <div class="label">❌ 37 个文件的模式</div>
-      <pre><code>from core.utils import *        # 导入什么？不知道
-from core.utils.models import * # 污染命名空间
-# result 从哪来的？无法追溯
-# mypy 完全失效</code></pre>
-    </div>
-    <div class="good">
-      <div class="label">✅ 显式导入</div>
-      <pre><code>from core.utils.config_utils import load_config
+        <h3>Good/Bad Comparison</h3>
+        <div class="compare">
+            <div class="compare-bad">
+                <div class="compare-label">Bad: Pattern in 37 files</div>
+                <pre><code>from core.utils import *        # what is imported? Unknown
+from core.utils.models import * # namespace pollution
+# Where does 'result' come from? Untraceable
+# mypy completely disabled</code></pre>
+            </div>
+            <div class="compare-good">
+                <div class="compare-label">Good: Explicit imports</div>
+                <pre><code>from core.utils.config_utils import load_config
 from core.utils.models import SubtitleItem
 from core.utils.ask_gpt import ask_gpt
-# 每个名字来源可追溯
-# mypy/ruff 可精确检查
-# IDE 跳转定义精确</code></pre>
-    </div>
-  </div>
+# Every name source is traceable
+# mypy/ruff can precisely check
+# IDE navigation is exact</code></pre>
+            </div>
+        </div>
 
-  <table>
-    <tr><th>ID</th><th>行动</th><th>优</th><th>工时</th></tr>
-    <tr><td>A7.1</td><td>阶段A: 12 个管线文件消除 star import</td><td><span class="badge critical">P0</span></td><td>3h</td></tr>
-    <tr><td>A7.2</td><td>阶段B: 17 个后端文件消除 star import</td><td><span class="badge critical">P0</span></td><td>3h</td></tr>
-    <tr><td>A7.3</td><td>阶段C: 重构 core/__init__.py 显式 __all__</td><td><span class="badge critical">P0</span></td><td>2h</td></tr>
-    <tr><td>A7.4</td><td>阶段D: CI 添加 ruff F403/F405 禁止 star import</td><td><span class="badge high">P1</span></td><td>0.5h</td></tr>
-  </table>
-</div>
+        <div class="table-wrap">
+            <table>
+                <tr><th>ID</th><th>Action</th><th>Priority</th><th>Hours</th></tr>
+                <tr><td>A7.1</td><td>Phase A: Remove star import from 12 pipeline files</td><td><span class="badge badge-critical">P0</span></td><td>3h</td></tr>
+                <tr><td>A7.2</td><td>Phase B: Remove star import from 17 backend files</td><td><span class="badge badge-critical">P0</span></td><td>3h</td></tr>
+                <tr><td>A7.3</td><td>Phase C: Refactor core/__init__.py with explicit __all__</td><td><span class="badge badge-critical">P0</span></td><td>2h</td></tr>
+                <tr><td>A7.4</td><td>Phase D: Add ruff F403/F405 CI check to ban star import</td><td><span class="badge badge-high">P1</span></td><td>0.5h</td></tr>
+            </table>
+        </div>
+    </section>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!--  §9 根因分析                                  -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="section" id="sec9">
-  <h2><span class="num">9</span> 根因分析：问题因果链</h2>
+    <!-- ═══════════════ §9 ROOT CAUSE ═══════════════ -->
+    <section class="section" id="sec9">
+        <h2><span class="section-num">{{ rootCause.num }}</span> {{ rootCause.heading }}</h2>
 
-  <h3>📊 因果追溯</h3>
-  <div class="full-chart">
-    <h4>问题传播图</h4>
-    <svg width="720" height="330" viewBox="0 0 720 330">
-      <!-- Root cause -->
-      <rect x="260" y="15" width="200" height="45" rx="8" fill="#f85149" opacity="0.85"/>
-      <text x="360" y="35" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">🔴 Star Import 泛滥</text>
-      <text x="360" y="50" text-anchor="middle" fill="#fff" font-size="9">37/63 文件 (58.7%)</text>
+        <h3>Causal Trace</h3>
+        <div class="full-chart">
+            <h4>Problem Propagation Diagram</h4>
+            <svg width="720" height="330" viewBox="0 0 720 330">
+                <defs>
+                    <marker id="arrowRed" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 Z" fill="#f85149"/>
+                    </marker>
+                </defs>
+                <rect x="260" y="15" width="200" height="45" rx="8" fill="#f85149" opacity="0.85"/>
+                <text x="360" y="35" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Star Import Proliferation</text>
+                <text x="360" y="50" text-anchor="middle" fill="#fff" font-size="9">37/63 files (58.7%)</text>
+                <line x1="360" y1="60" x2="360" y2="85" stroke="#f85149" stroke-width="2" marker-end="url(#arrowRed)"/>
+                <rect x="230" y="85" width="260" height="30" rx="6" fill="rgba(248,81,73,0.2)" stroke="#f85149" stroke-width="1"/>
+                <text x="360" y="104" text-anchor="middle" fill="#f85149" font-size="9">Cannot introduce static analysis tools (mypy / ruff)</text>
+                <line x1="360" y1="115" x2="360" y2="140" stroke="#d29922" stroke-width="1.5"/>
+                <line x1="360" y1="140" x2="120" y2="165" stroke="#d29922" stroke-width="1.2"/>
+                <line x1="360" y1="140" x2="360" y2="160" stroke="#d29922" stroke-width="1.2"/>
+                <line x1="360" y1="140" x2="580" y2="160" stroke="#d29922" stroke-width="1.2"/>
+                <rect x="20" y="160" width="200" height="45" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
+                <text x="120" y="180" text-anchor="middle" fill="#d29922" font-size="9">Duplicate code undetectable</text>
+                <text x="120" y="194" text-anchor="middle" fill="#8b949e" font-size="8">→ accumulated to ~130 lines</text>
+                <rect x="260" y="160" width="200" height="45" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
+                <text x="360" y="180" text-anchor="middle" fill="#d29922" font-size="9">Naming/comment issues no lint urging</text>
+                <text x="360" y="194" text-anchor="middle" fill="#8b949e" font-size="8">→ 50+ vague names</text>
+                <rect x="500" y="160" width="200" height="45" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
+                <text x="600" y="180" text-anchor="middle" fill="#d29922" font-size="9">Developers fear refactoring</text>
+                <text x="600" y="194" text-anchor="middle" fill="#8b949e" font-size="8">→ functions keep bloating</text>
+                <line x1="600" y1="205" x2="600" y2="230" stroke="#f85149" stroke-width="1.2"/>
+                <rect x="480" y="230" width="240" height="35" rx="6" fill="rgba(248,81,73,0.15)" stroke="#f85149" stroke-width="1"/>
+                <text x="600" y="250" text-anchor="middle" fill="#f85149" font-size="9">page_setting() 302 lines | tts_main elif 11 deep</text>
+                <text x="600" y="262" text-anchor="middle" fill="#8b949e" font-size="7">Quality cannot regress → vicious cycle</text>
+                <rect x="10" y="240" width="220" height="40" rx="6" fill="rgba(210,153,34,0.15)" stroke="#d29922" stroke-width="1"/>
+                <text x="120" y="258" text-anchor="middle" fill="#d29922" font-size="9">Rapid iteration over architecture</text>
+                <text x="120" y="272" text-anchor="middle" fill="#8b949e" font-size="7">Copy TTS backend → each engine duplicates</text>
+                <rect x="250" y="265" width="220" height="50" rx="6" fill="rgba(58,166,255,0.1)" stroke="#58a6ff" stroke-width="1"/>
+                <text x="360" y="283" text-anchor="middle" fill="#58a6ff" font-size="9">Streamlit framework encourages anti-pattern</text>
+                <text x="360" y="297" text-anchor="middle" fill="#8b949e" font-size="7">Declarative API → all widgets in one function</text>
+                <text x="360" y="310" text-anchor="middle" fill="#8b949e" font-size="7">No framework-level constraint against bloat</text>
+            </svg>
+        </div>
 
-      <!-- Arrow down -->
-      <line x1="360" y1="60" x2="360" y2="85" stroke="#f85149" stroke-width="2" marker-end="url(#arrowRed)"/>
+        <h3>{{ rootCause.summaryTitle }}</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>#</th><th>Root Cause</th><th>Severity</th><th>Impact Scope</th></tr>
+                <tr><td>1</td><td><strong>Star Import blocks automated quality assurance</strong> — prevents introducing ruff/mypy tools; all other problems lack auto-detection and regression</td><td><span class="badge badge-critical">P0</span></td><td>Global 37/63 files</td></tr>
+                <tr><td>2</td><td><strong>"Copy-paste" development pattern</strong> — copy existing implementation when adding new TTS/ASR backend, leading to duplication accumulation</td><td><span class="badge badge-high">P1</span></td><td>TTS/ASR backends</td></tr>
+                <tr><td>3</td><td><strong>Streamlit lacks architectural constraints</strong> — framework encourages putting all widgets in one function, no natural module boundaries</td><td><span class="badge badge-high">P1</span></td><td>UI files</td></tr>
+                <tr><td>4</td><td><strong>Missing CI quality gate</strong> — no linting, type checking, complexity checking; problems found manually</td><td><span class="badge badge-high">P2</span></td><td>Global</td></tr>
+            </table>
+        </div>
+    </section>
 
-      <rect x="230" y="85" width="260" height="30" rx="6" fill="rgba(248,81,73,0.2)" stroke="#f85149" stroke-width="1"/>
-      <text x="360" y="104" text-anchor="middle" fill="#f85149" font-size="9">无法引入静态分析工具 (mypy / ruff)</text>
+    <!-- ═══════════════ §10 IMPROVEMENT PLAN ═══════════════ -->
+    <section class="section" id="sec10">
+        <h2><span class="section-num">{{ improvement.num }}</span> {{ improvement.heading }}</h2>
 
-      <!-- Fan out arrows -->
-      <line x1="360" y1="115" x2="360" y2="140" stroke="#d29922" stroke-width="1.5"/>
-      <line x1="360" y1="140" x2="120" y2="165" stroke="#d29922" stroke-width="1.2"/>
-      <line x1="360" y1="140" x2="360" y2="160" stroke="#d29922" stroke-width="1.2"/>
-      <line x1="360" y1="140" x2="580" y2="160" stroke="#d29922" stroke-width="1.2"/>
+        <h3>{{ improvement.priorityTitle }}</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Priority</th><th>Definition</th><th>Count</th><th>Total Hours</th></tr>
+                <tr><td><span class="badge badge-critical">P0 Immediate</span></td><td>Blocking risk, prevents all other improvements</td><td>8 items</td><td>~22h</td></tr>
+                <tr><td><span class="badge badge-high">P1 High</span></td><td>Significantly impacts maintainability</td><td>8 items</td><td>~16h</td></tr>
+                <tr><td><span class="badge badge-medium">P2 Medium</span></td><td>Improves readability and developer experience</td><td>3 items</td><td>~8h</td></tr>
+                <tr><td><span class="badge badge-low">P3-P4</span></td><td>Nice-to-have, continuous improvement</td><td>7 items</td><td>~10h</td></tr>
+            </table>
+        </div>
 
-      <!-- Consequences -->
-      <rect x="20" y="160" width="200" height="45" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
-      <text x="120" y="180" text-anchor="middle" fill="#d29922" font-size="9">重复代码无法自动检测</text>
-      <text x="120" y="194" text-anchor="middle" fill="#8b949e" font-size="8">→ 积累到 ~130 行</text>
+        <h3>{{ improvement.ganttTitle }}</h3>
+        <div class="full-chart">
+            <h4>4-Phase Delivery Roadmap</h4>
+            <svg width="720" height="400" viewBox="0 0 720 400">
+                <rect x="140" y="20" width="130" height="28" rx="4" fill="#f85149" opacity="0.8"/>
+                <text x="205" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">P0 Stop Bleeding W1-2</text>
+                <rect x="278" y="20" width="130" height="28" rx="4" fill="#d29922" opacity="0.8"/>
+                <text x="343" y="39" text-anchor="middle" fill="#000" font-size="10" font-weight="700">P1 Fix W3-4</text>
+                <rect x="416" y="20" width="110" height="28" rx="4" fill="#58a6ff" opacity="0.7"/>
+                <text x="471" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">P2 Consolidate W5-6</text>
+                <rect x="534" y="20" width="160" height="28" rx="4" fill="#3fb950" opacity="0.7"/>
+                <text x="614" y="39" text-anchor="middle" fill="#000" font-size="10" font-weight="700">P3+ Continuous W7+</text>
+                <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="3,3">
+                    <line x1="140" y1="55" x2="140" y2="380"/>
+                    <line x1="278" y1="55" x2="278" y2="380"/>
+                    <line x1="416" y1="55" x2="416" y2="380"/>
+                    <line x1="534" y1="55" x2="534" y2="380"/>
+                </g>
+                <g font-size="8" fill="#8b949e" text-anchor="start">
+                    <text x="140" y="68">W1</text><text x="190" y="68">W2</text>
+                    <text x="278" y="68">W3</text><text x="328" y="68">W4</text>
+                    <text x="416" y="68">W5</text><text x="466" y="68">W6</text>
+                    <text x="534" y="68">W7+</text>
+                </g>
+                <!-- P0 bars -->
+                <rect x="142" y="78" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/>
+                <text x="280" y="90" fill="#8b949e" font-size="8">A2.1 Eliminate TTS duplication 2h</text>
+                <rect x="142" y="96" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/>
+                <text x="280" y="108" fill="#8b949e" font-size="8">A2.2 Eliminate subtitle duplication 1.5h</text>
+                <rect x="142" y="114" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/>
+                <text x="280" y="126" fill="#8b949e" font-size="8">A4.1 tts_main strategy pattern 3h</text>
+                <rect x="142" y="132" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/>
+                <text x="280" y="144" fill="#8b949e" font-size="8">A7.1/A7.2 Remove star imports 6h</text>
+                <rect x="190" y="150" width="82" height="14" rx="3" fill="#f85149" opacity="0.85"/>
+                <text x="280" y="162" fill="#8b949e" font-size="8">A7.3 core/__init__ refactor 2h</text>
+                <rect x="190" y="168" width="82" height="14" rx="3" fill="#f85149" opacity="0.85"/>
+                <text x="280" y="180" fill="#8b949e" font-size="8">A5.1 Split page_setting 4h</text>
+                <rect x="190" y="186" width="82" height="14" rx="3" fill="#f85149" opacity="0.85"/>
+                <text x="280" y="198" fill="#8b949e" font-size="8">A5.2 Split download_ui 3h</text>
+                <!-- P1 bars -->
+                <rect x="280" y="216" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/>
+                <text x="420" y="228" fill="#8b949e" font-size="8">A2.3 ASR audio loader 1.5h</text>
+                <rect x="280" y="234" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/>
+                <text x="420" y="246" fill="#8b949e" font-size="8">A4.2/A4.3 Guard Clause refactor 4h</text>
+                <rect x="280" y="252" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/>
+                <text x="420" y="264" fill="#8b949e" font-size="8">A6.1 Zero-comment file docstrings 3h</text>
+                <rect x="280" y="270" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/>
+                <text x="420" y="282" fill="#8b949e" font-size="8">A1.2 prompts.yaml + A7.5 ruff CI 2.5h</text>
+                <rect x="328" y="288" width="82" height="14" rx="3" fill="#d29922" opacity="0.85"/>
+                <text x="420" y="300" fill="#8b949e" font-size="8">A3.1 Rename + A7.4 Clean imports 1.5h</text>
+                <!-- P2 bars -->
+                <rect x="418" y="318" width="110" height="14" rx="3" fill="#58a6ff" opacity="0.7"/>
+                <text x="540" y="330" fill="#8b949e" font-size="8">A6.2 Pipeline step docs 4h</text>
+                <rect x="418" y="336" width="110" height="14" rx="3" fill="#58a6ff" opacity="0.7"/>
+                <text x="540" y="348" fill="#8b949e" font-size="8">A3.2 Specificize vague names 3h</text>
+                <rect x="466" y="354" width="62" height="14" rx="3" fill="#58a6ff" opacity="0.7"/>
+                <text x="540" y="366" fill="#8b949e" font-size="8">A5.3 Split install 2h</text>
+                <!-- P3 bars -->
+                <rect x="536" y="318" width="155" height="14" rx="3" fill="#3fb950" opacity="0.6"/>
+                <text x="700" y="330" fill="#8b949e" font-size="8">A*.X Toolchain + type annotations 10h</text>
+            </svg>
+        </div>
 
-      <rect x="260" y="160" width="200" height="45" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
-      <text x="360" y="180" text-anchor="middle" fill="#d29922" font-size="9">命名/注释问题无 lint 督促</text>
-      <text x="360" y="194" text-anchor="middle" fill="#8b949e" font-size="8">→ 50+ 处模糊命名</text>
+        <h3>{{ improvement.metricsTitle }}</h3>
+        <div class="full-chart">
+            <h4>Health Index Improvement Trajectory</h4>
+            <svg width="680" height="200" viewBox="0 0 680 200">
+                <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,4">
+                    <line x1="50" y1="160" x2="650" y2="160"/>
+                    <line x1="50" y1="120" x2="650" y2="120"/>
+                    <line x1="50" y1="80" x2="650" y2="80"/>
+                    <line x1="50" y1="40" x2="650" y2="40"/>
+                </g>
+                <g fill="#8b949e" font-size="10" text-anchor="end">
+                    <text x="45" y="164">0</text><text x="45" y="124">25</text>
+                    <text x="45" y="84">50</text><text x="45" y="44">100</text>
+                </g>
+                <rect x="51" y="120" width="598" height="40" fill="rgba(248,81,73,0.06)"/>
+                <rect x="51" y="80" width="598" height="40" fill="rgba(210,153,34,0.05)"/>
+                <rect x="51" y="40" width="598" height="40" fill="rgba(58,166,255,0.05)"/>
+                <text x="660" y="144" fill="#f85149" font-size="9">F</text>
+                <text x="660" y="104" fill="#d29922" font-size="9">D</text>
+                <text x="660" y="64" fill="#58a6ff" font-size="9">C-B</text>
+                <text x="660" y="44" fill="#3fb950" font-size="9">A</text>
+                <polyline points="80,107 220,93 400,77 580,60" fill="none" stroke="#58a6ff" stroke-width="3" stroke-linejoin="round"/>
+                <circle cx="80" cy="107" r="8" fill="#f85149"/>
+                <text x="80" y="130" text-anchor="middle" fill="#f85149" font-size="10" font-weight="700">Now 58</text>
+                <circle cx="220" cy="93" r="8" fill="#d29922"/>
+                <text x="220" y="116" text-anchor="middle" fill="#d29922" font-size="10" font-weight="700">W2 65</text>
+                <circle cx="400" cy="77" r="8" fill="#58a6ff"/>
+                <text x="400" y="100" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">W4 72</text>
+                <circle cx="580" cy="60" r="8" fill="#3fb950"/>
+                <text x="580" y="83" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">W6+ 80</text>
+                <line x1="50" y1="60" x2="650" y2="60" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="6,3"/>
+                <text x="55" y="55" fill="#3fb950" font-size="9">Target Grade A (85)</text>
+            </svg>
+        </div>
 
-      <rect x="500" y="160" width="200" height="45" rx="6" fill="rgba(210,153,34,0.12)" stroke="#d29922" stroke-width="1"/>
-      <text x="600" y="180" text-anchor="middle" fill="#d29922" font-size="9">开发者害怕重构</text>
-      <text x="600" y="194" text-anchor="middle" fill="#8b949e" font-size="8">→ 函数持续膨胀</text>
+        <h3>{{ improvement.timelineTitle }}</h3>
+        <div class="timeline">
+            <div class="tl-phase">
+                <h4>Phase 1: Stop Bleeding (Week 1-2, 22h)</h4>
+                <div class="tl-meta">Goal: Eliminate P0 blockers, establish refactoring safety net</div>
+                <div class="table-wrap">
+                    <table>
+                        <tr><th>ID</th><th>Action Item</th><th>Hours</th><th>Acceptance Criteria</th></tr>
+                        <tr><td>A2.1, A2.2</td><td>Create audio_utils.py + video_utils.py</td><td>3.5h</td><td>4 duplication pairs eliminated, behavior unchanged</td></tr>
+                        <tr><td>A4.1</td><td>TTS registry pattern refactor</td><td>3h</td><td>tts_main.py branch depth 11→2</td></tr>
+                        <tr><td>A7.1, A7.2, A7.3</td><td>Eliminate all 37 files star imports</td><td>8h</td><td>Star imports zeroed</td></tr>
+                        <tr><td>A5.1, A5.2</td><td>Split page_setting + download_ui</td><td>7h</td><td>Max function ≤60 lines</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="tl-phase">
+                <h4>Phase 2: Repair (Week 3-4, 16h)</h4>
+                <div class="tl-meta">Goal: Eliminate medium-risk items, establish CI quality gate</div>
+                <div class="table-wrap">
+                    <table>
+                        <tr><th>ID</th><th>Action Item</th><th>Hours</th><th>Acceptance Criteria</th></tr>
+                        <tr><td>A2.3</td><td>Create audio_loader.py</td><td>1.5h</td><td>ASR backends share loader</td></tr>
+                        <tr><td>A4.2, A4.3</td><td>Guard Clause + sidebar refactor</td><td>4h</td><td>Nesting depth ≤4</td></tr>
+                        <tr><td>A6.1</td><td>Docstrings for 9 zero-comment files</td><td>3h</td><td>Zero-comment files eliminated</td></tr>
+                        <tr><td>A1.2, A7.5</td><td>prompts.yaml + ruff CI</td><td>2.5h</td><td>CI lint gate enabled</td></tr>
+                        <tr><td>A3.1, A7.4</td><td>Rename + clean imports</td><td>1.5h</td><td>ruff F401/F811 zero warnings</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="tl-phase">
+                <h4>Phase 3: Consolidate (Week 5-6, 8h)</h4>
+                <div class="tl-meta">Goal: Documentation completion + naming standardization</div>
+                <div class="table-wrap">
+                    <table>
+                        <tr><th>ID</th><th>Action Item</th><th>Hours</th><th>Acceptance Criteria</th></tr>
+                        <tr><td>A6.2</td><td>Pipeline step I/O/dependency docs</td><td>4h</td><td>Every _N_*.py has complete docstring</td></tr>
+                        <tr><td>A3.2</td><td>Specificize 50+ vague variable names</td><td>3h</td><td>Vague names reduced by 70%</td></tr>
+                        <tr><td>A5.3</td><td>Split install.py main()</td><td>2h</td><td>118→5 step functions</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="tl-phase">
+                <h4>Phase 4: Continuous Governance (Week 7+, 10h)</h4>
+                <div class="tl-meta">Goal: Establish long-term sustainable quality system</div>
+                <div class="table-wrap">
+                    <table>
+                        <tr><th>ID</th><th>Action Item</th><th>Hours</th></tr>
+                        <tr><td>A1.3, A2.4, A4.4, A5.4</td><td>CI add line limit + jscpd + CC check</td><td>2.5h</td></tr>
+                        <tr><td>A6.3</td><td>Progressive type annotations</td><td>6h</td></tr>
+                        <tr><td>A3.3, A7.6</td><td>Naming convention doc + __future__ annotations</td><td>1.5h</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 
-      <!-- Deeper -->
-      <line x1="600" y1="205" x2="600" y2="230" stroke="#f85149" stroke-width="1.2"/>
-      <rect x="480" y="230" width="240" height="35" rx="6" fill="rgba(248,81,73,0.15)" stroke="#f85149" stroke-width="1"/>
-      <text x="600" y="250" text-anchor="middle" fill="#f85149" font-size="9">page_setting() 302行 | tts_main elif 11层</text>
-      <text x="600" y="262" text-anchor="middle" fill="#8b949e" font-size="7">质量无法回归 → 恶性循环</text>
+    <!-- ═══════════════ §11 APPENDIX ═══════════════ -->
+    <section class="section" id="sec11">
+        <h2><span class="section-num">{{ appendix.num }}</span> {{ appendix.heading }}</h2>
 
-      <!-- Second root cause -->
-      <rect x="10" y="240" width="220" height="40" rx="6" fill="rgba(210,153,34,0.15)" stroke="#d29922" stroke-width="1"/>
-      <text x="120" y="258" text-anchor="middle" fill="#d29922" font-size="9">🟡 快速迭代优先于架构设计</text>
-      <text x="120" y="272" text-anchor="middle" fill="#8b949e" font-size="7">复制 TTS 后端 → 每个引擎重复实现</text>
-
-      <!-- Third root cause -->
-      <rect x="250" y="265" width="220" height="50" rx="6" fill="rgba(58,166,255,0.1)" stroke="#58a6ff" stroke-width="1"/>
-      <text x="360" y="283" text-anchor="middle" fill="#58a6ff" font-size="9">🔵 Streamlit 框架鼓励反模式</text>
-      <text x="360" y="297" text-anchor="middle" fill="#8b949e" font-size="7">声明式 API → 所有 widget 塞一个函数</text>
-      <text x="360" y="310" text-anchor="middle" fill="#8b949e" font-size="7">无框架级约束防止膨胀</text>
-
-      <defs>
-        <marker id="arrowRed" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M0,0 L10,5 L0,10 Z" fill="#f85149"/>
-        </marker>
-      </defs>
-    </svg>
-  </div>
-
-  <h3>🔍 根因总结</h3>
-  <table>
-    <tr><th>#</th><th>根因</th><th>严重度</th><th>影响面</th></tr>
-    <tr><td>1</td><td><strong>Star Import 阻止自动化质量保障</strong> — 使项目无法引入 ruff/mypy 等工具，所有其他问题都缺乏自动检测和回归机制</td><td><span class="badge critical">P0</span></td><td>全局 37/63 文件</td></tr>
-    <tr><td>2</td><td><strong>"复制-粘贴"开发模式</strong> — 新增 TTS/ASR 后端时复制已有实现，导致重复积累</td><td><span class="badge high">P1</span></td><td>TTS/ASR 后端</td></tr>
-    <tr><td>3</td><td><strong>Streamlit 无架构约束</strong> — 框架鼓励把所有 widget 写在一个函数中，没有天然的模块边界</td><td><span class="badge high">P1</span></td><td>UI 文件</td></tr>
-    <tr><td>4</td><td><strong>缺少 CI 质量门禁</strong> — 无 linting、类型检查、复杂度检查，问题靠人工发现</td><td><span class="badge high">P2</span></td><td>全局</td></tr>
-  </table>
-</div>
-
-<!-- ═══════════════════════════════════════════════ -->
-<!--  §10 改进方案与落地排期                       -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="section" id="sec10">
-  <h2><span class="num">10</span> 改进方案与落地排期</h2>
-
-  <h3>📊 优先级矩阵 (26 项行动)</h3>
-  <table>
-    <tr><th>优先级</th><th>定义</th><th>数量</th><th>总工时</th></tr>
-    <tr><td><span class="badge critical">P0 立即执行</span></td><td>阻塞性风险，阻止其他一切改进</td><td>8 项</td><td>~22h</td></tr>
-    <tr><td><span class="badge high">P1 高优先级</span></td><td>显著影响可维护性</td><td>8 项</td><td>~16h</td></tr>
-    <tr><td><span class="badge medium">P2 中优先级</span></td><td>改善可读性和开发体验</td><td>3 项</td><td>~8h</td></tr>
-    <tr><td><span class="badge low">P3-P4</span></td><td>锦上添花，可持续推进</td><td>7 项</td><td>~10h</td></tr>
-  </table>
-
-  <h3>📈 排期甘特图</h3>
-  <div class="full-chart">
-    <h4>4 阶段落地路线图</h4>
-    <svg width="720" height="400" viewBox="0 0 720 400">
-      <!-- Phase headers -->
-      <rect x="140" y="20" width="130" height="28" rx="4" fill="#f85149" opacity="0.8"/>
-      <text x="205" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">🔴 P0 止血 W1-2</text>
-      <rect x="278" y="20" width="130" height="28" rx="4" fill="#d29922" opacity="0.8"/>
-      <text x="343" y="39" text-anchor="middle" fill="#000" font-size="10" font-weight="700">🟡 P1 修复 W3-4</text>
-      <rect x="416" y="20" width="110" height="28" rx="4" fill="#58a6ff" opacity="0.7"/>
-      <text x="471" y="39" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">🔵 P2 巩固 W5-6</text>
-      <rect x="534" y="20" width="160" height="28" rx="4" fill="#3fb950" opacity="0.7"/>
-      <text x="614" y="39" text-anchor="middle" fill="#000" font-size="10" font-weight="700">🟢 P3+ 持续治理 W7+</text>
-
-      <!-- Week lines -->
-      <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="3,3">
-        <line x1="140" y1="55" x2="140" y2="380"/>
-        <line x1="278" y1="55" x2="278" y2="380"/>
-        <line x1="416" y1="55" x2="416" y2="380"/>
-        <line x1="534" y1="55" x2="534" y2="380"/>
-      </g>
-
-      <!-- Bars -->
-      <g font-size="8" fill="#8b949e" text-anchor="start">
-        <!-- Week lines -->
-        <text x="140" y="68">W1</text>
-        <text x="190" y="68">W2</text>
-        <text x="278" y="68">W3</text>
-        <text x="328" y="68">W4</text>
-        <text x="416" y="68">W5</text>
-        <text x="466" y="68">W6</text>
-        <text x="534" y="68">W7+</text>
-      </g>
-      <!-- P0 bars: 140-278  (W1-W2) -->
-      <rect x="142" y="78" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/><!-- A2.1 -->
-      <text x="280" y="90" fill="#8b949e" font-size="8">A2.1 消除TTS重复 2h</text>
-      <rect x="142" y="96" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/><!-- A2.2 -->
-      <text x="280" y="108" fill="#8b949e" font-size="8">A2.2 消除字幕重复 1.5h</text>
-      <rect x="142" y="114" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/><!-- A4.1 -->
-      <text x="280" y="126" fill="#8b949e" font-size="8">A4.1 tts_main策略模式 3h</text>
-      <rect x="142" y="132" width="130" height="14" rx="3" fill="#f85149" opacity="0.85"/><!-- A7.1+A7.2 -->
-      <text x="280" y="144" fill="#8b949e" font-size="8">A7.1/A7.2 消除star import 6h</text>
-      <rect x="190" y="150" width="82" height="14" rx="3" fill="#f85149" opacity="0.85"/><!-- A7.3 -->
-      <text x="280" y="162" fill="#8b949e" font-size="8">A7.3 core/__init__ 重构 2h</text>
-      <rect x="190" y="168" width="82" height="14" rx="3" fill="#f85149" opacity="0.85"/><!-- A5.1 -->
-      <text x="280" y="180" fill="#8b949e" font-size="8">A5.1 拆分page_setting 4h</text>
-      <rect x="190" y="186" width="82" height="14" rx="3" fill="#f85149" opacity="0.85"/><!-- A5.2 -->
-      <text x="280" y="198" fill="#8b949e" font-size="8">A5.2 拆分download_ui 3h</text>
-
-      <!-- P1 bars: 278-416 (W3-W4) -->
-      <rect x="280" y="216" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/><!-- A2.3 -->
-      <text x="420" y="228" fill="#8b949e" font-size="8">A2.3 ASR音频加载器 1.5h</text>
-      <rect x="280" y="234" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/><!-- A4.2+A4.3 -->
-      <text x="420" y="246" fill="#8b949e" font-size="8">A4.2/A4.3 Guard Clause重构 4h</text>
-      <rect x="280" y="252" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/><!-- A6.1 -->
-      <text x="420" y="264" fill="#8b949e" font-size="8">A6.1 零注释文件docstring 3h</text>
-      <rect x="280" y="270" width="130" height="14" rx="3" fill="#d29922" opacity="0.85"/><!-- A1.2+A7.5 -->
-      <text x="420" y="282" fill="#8b949e" font-size="8">A1.2 prompts.yaml + A7.5 ruff CI 2.5h</text>
-      <rect x="328" y="288" width="82" height="14" rx="3" fill="#d29922" opacity="0.85"/><!-- A3.1+A7.4 -->
-      <text x="420" y="300" fill="#8b949e" font-size="8">A3.1重命名+A7.4清理导入 1.5h</text>
-
-      <!-- P2 bars: 416-534 (W5-W6) -->
-      <rect x="418" y="318" width="110" height="14" rx="3" fill="#58a6ff" opacity="0.7"/>
-      <text x="540" y="330" fill="#8b949e" font-size="8">A6.2 管线步骤文档 4h</text>
-      <rect x="418" y="336" width="110" height="14" rx="3" fill="#58a6ff" opacity="0.7"/>
-      <text x="540" y="348" fill="#8b949e" font-size="8">A3.2 具体化泛化名称 3h</text>
-      <rect x="466" y="354" width="62" height="14" rx="3" fill="#58a6ff" opacity="0.7"/>
-      <text x="540" y="366" fill="#8b949e" font-size="8">A5.3 install拆分 2h</text>
-
-      <!-- P3 bars: 534+ (W7+) -->
-      <rect x="536" y="318" width="155" height="14" rx="3" fill="#3fb950" opacity="0.6"/>
-      <text x="700" y="330" fill="#8b949e" font-size="8">A*.X 工具链+类型注解 10h</text>
-    </svg>
-  </div>
-
-  <h3>📈 预期效果量化</h3>
-  <div class="full-chart">
-    <h4>健康指数提升路线</h4>
-    <svg width="680" height="200" viewBox="0 0 680 200">
-      <!-- Grid -->
-      <g stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,4">
-        <line x1="50" y1="160" x2="650" y2="160"/>
-        <line x1="50" y1="120" x2="650" y2="120"/>
-        <line x1="50" y1="80" x2="650" y2="80"/>
-        <line x1="50" y1="40" x2="650" y2="40"/>
-      </g>
-      <!-- Y labels -->
-      <g fill="#8b949e" font-size="10" text-anchor="end">
-        <text x="45" y="164">0</text>
-        <text x="45" y="124">25</text>
-        <text x="45" y="84">50</text>
-        <text x="45" y="44">100</text>
-      </g>
-      <!-- Zone bands -->
-      <rect x="51" y="120" width="598" height="40" fill="rgba(248,81,73,0.06)"/>
-      <rect x="51" y="80" width="598" height="40" fill="rgba(210,153,34,0.05)"/>
-      <rect x="51" y="40" width="598" height="40" fill="rgba(58,166,255,0.05)"/>
-      <!-- Zone labels -->
-      <text x="660" y="144" fill="#f85149" font-size="9">F</text>
-      <text x="660" y="104" fill="#d29922" font-size="9">D</text>
-      <text x="660" y="64" fill="#58a6ff" font-size="9">C-B</text>
-      <text x="660" y="44" fill="#3fb950" font-size="9">A</text>
-
-      <!-- Trend line -->
-      <polyline points="80,107 220,93 400,77 580,60" fill="none" stroke="#58a6ff" stroke-width="3" stroke-linejoin="round"/>
-      <!-- Points -->
-      <circle cx="80" cy="107" r="8" fill="#f85149"/>
-      <text x="80" y="130" text-anchor="middle" fill="#f85149" font-size="10" font-weight="700">现在 58</text>
-      <circle cx="220" cy="93" r="8" fill="#d29922"/>
-      <text x="220" y="116" text-anchor="middle" fill="#d29922" font-size="10" font-weight="700">W2 65</text>
-      <circle cx="400" cy="77" r="8" fill="#58a6ff"/>
-      <text x="400" y="100" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="700">W4 72</text>
-      <circle cx="580" cy="60" r="8" fill="#3fb950"/>
-      <text x="580" y="83" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700">W6+ 80</text>
-
-      <!-- Target line -->
-      <line x1="50" y1="60" x2="650" y2="60" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="6,3"/>
-      <text x="55" y="55" fill="#3fb950" font-size="9">目标 A 级 (85)</text>
-    </svg>
-  </div>
-
-  <h3>🔍 分阶段详情</h3>
-  <div class="timeline">
-    <div class="tl-phase">
-      <h4>🔴 第一阶段：止血（第 1–2 周，22h）</h4>
-      <div class="tl-meta">目标：消除 P0 阻塞项，建立重构安全网</div>
-      <table>
-        <tr><th>ID</th><th>行动项</th><th>工时</th><th>验收标准</th></tr>
-        <tr><td>A2.1, A2.2</td><td>新建 audio_utils.py + video_utils.py</td><td>3.5h</td><td>4 个重复对消除，原有行为不变</td></tr>
-        <tr><td>A4.1</td><td>TTS 注册表模式重构</td><td>3h</td><td>tts_main.py 分支深度 11→2</td></tr>
-        <tr><td>A7.1, A7.2, A7.3</td><td>消除全部 37 个文件的 star import</td><td>8h</td><td>star import 清零</td></tr>
-        <tr><td>A5.1, A5.2</td><td>拆分 page_setting + download_ui</td><td>7h</td><td>最大函数 ≤60 行</td></tr>
-      </table>
-    </div>
-    <div class="tl-phase">
-      <h4>🟡 第二阶段：修复（第 3–4 周，16h）</h4>
-      <div class="tl-meta">目标：消除中等风险项，建立 CI 质量门禁</div>
-      <table>
-        <tr><th>ID</th><th>行动项</th><th>工时</th><th>验收标准</th></tr>
-        <tr><td>A2.3</td><td>新建 audio_loader.py</td><td>1.5h</td><td>ASR 后端共享加载器</td></tr>
-        <tr><td>A4.2, A4.3</td><td>Guard Clause + sidebar 重构</td><td>4h</td><td>嵌套深度 ≤4</td></tr>
-        <tr><td>A6.1</td><td>9 个零注释文件 docstring</td><td>3h</td><td>零注释文件清零</td></tr>
-        <tr><td>A1.2, A7.5</td><td>prompts.yaml + ruff CI</td><td>2.5h</td><td>CI 启用 lint 门禁</td></tr>
-        <tr><td>A3.1, A7.4</td><td>重命名 + 清理导入</td><td>1.5h</td><td>ruff F401/F811 零告警</td></tr>
-      </table>
-    </div>
-    <div class="tl-phase">
-      <h4>🔵 第三阶段：巩固（第 5–6 周，8h）</h4>
-      <div class="tl-meta">目标：文档完善 + 命名规范化</div>
-      <table>
-        <tr><th>ID</th><th>行动项</th><th>工时</th><th>验收标准</th></tr>
-        <tr><td>A6.2</td><td>管线步骤输入/输出/依赖文档</td><td>4h</td><td>每个 _N_*.py 有完整 docstring</td></tr>
-        <tr><td>A3.2</td><td>具体化 50+ 处泛化变量名</td><td>3h</td><td>泛化名减少 70%</td></tr>
-        <tr><td>A5.3</td><td>拆分 install.py main()</td><td>2h</td><td>118→5 个步骤函数</td></tr>
-      </table>
-    </div>
-    <div class="tl-phase">
-      <h4>🟢 第四阶段：持续治理（第 7 周起，10h）</h4>
-      <div class="tl-meta">目标：建立长期可持续质量体系</div>
-      <table>
-        <tr><th>ID</th><th>行动项</th><th>工时</th></tr>
-        <tr><td>A1.3, A2.4, A4.4, A5.4</td><td>CI 添加行数限制 + jscpd + CC 检查</td><td>2.5h</td></tr>
-        <tr><td>A6.3</td><td>渐进式类型注解</td><td>6h</td></tr>
-        <tr><td>A3.3, A7.6</td><td>命名规范文档 + __future__ annotations</td><td>1.5h</td></tr>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════ -->
-<!--  §11 附录                                     -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="section" id="sec11">
-  <h2><span class="num">11</span> 附录：工具链配置与基线快照</h2>
-
-  <h3>📋 推荐 pyproject.toml</h3>
-  <pre><code>[tool.ruff]
+        <h3>{{ appendix.configTitle }}</h3>
+        <pre><code>[tool.ruff]
 target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
 select = ["F","E","W","I","PL"]
-# F403: 禁止 from module import *
-# F405: star import 中的未定义名称
-# PLR0915: 函数过长 (>50 行)
-# PLR0912: 过多分支 (>12)
+# F403: ban from module import *
+# F405: undefined names from star import
+# PLR0915: function too long (>50 lines)
+# PLR0912: too many branches (>12)
 
 [tool.mypy]
 python_version = "3.11"
-strict = false  # 渐进启用
+strict = false  # progressive enable
 
 [tool.radon]
-cc_rank = "C"   # 圈复杂度 > C 级告警
+cc_rank = "C"   # Warn if CC > C grade
 
 [tool.jscpd]
 threshold = 0.05
 minLines = 5</code></pre>
 
-  <h3>📊 基线快照 (2026-06-28)</h3>
-  <table>
-    <tr><th>指标</th><th>数值</th></tr>
-    <tr><td>Python 文件数</td><td>63</td></tr>
-    <tr><td>总代码行 (LOC)</td><td>6,986</td></tr>
-    <tr><td>函数总数</td><td>234</td></tr>
-    <tr><td>综合健康指数</td><td><span class="badge high">58 (C+)</span></td></tr>
-    <tr><td>七维评分</td><td>D1:40 D2:35 D3:55 D4:42 D5:38 D6:30 D7:15</td></tr>
-    <tr><td>Star import 文件</td><td><span class="badge critical">37/63 (58.7%)</span></td></tr>
-    <tr><td>可消除重复行</td><td><span class="badge high">~130 行</span></td></tr>
-    <tr><td>超长函数 (>50行)</td><td><span class="badge high">10 个</span></td></tr>
-    <tr><td>深度嵌套 (>7层)</td><td><span class="badge critical">3 个文件</span></td></tr>
-    <tr><td>零注释文件</td><td><span class="badge high">9 个</span></td></tr>
-    <tr><td>注释率</td><td><span class="badge critical">6.2%</span></td></tr>
-    <tr><td>改进行动项</td><td>26 项 / ~56h</td></tr>
-    <tr><td>下次复查</td><td>2026-07-12（第二阶段完成后）</td></tr>
-  </table>
+        <h3>{{ appendix.baselineTitle }}</h3>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Python files</td><td>63</td></tr>
+                <tr><td>Total LOC</td><td>6,986</td></tr>
+                <tr><td>Total functions</td><td>234</td></tr>
+                <tr><td>Comprehensive health index</td><td><span class="badge badge-high">58 (C+)</span></td></tr>
+                <tr><td>Seven-dimension scores</td><td>D1:40 D2:35 D3:55 D4:42 D5:38 D6:30 D7:15</td></tr>
+                <tr><td>Star import files</td><td><span class="badge badge-critical">37/63 (58.7%)</span></td></tr>
+                <tr><td>Eliminable duplicate lines</td><td><span class="badge badge-high">~130 lines</span></td></tr>
+                <tr><td>Overly long functions (&gt;50 lines)</td><td><span class="badge badge-high">10</span></td></tr>
+                <tr><td>Deeply nested (&gt;7 levels)</td><td><span class="badge badge-critical">3 files</span></td></tr>
+                <tr><td>Zero-comment files</td><td><span class="badge badge-high">9</span></td></tr>
+                <tr><td>Comment rate</td><td><span class="badge badge-critical">6.2%</span></td></tr>
+                <tr><td>Improvement actions</td><td>26 items / ~56h</td></tr>
+                <tr><td>Next review</td><td>2026-07-12 (after Phase 2)</td></tr>
+            </table>
+        </div>
 
-  <hr>
-  <p style="text-align:center;color:var(--text-muted);font-size:0.82em;">
-    📊 VideoLingo 代码健康报告 v3.0 · 2026-06-28 · 评估范围：63 个 Python 源文件<br>
-    7 维度 × 26 子指标 · 26 项改进行动 · 4 阶段 × 56h 治理路线图<br>
-    方法论：AST 遍历 + 模式匹配 + 依赖图分析 + 人工语义审查
-  </p>
+        <hr>
+        <p class="report-footer-text" v-text="appendix.footer"></p>
+    </section>
 </div>
+</template>
 
-</div>
+<script src="../../assets/mount-component.js"></script>
+<script src="../../assets/lang.js"></script>
+
+<!-- data.js MUST come before index.js -->
+<script src="data.js"></script>
+<script src="index.js"></script>
+
 </body>
 </html>

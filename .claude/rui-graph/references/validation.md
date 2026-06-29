@@ -127,6 +127,48 @@ Edges where `source === target`. Should never happen — indicates a bug in edge
 
 **Auto-fix**: Drop self-referencing edges.
 
+## Runtime Browser Checks
+
+These checks catch bugs that pass structural validation but cause **browser console errors or broken UI interactions**. Run these manually or via automated browser testing.
+
+### Runtime Check 1: `filterByBadge('all', null)` Button State
+
+**Problem:** `resetView()` calls `filterByBadge('all', null)` — the `null` button means no filter button gets the `.active` class after reset.
+
+**Check:** With browser console open, click any badge filter, then press `R`. Verify the "All" filter button has the `.active` class.
+
+**Auto-fix in template:** Always re-find the "All" button: `document.querySelector('#badge-filters .filter-btn')`.
+
+### Runtime Check 2: `escHtml` Single Quote Handling
+
+**Problem:** `escHtml()` doesn't escape `'`, so label values containing `'` break onclick handlers.
+
+**Check:** Verify `escHtml("test'value")` returns a string without raw single quotes. In the generated `index.js`, the function must include `.replace(/'/g, '&#39;')`.
+
+### Runtime Check 3: Search Edge Dimming
+
+**Problem:** `doSearch()` dims nodes but not edges, leaving edges visible between dimmed nodes.
+
+**Check:** Type a search query that matches some nodes. Verify that edges between non-matching nodes are dimmed (opacity reduced).
+
+### Runtime Check 4: `filterByBadge` Cluster Node Handling
+
+**Problem:** The visibility conditional misses `cluster` nodes, leaving them always visible.
+
+**Check:** Ensure generated `index.js` includes `|| n.data('type') === 'cluster'` in the filterByBadge non-card visibility conditional.
+
+### Runtime Check 5: `focusNode` Empty Collection Guard
+
+**Problem:** Calling `focusNode(id)` with a non-existent ID creates an empty collection; `.length` is 0 and calling `.addClass()` etc. on it fails silently.
+
+**Check:** Verify `focusNode` has `if (!node || !node.length) return;` as its first guard.
+
+### Runtime Check 6: `.detail-badge` Default Colors
+
+**Problem:** The `.detail-badge` base class lacks `border-color`, `color`, and `background`. Unknown badge types render invisible.
+
+**Check:** In the generated `index.css`, verify `.detail-badge` has `border: 1px solid var(--border); color: var(--text-soft); background: var(--border);`.
+
 ## Severity Classification
 
 | Level | Meaning | Action |
@@ -134,6 +176,7 @@ Edges where `source === target`. Should never happen — indicates a bug in edge
 | **BLOCKER** | Graph is structurally broken — missing required data, broken references | Must fix before HTML generation |
 | **WARNING** | Graph is usable but has quality issues | Should fix; OK to ship with warnings noted |
 | **INFO** | Minor observations, suggestions for improvement | Can ship; consider for next iteration |
+| **RUNTIME** | Structural validation passes but browser console errors or broken interactions will occur | Must fix before finalizing — see Runtime Browser Checks above |
 
 ## Auto-Fix Pipeline
 

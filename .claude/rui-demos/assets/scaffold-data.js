@@ -1,7 +1,11 @@
 /**
  * __CARD_NAME__ Demo — Data
  *
- * Card data: YrySceneCard props for the scene card at the top of the page.
+ * Card data: YrySceneCard-compatible props for the scene card at the top of the page.
+ *   - Links use { label, href, target } format (NOT { text, href }).
+ *   - nameHref should point to the scene's main docs page.
+ *   - The card is a gateway — put external links in the info area, not the card.
+ *
  * Mock data: Simulated data for demo interactivity (never real API calls).
  */
 window.DEMO_CARD_DATA = __CARD_DATA_JSON__;

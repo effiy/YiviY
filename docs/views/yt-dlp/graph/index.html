@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>yt-dlp — Source Graph · VideoLingo</title>
+  <meta name="description" content="Interactive source graph for yt-dlp — explore cards, tags, badges, and relationships in the yt-dlp download pipeline.">
+
+  <!-- Cytoscape.js + Layout Plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
+
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="pulse-dot"></div>
+    <h1 id="graph-title">yt-dlp · Source Graph</h1>
+    <span class="subtitle" id="graph-subtitle">Download Pipeline — Cards · Tags · Relationships</span>
+    <div class="header-right">
+      <button class="btn primary" onclick="downloadPNG()" title="Download PNG (2x)">📥 PNG</button>
+      <button class="btn" onclick="resetView()" title="Reset view">↺ Reset</button>
+      <button class="btn" onclick="fitGraph()" title="Fit to screen">⊞ Fit</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">Layout</span>
+      <select id="layout-select" onchange="switchLayout(this.value)">
+        <option value="cose-bilkent">cose-bilkent</option>
+        <option value="dagre">dagre (LR)</option>
+        <option value="dagre-tb">dagre (TB)</option>
+        <option value="breadthfirst">breadthfirst</option>
+        <option value="concentric">concentric</option>
+        <option value="grid">grid</option>
+        <option value="circle">circle</option>
+      </select>
+    </div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Search</span>
+      <input type="search" id="search-input" placeholder="Card name or tag..." oninput="doSearch(this.value)">
+    </div>
+    <div class="toolbar-group" id="badge-filters">
+      <!-- Populated by initUI() -->
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <h3>Stats</h3>
+        <div id="stats-content">Loading...</div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Legend · Nodes</h3>
+        <div id="legend-nodes"></div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Legend · Edges</h3>
+        <div id="legend-edges"></div>
+      </div>
+    </div>
+
+    <!-- Cytoscape Container -->
+    <div class="graph-container" id="graph-container">
+      <div id="cy"></div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-toggle" onclick="toggleDetail()" title="Toggle detail panel">◀</div>
+      <div class="detail-content" id="detail-content">
+        <div class="detail-empty">Click a node<br>to see details</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load data first, then init -->
+  <script src="data.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

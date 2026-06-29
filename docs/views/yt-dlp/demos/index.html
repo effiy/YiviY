@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yt-dlp Demos · VideoLingo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23fbbf24'/><text x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23020617' text-anchor='middle'>YT</text></svg>" type="image/svg+xml">
+    <meta name="description" content="Interactive demos for yt-dlp — simulate the download pipeline and explore features">
+
+    <!-- 1. CDN Theme (dark, tech-oriented) — one line to switch themes -->
+    <link rel="stylesheet" href="../../../../cdn/theme/tech-innovation.css">
+
+    <!-- 2. Page-specific styles -->
+    <link rel="stylesheet" href="index.css">
+
+    <!-- 3. Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body class="demos-page">
+
+    <!--
+        Template: Vue 3 会从此 <template> 渲染组件。
+        mountDocComponent() 在 <template> 前插入挂载 <div>，
+        然后将 Vue app 挂载其上。<template> 本身保持惰性。
+    -->
+    <template id="yt-dlp-demos-template">
+        <div class="page">
+            <header class="page-header">
+                <h1>{{ pageTitle }}</h1>
+                <p>{{ pageDescription }}</p>
+                <a href="../diagram/index.html" class="scene-link">{{ diagramLink }}</a>
+            </header>
+
+            <!-- Type Filters -->
+            <div class="demo-filters">
+                <button v-for="type in types" :key="type.id"
+                        class="filter-btn" :class="{ active: activeType === type.id }"
+                        @click="activeType = type.id">
+                    {{ type.label }} ({{ countByType(type.id) }})
+                </button>
+            </div>
+
+            <!-- Demo Grid -->
+            <div class="demo-grid">
+                <template v-for="demo in filteredDemos" :key="demo.slug">
+                    <div class="demo-card">
+                        <span class="card-type">{{ typeLabelFor(demo.type) }}</span>
+                        <h3><a :href="demo.href">{{ demo.name }}</a></h3>
+                        <p class="card-desc" v-html="demo.desc"></p>
+                        <div class="card-tags" v-if="demo.tags && demo.tags.length">
+                            <span v-for="tag in demo.tags" class="card-tag">{{ tag }}</span>
+                        </div>
+                        <a :href="demo.href" class="card-action">{{ tryDemo }}</a>
+                    </div>
+                </template>
+                <div v-if="filteredDemos.length === 0" class="no-results">
+                    {{ noResults }}
+                </div>
+            </div>
+
+            <div class="back-link">
+                ← <a href="../diagram/index.html">{{ backToDiagram }}</a> ·
+                <a href="../../../index.html">{{ backToDocs }}</a>
+            </div>
+        </div>
+    </template>
+
+    <!--
+        Script order is critical:
+        1. mount-component.js — defines mountDocComponent()
+        2. lang.js           — window.VL_LANG must exist before i18n resolution
+        3. data.js           — sets window.YT_DLP_DEMOS_CONFIG
+        4. index.js          — calls mountDocComponent() → Vue.createApp().mount()
+    -->
+    <script src="../../../assets/mount-component.js"></script>
+    <script src="../../../assets/lang.js"></script>
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

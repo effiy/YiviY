@@ -714,7 +714,86 @@ Before finalizing a graph:
 - [ ] `graph-data.json` saved alongside the 4 output files (for incremental updates)
 - [ ] `meta.json` written with source hash and generation metadata
 - [ ] Keyboard shortcuts functional (Ctrl+F, Escape, R, F)
+- [ ] `doSearch()` dims edges disconnected from search hits (not just nodes)
+- [ ] `resetView()` properly reactivates the "All" filter button (not `null` btn)
+- [ ] `escHtml()` escapes single quotes (`'` → `&#39;`) for safe onclick attributes
+- [ ] `filterByBadge()` handles all node types: card, tag, link_dest, badge, **cluster**
+- [ ] `focusNode()` guards against empty collection (`!node.length`) before animating
+- [ ] `.detail-badge` has default fallback (border/color/background) for unknown badge types
 - [ ] Output follows project convention: `index.html` + `index.js` + `index.css` + `data.js`
+
+## Browser Console Error Prevention
+
+The following are **real bugs** found in production graphs. Every generated graph MUST be checked against this list:
+
+### 🐛 Bug 1: `resetView` doesn't re-activate filter button
+
+**Symptom:** After clicking a badge filter then pressing `R` to reset, no filter button shows as active.
+
+**Root cause:** `resetView()` calls `filterByBadge('all', null)` — the `null` button means no button gets `.active` class.
+
+**Fix:** Find the "All" button via `document.querySelector('#badge-filters .filter-btn')` and pass it:
+```javascript
+var allBtn = document.querySelector('#badge-filters .filter-btn');
+window.filterByBadge('all', allBtn);
+```
+
+### 🐛 Bug 2: `escHtml` doesn't escape single quotes
+
+**Symptom:** If any badge/label name contains `'`, onclick handlers break with JS syntax error.
+
+**Root cause:** `escHtml()` escapes `&`, `<`, `>`, `"` but NOT `'`. Since onclick attributes use single-quote delimiters (`onclick="fn('val', this)"`), an unescaped `'` in the value breaks the JS.
+
+**Fix:** Add `'` → `&#39;` to `escHtml`:
+```javascript
+return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+```
+
+### 🐛 Bug 3: `doSearch` only dims nodes, leaves edges visible
+
+**Symptom:** After searching, dimmed nodes have undimmed edges between them, or undimmed edges connect dimmed to highlighted nodes.
+
+**Root cause:** Only `cy.nodes().addClass('dimmed')` is called; edges are never dimmed.
+
+**Fix:** After setting node classes, dim edges not connected to any search-hit node:
+```javascript
+cy.edges().forEach(function(e) {
+  if (e.source().hasClass('search-hit') || e.target().hasClass('search-hit')) {
+    e.removeClass('dimmed');
+  } else {
+    e.addClass('dimmed');
+  }
+});
+```
+
+### 🐛 Bug 4: `filterByBadge` missing `cluster` node type
+
+**Symptom:** When filtering by badge, cluster nodes always remain visible even when disconnected from visible cards.
+
+**Root cause:** The visibility logic only handles `card`, `tag`, `link_dest`, and `badge` types. `cluster` nodes are ignored and stay visible.
+
+**Fix:** Add `|| n.data('type') === 'cluster'` to the conditional.
+
+### 🐛 Bug 5: `focusNode` doesn't guard against missing nodes
+
+**Symptom:** If `focusNode('bad-id')` is called (e.g., from a stale detail panel click), `cy.getElementById('bad-id').length` is 0, and subsequent calls silently fail.
+
+**Fix:** Guard with `if (!node || !node.length) return;`
+
+### 🐛 Bug 6: `.detail-badge` has no default colors
+
+**Symptom:** Unknown badge types in the detail panel show a transparent badge with no visible border/background.
+
+**Root cause:** `.detail-badge` base class has `border: 1px solid` without a color, and no `background` or `color`. Only modifier classes (`.badge-core`, etc.) set these.
+
+**Fix:** Add defaults:
+```css
+.detail-badge {
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  background: var(--border);
+}
+```
 
 ## Error Handling
 
@@ -725,6 +804,7 @@ Before finalizing a graph:
 - If HTML generation fails → report template errors and **STOP**
 - **Always save partial results** — a graph with warnings is better than no graph
 - **Never silently drop errors** — every failure must be visible in the Phase 5 summary
+- **Run the Browser Console Error Prevention checklist** before finalizing — these are bugs that pass structural validation but fail at runtime
 
 ## Example
 

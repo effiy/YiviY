@@ -75,9 +75,10 @@ window.INTRO_CONFIG = {
                   tags: [{ text: '1.2k sites', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
                   links: [
                       { label: '图解', href: 'views/yt-dlp/diagram/index.html',                  target: '' },
+                      { label: '图谱', href: 'views/yt-dlp/graph/index.html',                     target: '' },
+                      { label: '演示', href: 'views/yt-dlp/demos/yt-dlp-tool/index.html',          target: '' },
                       { label: '源码', href: 'https://github.com/yt-dlp/yt-dlp',                    target: '_blank' },
                       { label: '文档', href: 'https://github.com/yt-dlp/yt-dlp#readme',             target: '_blank' },
-                      { label: 'Wiki', href: 'https://github.com/yt-dlp/yt-dlp/wiki',              target: '_blank' },
                       { label: 'Issues', href: 'https://github.com/yt-dlp/yt-dlp/issues',           target: '_blank' }
                   ]},
                 { name: '🎙️ WhisperX', badge: 'Core', desc: 'Word-level subtitle recognition · <strong>low-illusion</strong> output · speaker diarization · multi-language',
@@ -221,9 +222,10 @@ window.INTRO_CONFIG = {
                   tags: [{ text: '1.2k 站点', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
                   links: [
                       { label: '图解', href: 'views/yt-dlp/diagram/index.html',                  target: '' },
+                      { label: '图谱', href: 'views/yt-dlp/graph/index.html',                     target: '' },
+                      { label: '演示', href: 'views/yt-dlp/demos/yt-dlp-tool/index.html',          target: '' },
                       { label: '源码', href: 'https://github.com/yt-dlp/yt-dlp',                    target: '_blank' },
                       { label: '文档', href: 'https://github.com/yt-dlp/yt-dlp#readme',             target: '_blank' },
-                      { label: 'Wiki', href: 'https://github.com/yt-dlp/yt-dlp/wiki',              target: '_blank' },
                       { label: 'Issues', href: 'https://github.com/yt-dlp/yt-dlp/issues',           target: '_blank' }
                   ]},
                 { name: '🎙️ WhisperX', badge: '核心', desc: '单词级字幕识别 · <strong>低幻觉</strong>输出 · 说话人分离 · 多语言支持',

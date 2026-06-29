@@ -11,6 +11,9 @@
     var mockData = window.DEMO_MOCK_DATA;
 
     // ── Mount the rui-scene card ──────────────────
+    // The card area uses YrySceneCard.mount() — NOT inline Vue templates.
+    // cardData must be a valid YrySceneCard props object from data.js.
+    // Links in cardData use { label, href, target } format.
     (function mountCard() {
         var el = document.getElementById('scene-card');
         function doMount() {

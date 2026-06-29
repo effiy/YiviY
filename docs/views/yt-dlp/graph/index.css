@@ -1,6 +1,7 @@
 /* ════════════════════════════════════════════════════════════════════════
    rui-graph — Dark Theme Stylesheet
    VideoLingo design system: #020617 background, JetBrains Mono
+   yt-dlp graph variant — extends base rui-graph theme
    ════════════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -20,8 +21,13 @@
   --guide: #38bdf8;      --guide-bg: rgba(8, 51, 68, 0.4);
   --oss: #fbbf24;        --oss-bg: rgba(120, 53, 15, 0.3);
   --agent: #a78bfa;      --agent-bg: rgba(76, 29, 149, 0.4);
-  --beta: #fb923c;        --beta-bg: rgba(120, 53, 15, 0.3);
+  --beta: #fb923c;       --beta-bg: rgba(120, 53, 15, 0.3);
   --default: #22d3ee;    --default-bg: rgba(8, 51, 68, 0.4);
+
+  /* yt-dlp custom badges */
+  --sources: #fbbf24;     --sources-bg: rgba(120, 53, 15, 0.3);
+  --features: #34d399;    --features-bg: rgba(6, 78, 59, 0.4);
+  --reliability: #a78bfa; --reliability-bg: rgba(76, 29, 149, 0.4);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -48,7 +54,7 @@ body {
 }
 .pulse-dot {
   width: 10px; height: 10px;
-  background: var(--default);
+  background: var(--oss);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -117,8 +123,8 @@ body {
   white-space: nowrap;
 }
 .btn:hover { color: var(--text); border-color: var(--text-soft); background: rgba(30, 41, 59, 0.5); }
-.btn.primary { border-color: var(--default); color: var(--default); }
-.btn.primary:hover { background: var(--default-bg); }
+.btn.primary { border-color: var(--oss); color: var(--oss); }
+.btn.primary:hover { background: var(--oss-bg); }
 
 /* ── Main Layout ─────────────────────── */
 .main { display: flex; flex: 1; overflow: hidden; }
@@ -233,6 +239,9 @@ body {
 .detail-badge.badge-oss { color: var(--oss); border-color: var(--oss); background: var(--oss-bg); }
 .detail-badge.badge-agent { color: var(--agent); border-color: var(--agent); background: var(--agent-bg); }
 .detail-badge.badge-beta { color: var(--beta); border-color: var(--beta); background: var(--beta-bg); }
+.detail-badge.badge-sources { color: var(--sources); border-color: var(--sources); background: var(--sources-bg); }
+.detail-badge.badge-features { color: var(--features); border-color: var(--features); background: var(--features-bg); }
+.detail-badge.badge-reliability { color: var(--reliability); border-color: var(--reliability); background: var(--reliability-bg); }
 .detail-desc {
   font-size: 0.78rem;
   line-height: 1.5;

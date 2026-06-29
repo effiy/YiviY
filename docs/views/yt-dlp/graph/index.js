@@ -1,7 +1,8 @@
 /* ════════════════════════════════════════════════════════════════════════
-   rui-graph — Graph Logic
+   rui-graph — Graph Logic (yt-dlp variant)
    Reads window.GRAPH_DATA, initializes Cytoscape, wires all interactions.
 
+   Custom badges: Sources (amber), Features (emerald), Reliability (violet)
    Depends on: data.js (window.GRAPH_DATA), Cytoscape.js CDN,
                dagre, cytoscape-dagre, cytoscape-cose-bilkent
    ════════════════════════════════════════════════════════════════════════ */
@@ -9,7 +10,7 @@
 (function() {
   'use strict';
 
-  const DATA = window.GRAPH_DATA;
+  var DATA = window.GRAPH_DATA;
   if (!DATA || !DATA.elements) {
     console.error('rui-graph: window.GRAPH_DATA not found. Ensure data.js is loaded before index.js.');
     return;
@@ -19,7 +20,7 @@
    * CY INIT
    * ════════════════════════════════════════════════════════════════════════ */
 
-  const cy = cytoscape({
+  var cy = cytoscape({
     container: document.getElementById('cy'),
     elements: DATA.elements,
     style: getGraphStyle(),
@@ -78,6 +79,7 @@
       // ── Card nodes by badge ──
       { selector: 'node[type="card"]',
         style: { 'shape': 'round-rectangle', 'width': 140, 'height': 60, 'font-size': '11px', 'font-weight': '600' } },
+      // Canonical badges
       { selector: 'node[badge="Core"], node[badge="核心"]',
         style: { 'background-color': 'rgba(6, 78, 59, 0.85)', 'border-color': '#34d399' } },
       { selector: 'node[badge="Report"], node[badge="报告"]',
@@ -90,6 +92,13 @@
         style: { 'background-color': 'rgba(76, 29, 149, 0.85)', 'border-color': '#a78bfa' } },
       { selector: 'node[badge="Beta"]',
         style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fb923c' } },
+      // yt-dlp custom badges
+      { selector: 'node[badge="Sources"]',
+        style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fbbf24' } },
+      { selector: 'node[badge="Features"]',
+        style: { 'background-color': 'rgba(6, 78, 59, 0.85)', 'border-color': '#34d399' } },
+      { selector: 'node[badge="Reliability"]',
+        style: { 'background-color': 'rgba(76, 29, 149, 0.85)', 'border-color': '#a78bfa' } },
 
       // ── Tag nodes by modifier ──
       { selector: 'node[type="tag"]',
@@ -157,21 +166,21 @@
    * ════════════════════════════════════════════════════════════════════════ */
 
   window.switchLayout = function(name) {
-    let opts = { animate: true, animationDuration: 600 };
+    var opts = { animate: true, animationDuration: 600 };
     if (name === 'cose-bilkent') {
-      opts = { ...opts, name: 'cose-bilkent', nodeRepulsion: 8000, idealEdgeLength: 120, gravity: 0.3, numIter: 2000, tile: true };
+      opts = Object.assign(opts, { name: 'cose-bilkent', nodeRepulsion: 8000, idealEdgeLength: 120, gravity: 0.3, numIter: 2000, tile: true });
     } else if (name === 'dagre') {
-      opts = { ...opts, name: 'dagre', rankDir: 'LR', nodeSep: 60, edgeSep: 20, rankSep: 100 };
+      opts = Object.assign(opts, { name: 'dagre', rankDir: 'LR', nodeSep: 60, edgeSep: 20, rankSep: 100 });
     } else if (name === 'dagre-tb') {
-      opts = { ...opts, name: 'dagre', rankDir: 'TB', nodeSep: 60, edgeSep: 20, rankSep: 100 };
+      opts = Object.assign(opts, { name: 'dagre', rankDir: 'TB', nodeSep: 60, edgeSep: 20, rankSep: 100 });
     } else if (name === 'breadthfirst') {
-      opts = { ...opts, name: 'breadthfirst', directed: true, spacingFactor: 1.5 };
+      opts = Object.assign(opts, { name: 'breadthfirst', directed: true, spacingFactor: 1.5 });
     } else if (name === 'concentric') {
-      opts = { ...opts, name: 'concentric', concentric: function(n) { return n.data('richness') || 1; }, minNodeSpacing: 40 };
+      opts = Object.assign(opts, { name: 'concentric', concentric: function(n) { return n.data('richness') || 1; }, minNodeSpacing: 40 });
     } else if (name === 'grid') {
-      opts = { ...opts, name: 'grid', cols: Math.ceil(Math.sqrt(cy.nodes().length)) };
+      opts = Object.assign(opts, { name: 'grid', cols: Math.ceil(Math.sqrt(cy.nodes().length)) });
     } else if (name === 'circle') {
-      opts = { ...opts, name: 'circle', radius: Math.max(200, cy.nodes().length * 15) };
+      opts = Object.assign(opts, { name: 'circle', radius: Math.max(200, cy.nodes().length * 15) });
     }
     cy.layout(opts).run();
   };
@@ -180,7 +189,7 @@
    * SEARCH
    * ════════════════════════════════════════════════════════════════════════ */
 
-  let searchTimeout;
+  var searchTimeout;
   window.doSearch = function(query) {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(function() {
@@ -219,7 +228,8 @@
    * ════════════════════════════════════════════════════════════════════════ */
 
   window.filterByBadge = function(badge, btn) {
-    document.querySelectorAll('#badge-filters .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    var buttons = document.querySelectorAll('#badge-filters .filter-btn');
+    buttons.forEach(function(b) { b.classList.remove('active'); });
     if (btn) btn.classList.add('active');
 
     if (badge === 'all') {
@@ -269,7 +279,8 @@
 
     if (type === 'card') {
       var connectedTags = node.connectedEdges('[type="has_tag"]').length;
-      var connectedCards = node.connectedEdges('[type="shares_tag"], [type="shares_badge"], [type="depends_on"], [type="related_to"], [type="extends"], [type="implements"]').map(function(e) {
+      var relatedEdges = node.connectedEdges('[type="shares_tag"], [type="shares_badge"], [type="depends_on"], [type="related_to"], [type="extends"], [type="implements"]');
+      var connectedCards = relatedEdges.map(function(e) {
         var other = e.source().id() === data.id ? e.target() : e.source();
         return { id: other.id(), label: other.data('label') };
       });
@@ -489,6 +500,10 @@
     if (b.indexOf('oss') !== -1) return 'badge-oss';
     if (b.indexOf('agent') !== -1) return 'badge-agent';
     if (b.indexOf('beta') !== -1) return 'badge-beta';
+    // yt-dlp custom badges
+    if (b.indexOf('sources') !== -1) return 'badge-sources';
+    if (b.indexOf('features') !== -1) return 'badge-features';
+    if (b.indexOf('reliability') !== -1) return 'badge-reliability';
     return '';
   }
 
@@ -504,13 +519,6 @@
    * ════════════════════════════════════════════════════════════════════════ */
 
   function initUI() {
-    // Title
-    var meta = DATA.meta || {};
-    if (meta.source) {
-      document.getElementById('graph-title').textContent = 'Source Graph';
-      document.getElementById('graph-subtitle').textContent = meta.source;
-    }
-
     // Stats
     var cards = cy.nodes('[type="card"]');
     var tags = cy.nodes('[type="tag"]');
@@ -530,11 +538,10 @@
     // Legend — nodes
     var nodeLegend = '';
     var nodeColors = [
-      ['Core/核心', '#34d399', 'rgba(6, 78, 59, 0.85)'],
-      ['Report/报告', '#fb7185', 'rgba(136, 19, 55, 0.85)'],
-      ['Guide/指南', '#38bdf8', 'rgba(8, 51, 68, 0.85)'],
       ['OSS', '#fbbf24', 'rgba(120, 53, 15, 0.85)'],
-      ['Agent', '#a78bfa', 'rgba(76, 29, 149, 0.85)'],
+      ['Sources', '#fbbf24', 'rgba(120, 53, 15, 0.85)'],
+      ['Features', '#34d399', 'rgba(6, 78, 59, 0.85)'],
+      ['Reliability', '#a78bfa', 'rgba(76, 29, 149, 0.85)'],
       ['Tag', '#64748b', 'rgba(100, 116, 139, 0.2)'],
       ['Link Dest', '#64748b', 'rgba(71, 85, 105, 0.4)'],
     ];
@@ -548,7 +555,8 @@
       '<div class="legend-item"><span class="legend-line" style="background:#475569"></span> has_tag (solid)</div>' +
       '<div class="legend-item"><span class="legend-line" style="background:#94a3b8;border-top:1.5px dashed #94a3b8"></span> shares_tag (dashed)</div>' +
       '<div class="legend-item"><span class="legend-line" style="background:#475569;border-top:1.5px dotted #475569"></span> links_to (dotted)</div>' +
-      '<div class="legend-item"><span class="legend-line" style="background:#22d3ee"></span> depends_on (cyan)</div>';
+      '<div class="legend-item"><span class="legend-line" style="background:#22d3ee"></span> depends_on (cyan)</div>' +
+      '<div class="legend-item"><span class="legend-line" style="background:#64748b;border-top:1.5px dashed #64748b"></span> related_to (dashed)</div>';
 
     // Badge filter buttons
     var uniqueBadges = [];

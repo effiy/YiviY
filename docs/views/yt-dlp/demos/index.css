@@ -1,0 +1,190 @@
+/**
+ * yt-dlp Demos — 页面样式
+ * ----------------------------------------------------------------------
+ * 独立子页面（views/），不使用 .vl-doc 作用域。
+ * 所有选择器限定在 .demos-page 下，避免泄漏。
+ */
+
+/* ── Reset & Base ─────────────────────────────────── */
+.demos-page *, .demos-page *::before, .demos-page *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.demos-page {
+    font-family: var(--yry-font-sans, system-ui, -apple-system, sans-serif);
+    background: var(--yry-bg-primary);
+    color: var(--yry-text-primary);
+    min-height: 100vh;
+}
+
+.demos-page .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--yry-space-8) var(--yry-space-4);
+}
+
+/* ── Header ───────────────────────────────────────── */
+.demos-page .page-header {
+    text-align: center;
+    margin-bottom: var(--yry-space-6);
+}
+.demos-page .page-header h1 {
+    font-size: var(--yry-font-size-2xl);
+    margin-bottom: var(--yry-space-2);
+}
+.demos-page .page-header p {
+    color: var(--yry-text-muted);
+    font-size: var(--yry-font-size-base);
+}
+.demos-page .page-header .scene-link {
+    display: inline-block;
+    margin-top: var(--yry-space-2);
+    font-size: var(--yry-font-size-sm);
+    color: var(--yry-accent);
+    text-decoration: none;
+}
+.demos-page .page-header .scene-link:hover {
+    text-decoration: underline;
+}
+
+/* ── Filters ──────────────────────────────────────── */
+.demos-page .demo-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--yry-space-2);
+    justify-content: center;
+    margin-bottom: var(--yry-space-6);
+}
+.demos-page .filter-btn {
+    padding: var(--yry-space-1) var(--yry-space-4);
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-radius: var(--yry-radius-sm);
+    color: var(--yry-text-secondary);
+    font-size: var(--yry-font-size-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.demos-page .filter-btn:hover {
+    border-color: var(--yry-accent);
+    color: var(--yry-text-primary);
+}
+.demos-page .filter-btn.active {
+    background: var(--yry-accent);
+    border-color: var(--yry-accent);
+    color: var(--yry-accent-text);
+}
+
+/* ── Grid ─────────────────────────────────────────── */
+.demos-page .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--yry-space-4);
+}
+
+/* ── Demo Card ────────────────────────────────────── */
+.demos-page .demo-card {
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-radius: var(--yry-radius-lg);
+    padding: var(--yry-space-5);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+.demos-page .demo-card:hover {
+    border-color: var(--yry-accent);
+    transform: translateY(-2px);
+    box-shadow: var(--yry-shadow-md);
+}
+.demos-page .demo-card .card-type {
+    display: inline-block;
+    padding: 2px var(--yry-space-2);
+    background: var(--yry-bg-tertiary);
+    border-radius: var(--yry-radius-sm);
+    font-size: var(--yry-font-size-xs);
+    color: var(--yry-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--yry-space-3);
+}
+.demos-page .demo-card h3 {
+    font-size: var(--yry-font-size-lg);
+    margin-bottom: var(--yry-space-2);
+}
+.demos-page .demo-card h3 a {
+    color: var(--yry-text-primary);
+    text-decoration: none;
+}
+.demos-page .demo-card h3 a:hover {
+    color: var(--yry-accent);
+}
+.demos-page .demo-card .card-desc {
+    font-size: var(--yry-font-size-sm);
+    color: var(--yry-text-secondary);
+    margin-bottom: var(--yry-space-3);
+    flex: 1;
+}
+.demos-page .demo-card .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--yry-space-1);
+    margin-bottom: var(--yry-space-3);
+}
+.demos-page .demo-card .card-tag {
+    display: inline-block;
+    padding: 1px var(--yry-space-2);
+    border-radius: var(--yry-radius-sm);
+    font-size: var(--yry-font-size-xs);
+    background: var(--yry-bg-tertiary);
+    color: var(--yry-text-muted);
+}
+.demos-page .demo-card .card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--yry-space-1);
+    padding: var(--yry-space-1) var(--yry-space-3);
+    background: var(--yry-accent);
+    color: var(--yry-accent-text);
+    text-decoration: none;
+    border-radius: var(--yry-radius-sm);
+    font-size: var(--yry-font-size-sm);
+    font-weight: 500;
+    transition: background 0.2s ease;
+    align-self: flex-start;
+}
+.demos-page .demo-card .card-action:hover {
+    background: var(--yry-accent-hover);
+}
+
+/* ── No Results ───────────────────────────────────── */
+.demos-page .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--yry-space-8);
+    color: var(--yry-text-muted);
+}
+
+/* ── Back Link ────────────────────────────────────── */
+.demos-page .back-link {
+    display: block;
+    text-align: center;
+    margin-top: var(--yry-space-8);
+    color: var(--yry-text-muted);
+    font-size: var(--yry-font-size-sm);
+}
+.demos-page .back-link a {
+    color: var(--yry-accent);
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 768px) {
+    .demos-page .page {
+        padding: var(--yry-space-4) var(--yry-space-3);
+    }
+    .demos-page .demo-grid {
+        grid-template-columns: 1fr;
+    }
+}

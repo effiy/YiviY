@@ -1,9 +1,9 @@
 ---
-name: rui-demo
+name: rui-demos
 description: Generate interactive scene demonstration pages from rui-scene card data. Analyze YrySceneCard data structures from INTRO_CONFIG, data.js card arrays, or inline card definitions, and produce self-contained dark-theme HTML demo pages — one 4-file directory per card — that showcase each feature in action. Use when the user wants to create demo pages, feature showcases, interactive demonstrations, or scene HTML pages from cards. Also use when the user mentions 演示页面, demo pages, scene demos, card demonstrations, feature demos, or wants to generate visual showcases from rui-scene card data.
 ---
 
-# Rui Demo
+# Rui Demos
 
 Generate interactive scene demonstration pages from rui-scene card data — one demo directory per card, each containing four modular files: `index.html`, `index.js`, `index.css`, `data.js`.
 
@@ -67,9 +67,15 @@ The scene's own `data.js` (if needed as a card source reference) is at `../../da
 
 ### The Three-Area Layout (in `index.html`)
 
-1. **Card Area** (top) — `<div id="scene-card">` populated by `YrySceneCard.mount()` in `index.js`. The card serves as the page's identity and a gateway back to the main docs.
-2. **Demo Area** (middle) — `<section class="demo-area" id="demo-app">` with Vue template directives. This is where the feature comes alive — interactive, illustrative, self-explanatory.
-3. **Info Area** (bottom) — `<section class="info-area">` with brief text explaining what the demo demonstrates, plus a "Back to Scene" link to `../../index.html`.
+1. **Card Area** (top) — `<section class="card-area"><div id="scene-card"></div></section>`. Populated by `YrySceneCard.mount()` in `index.js`. The card serves as the page's identity and a gateway back to the main docs. **Never use raw Vue templates (`{{ }}`) in the card area** — it is outside the Vue mount point (`#demo-app`) and will render as raw text.
+
+2. **Demo Area** (middle) — `<section class="demo-area" id="demo-app">` with Vue template directives. This is where the feature comes alive — interactive, illustrative, self-explanatory. The Vue app mounts only to `#demo-app`.
+
+3. **Info Area** (bottom) — `<section class="info-area">` with brief text explaining what the demo demonstrates, plus a standard navigation link row. Always include links to:
+   - Pipeline diagram: `../../diagram/index.html` (if viewer has one)
+   - Source graph: `../../graph/index.html` (if viewer has one)
+   - All demos: `../index.html`
+   - Docs home: `../../../../index.html`
 
 ## Decision Tree
 
@@ -416,7 +422,7 @@ Phase 4 complete. All demos integrated.
 ```javascript
 #!/usr/bin/env node
 /**
- * rui-demo inline validator — Phase 5
+ * rui-demos inline validator — Phase 5
  * Checks structural correctness of generated demo files.
  * Usage: node validate.js <outputBase>
  */
@@ -557,7 +563,7 @@ process.exit(0);
 
 2. **Execute the validator:**
    ```bash
-   node /tmp/rui-demo-validate.cjs docs/components/<scene>/demos/
+   node /tmp/rui-demos-validate.cjs docs/components/<scene>/demos/
    ```
 
 3. **If issues are reported:**
@@ -588,6 +594,21 @@ process.exit(0);
               ├── whisperx/index.html + index.js + index.css + data.js
               └── ... (10 more)
 ```
+
+---
+
+## Common Bugs & Fixes
+
+Issues observed in real demos and how to prevent/repair them:
+
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| `{{ card.name }}` rendered as raw text | Card area uses Vue template but is **outside `#demo-app`** mount point | Replace with `<div id="scene-card">` + `YrySceneCard.mount()` |
+| Card links show empty labels | `data.js` uses `{ text, href }` but YrySceneCard expects `{ label, href }` | Always use `label` in card link objects |
+| `#scene-card` stays empty | `yry-scene-card/index.js` CDN not loaded | Add `<script src="../../../../cdn/yry-scene-card/index.js">` to `<head>` |
+| No graph/diagram link in info area | Info links section was not updated after graph/diagram added | Always check for `../../diagram/` and `../../graph/` existence |
+| `fetch()` in demo | Demo tries to make real API calls | All data must be simulated via `DEMO_MOCK_DATA`; validator catches `fetch()` |
+| Hardcoded hex colors in CSS | Author used `#020617` instead of theme variables | Replace with `var(--yry-bg-primary)`; validator catches hex patterns |
 
 ---
 

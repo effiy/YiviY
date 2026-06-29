@@ -1,0 +1,171 @@
+/* ─────────────────────────────────────────────────────
+ * 代码健康报告 — 页面专属样式
+ * 作用域：所有规则挂在 .vl-doc 下，仅作用于 body.vl-doc 容器内。
+ *
+ * 分层：
+ *   CDN 主题 (tech-innovation.css) → tokens.css → base.css → 本文件
+ * ───────────────────────────────────────────────────── */
+
+/* ── Report container ─────────────── */
+.vl-doc .report--health {
+    max-width: 1100px; margin: 0 auto; padding: 40px 20px 96px;
+    font-family: var(--vl-doc-font-sans);
+    color: var(--vl-doc-text); line-height: 1.72;
+}
+.vl-doc .report--health p { color: var(--vl-doc-text-soft); margin-bottom: 14px; }
+.vl-doc .report--health h3 { font-size: 1.1em; font-weight: 600; margin: 24px 0 12px; }
+.vl-doc .report--health h4 { font-size: 0.95em; font-weight: 600; margin: 18px 0 8px; }
+.vl-doc .report--health hr { border: none; border-top: 1px solid var(--vl-doc-border); margin: 36px 0 18px; }
+
+/* ── Cover ───────────────────────── */
+.vl-doc .cover {
+    text-align: center; padding: 64px 20px 48px;
+    border-bottom: 2px solid var(--vl-doc-border); margin-bottom: 0;
+}
+.vl-doc .cover-tag {
+    display: inline-block; padding: 3px 14px; border-radius: 20px;
+    background: rgba(88,166,255,0.12); color: var(--vl-doc-accent);
+    font-size: 0.78em; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 16px;
+}
+.vl-doc .cover h1 { font-size: 2.4em; font-weight: 800; letter-spacing: -0.02em; }
+.vl-doc .cover-subtitle { font-size: 1.05em; color: var(--vl-doc-text-muted); margin-top: 10px; }
+.vl-doc .cover-meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-top: 32px; text-align: center;
+}
+.vl-doc .cover-meta-item {
+    background: var(--vl-doc-bg); border: 1px solid var(--vl-doc-border);
+    border-radius: var(--vl-doc-radius); padding: 14px;
+}
+.vl-doc .cover-meta-num { font-size: 1.6em; font-weight: 700; }
+.vl-doc .cover-meta-label { font-size: 0.75em; color: var(--vl-doc-text-muted); margin-top: 3px; }
+
+/* ── TOC ─────────────────────────── */
+.vl-doc .toc {
+    background: var(--vl-doc-bg); border: 1px solid var(--vl-doc-border);
+    border-radius: var(--vl-doc-radius); padding: 24px 28px; margin: 48px 0 52px;
+}
+.vl-doc .toc h3 { margin: 0 0 12px; font-size: 0.9em; color: var(--vl-doc-text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.vl-doc .toc ol { padding-left: 18px; columns: 2; column-gap: 28px; }
+.vl-doc .toc li { margin: 4px 0; break-inside: avoid; }
+.vl-doc .toc a { color: var(--vl-doc-accent); text-decoration: none; font-size: 0.87em; }
+.vl-doc .toc a:hover { text-decoration: underline; }
+
+/* ── Sections ────────────────────── */
+.vl-doc .section { margin-bottom: 56px; }
+.vl-doc .section h2 {
+    font-size: 1.45em; font-weight: 700; padding-bottom: 10px;
+    border-bottom: 2px solid var(--vl-doc-border); margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+}
+.vl-doc .section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 6px;
+    background: var(--vl-doc-accent); font-size: 0.68em; flex-shrink: 0;
+}
+
+/* ── Badges (report-specific) ────── */
+.vl-doc .badge-critical { background: rgba(248,81,73,0.15); color: #f85149; }
+.vl-doc .badge-high { background: rgba(210,153,34,0.15); color: #d29922; }
+.vl-doc .badge-medium { background: rgba(63,185,80,0.15); color: #3fb950; }
+.vl-doc .badge-low { background: rgba(139,148,158,0.12); color: #8b949e; }
+.vl-doc .badge-info { background: rgba(88,166,255,0.15); color: #58a6ff; }
+
+/* ── Tables ──────────────────────── */
+.vl-doc .table-wrap { overflow-x: auto; margin: 14px 0; }
+.vl-doc .report--health table { width: 100%; border-collapse: collapse; font-size: 0.86em; }
+.vl-doc .report--health th, .vl-doc .report--health td {
+    padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--vl-doc-border); vertical-align: top;
+}
+.vl-doc .report--health th {
+    background: var(--vl-doc-bg-soft); color: var(--vl-doc-text-muted);
+    font-weight: 600; font-size: 0.76em; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.vl-doc .report--health tbody tr:hover td { background: rgba(88,166,255,0.03); }
+
+/* ── Score Panel ─────────────────── */
+.vl-doc .score-panel {
+    background: var(--vl-doc-bg); border: 2px solid var(--vl-doc-accent);
+    border-radius: var(--vl-doc-radius); padding: 28px 32px; margin-bottom: 28px;
+    display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+}
+.vl-doc .score-big-grade { font-size: 5em; font-weight: 900; color: var(--vl-doc-accent); line-height: 1; }
+.vl-doc .score-info { flex: 1; min-width: 240px; }
+.vl-doc .score-info h3 { margin: 0 0 8px; font-size: 1.1em; }
+.vl-doc .score-info p { font-size: 0.9em; color: var(--vl-doc-text-muted); }
+.vl-doc .score-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 14px; }
+.vl-doc .score-meta > div { text-align: center; }
+.vl-doc .score-meta-val { font-size: 1.5em; font-weight: 700; }
+.vl-doc .score-meta-lbl { font-size: 0.7em; color: var(--vl-doc-text-muted); }
+
+/* ── Dimension Scores ────────────── */
+.vl-doc .dim-scores { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 28px; }
+.vl-doc .dim-score {
+    background: var(--vl-doc-bg); border: 1px solid var(--vl-doc-border);
+    border-radius: var(--vl-doc-radius); padding: 14px 10px; text-align: center;
+}
+.vl-doc .dim-score .ds-name { font-size: 0.68em; color: var(--vl-doc-text-muted); margin-bottom: 4px; }
+.vl-doc .dim-score .ds-grade { font-size: 1.8em; font-weight: 800; line-height: 1.1; }
+.vl-doc .dim-score .ds-num { font-size: 0.8em; color: var(--vl-doc-text-muted); margin-top: 2px; }
+
+/* ── Charts ──────────────────────── */
+.vl-doc .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+.vl-doc .chart-card {
+    background: var(--vl-doc-bg); border: 1px solid var(--vl-doc-border);
+    border-radius: var(--vl-doc-radius); padding: 20px;
+}
+.vl-doc .chart-card h4 { margin: 0 0 12px; font-size: 0.9em; color: var(--vl-doc-text-muted); text-align: center; }
+.vl-doc .chart-card svg { display: block; margin: 0 auto; }
+.vl-doc .full-chart {
+    background: var(--vl-doc-bg); border: 1px solid var(--vl-doc-border);
+    border-radius: var(--vl-doc-radius); padding: 24px; margin: 20px 0; text-align: center;
+}
+.vl-doc .full-chart h4 { margin: 0 0 16px; font-size: 0.9em; color: var(--vl-doc-text-muted); }
+
+/* ── Compare (Good/Bad) ──────────── */
+.vl-doc .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+.vl-doc .compare-bad, .vl-doc .compare-good {
+    border-radius: var(--vl-doc-radius); overflow: hidden; border: 1px solid var(--vl-doc-border);
+}
+.vl-doc .compare-label {
+    padding: 7px 12px; font-weight: 600; font-size: 0.73em; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.vl-doc .compare-bad .compare-label { background: rgba(248,81,73,0.2); color: #f85149; }
+.vl-doc .compare-good .compare-label { background: rgba(63,185,80,0.2); color: #3fb950; }
+.vl-doc .compare pre { margin: 0; border: none; border-radius: 0; }
+
+/* ── Timeline ────────────────────── */
+.vl-doc .timeline { position: relative; padding-left: 28px; }
+.vl-doc .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: var(--vl-doc-border); }
+.vl-doc .tl-phase { position: relative; margin-bottom: 28px; }
+.vl-doc .tl-phase::before { content: ''; position: absolute; left: -25px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--vl-doc-accent); border: 2px solid var(--vl-doc-bg-soft); }
+.vl-doc .tl-phase h4 { margin: 0 0 2px; font-size: 1em; }
+.vl-doc .tl-meta { font-size: 0.76em; color: var(--vl-doc-text-muted); margin-bottom: 8px; }
+.vl-doc .tl-phase table { font-size: 0.82em; }
+
+/* ── Callouts ────────────────────── */
+.vl-doc .callout-warning {
+    border-left-color: #d29922; background: rgba(210,153,34,0.06);
+    border-left: 3px solid; border-radius: 0 var(--vl-doc-radius) var(--vl-doc-radius) 0;
+    padding: 12px 18px; margin: 16px 0;
+}
+.vl-doc .callout-warning strong, .vl-doc .callout strong { display: block; margin-bottom: 3px; }
+
+/* ── Footer ──────────────────────── */
+.vl-doc .report-footer-text { text-align: center; color: var(--vl-doc-text-muted); font-size: 0.82em; }
+
+/* ── Responsive ──────────────────── */
+@media (max-width: 900px) { .vl-doc .dim-scores { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 800px) { .vl-doc .chart-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) {
+    .vl-doc .report--health { padding: 16px 10px 40px; }
+    .vl-doc .cover { padding: 28px 12px 24px; }
+    .vl-doc .cover h1 { font-size: 1.4em; }
+    .vl-doc .toc ol { columns: 1; }
+    .vl-doc .section { margin-bottom: 32px; }
+    .vl-doc .score-panel { padding: 16px 18px; flex-direction: column; }
+    .vl-doc .score-big-grade { font-size: 3.5em; }
+}
+@media (max-width: 700px) { .vl-doc .compare { grid-template-columns: 1fr; } }
+@media (max-width: 500px) { .vl-doc .dim-scores { grid-template-columns: repeat(2, 1fr); } }
