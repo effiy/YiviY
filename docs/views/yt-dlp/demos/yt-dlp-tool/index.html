@@ -3,66 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>yt-dlp — Tool Demo · VideoLingo</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23fbbf24'/><text x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23020617' text-anchor='middle'>YT</text></svg>" type="image/svg+xml">
-    <meta name="description" content="Interactive yt-dlp tool demo — simulate the download pipeline: paste a URL, see staged progress, and get mock video info with subtitle extraction results.">
+    <title>yt-dlp — Download Pipeline Simulator · VideoLingo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23708090'/><text x='16' y='22' font-size='16' font-family='monospace' font-weight='bold' fill='%23ffffff' text-anchor='middle'>YT</text></svg>" type="image/svg+xml">
+    <meta name="description" content="Interactive yt-dlp download pipeline simulator — each stage traces to the actual Python source file and function. Clickable trace links connect to the code dependency graph.">
 
-    <!-- CDN Theme -->
-    <link rel="stylesheet" href="../../../../cdn/theme/tech-innovation.css">
-
-    <!-- Vue 3 CDN -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-
-    <!-- YrySceneCard component (for header card) -->
-    <script src="../../../../cdn/yry-scene-card/index.js"></script>
-
-    <!-- Demo styles -->
+    <!-- Theme: Modern Minimalist (rui-theme) -->
+    <link rel="stylesheet" href="../../../../../cdn/theme/modern-minimalist.css">
     <link rel="stylesheet" href="index.css">
 </head>
-<body>
+<body class="demos-page">
     <div id="app">
         <div class="page">
-            <!-- ═══════════════════════════════════ -->
-            <!-- Card Area                          -->
-            <!-- ═══════════════════════════════════ -->
+            <!-- ══════════════════════════════════════════════ -->
+            <!-- Card Area — YrySceneCard renders the header  -->
+            <!-- ══════════════════════════════════════════════ -->
             <section class="card-area">
                 <div id="scene-card"></div>
             </section>
 
-            <!-- ═══════════════════════════════════ -->
-            <!-- Demo Area                          -->
-            <!-- ═══════════════════════════════════ -->
+            <!-- ══════════════════════════════════════════════ -->
+            <!-- Demo Area — Vue 3 mounts here                -->
+            <!-- ══════════════════════════════════════════════ -->
             <section class="demo-area" id="demo-app">
-                <!-- Input Section -->
+
+                <!-- ── Input Section ──────────────────────── -->
                 <div class="demo-input">
-                    <label>Paste a video URL to simulate the yt-dlp download pipeline</label>
+                    <label class="demo-input__label">{{ ui.inputLabel }}</label>
                     <div class="input-group">
                         <input type="text"
                                v-model="input"
-                               :placeholder="placeholder"
-                               @keyup.enter="process">
-                        <button @click="process" :disabled="!canProcess">
-                            {{ processing ? '⏳ Downloading...' : '⬇ Download' }}
+                               :placeholder="ui.placeholder"
+                               @keyup.enter="process"
+                               ref="urlInput"
+                               class="input-group__field">
+                        <button @click="process"
+                                :disabled="!canProcess"
+                                class="input-group__btn btn-accent">
+                            {{ processing ? ui.downloading : ui.download }}
                         </button>
                     </div>
 
-                    <!-- Sample URLs for quick testing -->
+                    <!-- Sample URL chips -->
                     <div class="sample-urls">
-                        <button v-for="url in sampleInputs"
+                        <button v-for="(u, i) in sampleInputs"
                                 class="sample-url-btn"
-                                @click="useSample(url)"
-                                :title="url">
-                            📋 {{ url.length > 45 ? url.slice(0, 42) + '...' : url }}
+                                @click="useSample(u)"
+                                :title="u">
+                            <span class="sample-url-btn__icon">🔗</span>
+                            <span class="sample-url-btn__text">Sample {{ i + 1 }}</span>
                         </button>
                     </div>
 
-                    <!-- Options Toggle -->
+                    <!-- Command display -->
+                    <div class="cmd-display" v-if="input.trim() && !processing">
+                        <span class="cmd-display__label">{{ ui.cmdLabel }}</span>
+                        <code class="cmd-display__code">{{ computedCmd }}</code>
+                    </div>
+
+                    <!-- Advanced options panel -->
                     <div class="demo-options" v-if="showOptions">
                         <div class="option-group">
-                            <label>Resolution:</label>
-                            <select v-model="resolution">
+                            <label class="option-group__label">{{ ui.resolutionLabel }}</label>
+                            <select v-model="resolution" class="option-group__select">
                                 <option>best</option>
                                 <option>4K</option>
+                                <option>1440p</option>
                                 <option>1080p</option>
                                 <option>720p</option>
                                 <option>480p</option>
@@ -70,102 +75,136 @@
                             </select>
                         </div>
                         <div class="option-group">
-                            <label>
-                                <input type="checkbox" v-model="audioOnly"> Audio only
+                            <label class="option-group__checkbox">
+                                <input type="checkbox" v-model="audioOnly">
+                                {{ ui.audioOnly }}
                             </label>
                         </div>
                         <div class="option-group">
-                            <label>
-                                <input type="checkbox" v-model="extractSubtitles" checked> Extract subtitles
+                            <label class="option-group__checkbox">
+                                <input type="checkbox" v-model="extractSubtitles" checked>
+                                {{ ui.extractSubtitles }}
                             </label>
                         </div>
                         <div class="option-group">
-                            <label>
-                                <input type="checkbox" v-model="downloadThumbnail" checked> Download thumbnail
+                            <label class="option-group__checkbox">
+                                <input type="checkbox" v-model="downloadThumbnail" checked>
+                                {{ ui.downloadThumbnail }}
                             </label>
                         </div>
                     </div>
-                    <button style="margin-top: var(--yry-space-2); padding: var(--yry-space-1) var(--yry-space-2);
-                                   background: transparent; border: 1px solid var(--yry-border);
-                                   border-radius: var(--yry-radius-sm); color: var(--yry-text-muted);
-                                   font-size: var(--yry-font-size-xs);"
-                            @click="toggleOptions">
-                        {{ showOptions ? '▲ Hide options' : '▼ Advanced options' }}
+                    <button class="options-toggle" @click="toggleOptions"
+                            :class="{ 'options-toggle--open': showOptions }">
+                        {{ showOptions ? ui.hideOptions : ui.showOptions }}
                     </button>
                 </div>
 
-                <!-- Progress Section -->
-                <div class="demo-progress" v-if="processing">
-                    <div class="progress-bar">
-                        <div class="progress-fill" :style="{ width: progressPercent }"></div>
-                    </div>
-                    <p class="progress-text">{{ progressText }}</p>
-                    <div class="retry-indicator" v-if="showRetry">
-                        ⚠ Retry {{ retryCount }}/5 — automatic fragment retry in progress
-                    </div>
-                </div>
-
-                <!-- Output Section -->
-                <div class="demo-output" v-if="hasResult">
-                    <h3 style="margin-bottom: var(--yry-space-3); color: var(--yry-success);">✓ Download Complete</h3>
-                    <div class="result-grid">
-                        <div v-for="item in resultItems" class="result-item">
-                            <div class="result-label">{{ item.label }}</div>
-                            <div class="result-value" :class="{ mono: item.mono }">{{ item.value }}</div>
+                <!-- ── Pipeline Flow (during processing) ──── -->
+                <div class="pipeline-section" v-if="processing">
+                    <h4 class="pipeline-section__header">{{ ui.progressHeader }}</h4>
+                    <div class="pipeline-flow">
+                        <div v-for="(stage, i) in stages"
+                             class="pf-step"
+                             :class="{ done: i < currentStage, current: i === currentStage, pending: i > currentStage }"
+                             :title="stage.text">
+                            <div class="pf-dot">
+                                <span v-if="i < currentStage" class="pf-dot__check">✓</span>
+                                <span v-else-if="i === currentStage" class="pf-spinner"></span>
+                                <span v-else class="pf-dot__num">{{ i + 1 }}</span>
+                            </div>
+                            <div class="pf-label">{{ stage.text }}</div>
                         </div>
                     </div>
 
-                    <!-- Subtitle badges -->
-                    <div v-if="result.subs && Object.keys(result.subs).length > 0" style="margin-top: var(--yry-space-3);">
-                        <div class="result-label" style="margin-bottom: var(--yry-space-1);">Extracted Subtitles</div>
+                    <!-- Progress bar -->
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill" :style="{ width: progressPercent }"></div>
+                        </div>
+                        <p class="progress-bar__text">{{ progressText }}</p>
+                    </div>
+
+                    <!-- Stage trace (clickable code links) -->
+                    <div class="stage-trace" v-if="currentStageInfo && currentStageInfo.trace">
+                        <span class="stage-trace__icon">{{ ui.tracePrefix }}</span>
+                        <span class="stage-trace__label">Source:</span>
+                        <a class="stage-trace__link stage-trace__link--file"
+                           :href="graphLink(currentStageInfo.trace.fileId)"
+                           target="_blank">{{ currentStageInfo.trace.file }}</a>
+                        <span class="stage-trace__arrow">→</span>
+                        <a class="stage-trace__link stage-trace__link--func"
+                           :href="graphLink(currentStageInfo.trace.funcId)"
+                           target="_blank">{{ currentStageInfo.trace.func }}</a>
+                        <span class="stage-trace__desc">{{ currentStageInfo.trace.desc }}</span>
+                    </div>
+
+                    <!-- Retry indicator -->
+                    <div class="retry-indicator" v-if="showRetry">
+                        <span class="retry-indicator__icon">⚠</span>
+                        <span>{{ ui.retryPrefix }} {{ retryCount }}/{{ maxRetries }} — {{ ui.retrySuffix }}</span>
+                    </div>
+                </div>
+
+                <!-- ── Output Section ────────────────────── -->
+                <div class="demo-output" v-if="hasResult">
+                    <div class="output-header">
+                        <h3 class="output-header__title">{{ ui.completeHeader }}</h3>
+                        <span class="output-header__time">{{ result.extractedAt }}</span>
+                    </div>
+                    <div class="result-grid">
+                        <div v-for="item in resultItems" class="result-item">
+                            <div class="result-item__label">{{ item.label }}</div>
+                            <div class="result-item__value" :class="{ mono: item.mono }">{{ item.value }}</div>
+                        </div>
+                    </div>
+                    <div v-if="result.subs && Object.keys(result.subs).length" class="subs-section">
+                        <div class="subs-section__label">{{ ui.extractedSubs }}</div>
                         <div class="subs-list">
-                            <span v-for="(type, lang) in result.subs" class="sub-badge">
-                                {{ lang }}: {{ type }}
+                            <span v-for="(type, lang) in result.subs" class="sub-badge"
+                                  :title="type">
+                                <span class="sub-badge__lang">{{ lang }}</span>
+                                <span class="sub-badge__type">{{ type }}</span>
                             </span>
                         </div>
                     </div>
-
-                    <div style="margin-top: var(--yry-space-4); display: flex; gap: var(--yry-space-2);">
-                        <button @click="reset"
-                                style="padding: var(--yry-space-2) var(--yry-space-4);
-                                       background: var(--yry-bg-tertiary); border: 1px solid var(--yry-border);
-                                       border-radius: var(--yry-radius-md); color: var(--yry-text-secondary);
-                                       font-size: var(--yry-font-size-sm); cursor: pointer;">
-                            ↺ Try Another URL
-                        </button>
+                    <div class="result-actions">
+                        <button class="reset-btn" @click="reset">{{ ui.resetBtn }}</button>
                     </div>
+                </div>
+
+                <!-- ── Empty State ───────────────────────── -->
+                <div class="demo-empty" v-if="!hasResult && !processing">
+                    <div class="demo-empty__icon">⬇</div>
+                    <p class="demo-empty__text">Paste a URL above and click <strong>Download</strong> to simulate the yt-dlp pipeline</p>
+                    <p class="demo-empty__hint">Try one of the sample URLs, or paste your own YouTube/Vimeo link</p>
                 </div>
             </section>
 
-            <!-- ═══════════════════════════════════ -->
-            <!-- Info Area                          -->
-            <!-- ═══════════════════════════════════ -->
+            <!-- ══════════════════════════════════════════════ -->
+            <!-- Info Area                                      -->
+            <!-- ══════════════════════════════════════════════ -->
             <section class="info-area">
-                <h3>About This Demo</h3>
-                <p>
-                    This interactive demo simulates the <strong>yt-dlp download pipeline</strong> as it runs inside VideoLingo.
-                    Paste a video URL to see the full 7-stage download sequence — from info extraction through format selection,
-                    fragment download, subtitle extraction, and FFmpeg post-processing. All data is simulated client-side; no real
-                    downloads are performed.
-                </p>
-                <p>
-                    The progress stages and retry behavior mirror the actual <code>_1_ytdlp.py</code> implementation:
-                    5 retries with backoff, 8 concurrent fragments, socket timeout handling, and automatic yt-dlp updates.
-                </p>
+                <h3 class="info-area__title">{{ ui.infoHeader }}</h3>
+                <p class="info-area__text" v-html="ui.infoP1"></p>
+                <p class="info-area__text" v-html="ui.infoP2"></p>
+                <p class="info-area__text info-area__text--muted" v-html="ui.infoP3"></p>
                 <div class="info-links">
-                    <a href="../../diagram/index.html" class="info-link">📐 Pipeline Diagram</a>
-                    <a href="../../graph/index.html" class="info-link">🕸️ Source Graph</a>
-                    <a href="../index.html" class="info-link">🎬 All yt-dlp Demos</a>
-                    <a href="../../../../index.html" class="info-link">🏠 Docs Home</a>
+                    <a href="../../diagram/index.html" class="info-link">📐 {{ ui.pipelineLink }}</a>
+                    <a href="../../graph/index.html" class="info-link">🕸️ {{ ui.graphLink }}</a>
+                    <a href="../index.html" class="info-link">🎬 {{ ui.allDemosLink }}</a>
+                    <a href="../../../../index.html" class="info-link">🏠 {{ ui.docsHomeLink }}</a>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- Data -->
+    <!-- CDN scripts -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../../cdn/shared/yry-loader.js"></script>
+    <script src="../../../../../cdn/yry-tag-chip/index.js"></script>
+    <script src="../../../../../cdn/yry-scene-card/index.js"></script>
+    <script src="../../../../assets/lang.js"></script>
     <script src="data.js"></script>
-
-    <!-- Vue Demo App -->
     <script src="index.js"></script>
 </body>
 </html>

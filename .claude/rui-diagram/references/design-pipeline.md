@@ -1,6 +1,6 @@
 # Design Pipeline — 4-Phase Guide
 
-Detailed walkthrough of the integrated design pipeline: codebase analysis (multi-agent KG), rui-ui design intelligence, rui-theme selection, and rui-web-test verification.
+Detailed walkthrough of the integrated design pipeline: codebase analysis (multi-agent KG), rui-ui design intelligence, and rui-theme selection.
 
 ---
 
@@ -69,7 +69,7 @@ Each typed edge maps to an arrow between components.
 
 ## Phase 1: Design Intelligence (Pre-Generation)
 
-**Tool:** rui-ui (`python3 .claude/rui-ui/scripts/search.py`)
+**Tool:** rui-ui (`python3 <rui-ui-dir>/scripts/search.py`)
 
 **Purpose:** Replace arbitrary design decisions with data-driven recommendations based on page content type, audience, and purpose.
 
@@ -106,12 +106,12 @@ Query tips:
 **3. Run the design system generator:**
 
 ```bash
-python3 .claude/rui-ui/scripts/search.py "<query>" --design-system -p "<Project Name>"
+python3 <rui-ui-dir>/scripts/search.py "<query>" --design-system -p "<Project Name>"
 ```
 
 If you want markdown output (easier to parse for docs):
 ```bash
-python3 .claude/rui-ui/scripts/search.py "<query>" --design-system -p "<Project Name>" -f markdown
+python3 <rui-ui-dir>/scripts/search.py "<query>" --design-system -p "<Project Name>" -f markdown
 ```
 
 **4. Interpret the output.** The design system returns:
@@ -145,7 +145,7 @@ Does this look right? Any adjustments before I start building?"
 **7. Optional: persist for multi-page projects:**
 
 ```bash
-python3 .claude/rui-ui/scripts/search.py "<query>" --design-system -p "<Project>" --persist
+python3 <rui-ui-dir>/scripts/search.py "<query>" --design-system -p "<Project>" --persist
 ```
 
 This creates `design-system/<project>/MASTER.md`. For subsequent pages in the same project, read this file instead of re-running the analysis.
@@ -154,7 +154,7 @@ This creates `design-system/<project>/MASTER.md`. For subsequent pages in the sa
 
 ## Phase 2: Theme Selection (During Generation)
 
-**Tool:** rui-theme (`.claude/rui-theme/themes/*.md`)
+**Tool:** rui-theme (`<rui-theme-dir>/themes/*.md`)
 
 **Purpose:** Give users a choice of professionally designed themes instead of defaulting to Modern Minimalist.
 
@@ -194,111 +194,6 @@ All other files (tokens.css, base.css, layout.css, all components) work automati
 
 ---
 
-## Phase 3: Post-Generation Verification
-
-**Tool:** rui-web-test (Playwright via `python3 .claude/rui-web-test/scripts/with_server.py`)
-
-**Purpose:** Verify generated pages render correctly, have no console errors, and are responsive.
-
-### When to Use
-
-| Scenario | Run Phase 3? |
-|----------|-------------|
-| Generating a new doc page | **Recommended** |
-| Major refactoring | **Recommended** |
-| Adding a section | Optional (quick check) |
-| Architecture diagrams | **Recommended** (verify SVG renders, export toolbar works) |
-
-### Step-by-Step
-
-**1. Write a verification script.** For doc pages (file:// URLs work since there's no build step):
-
-```python
-from playwright.sync_api import sync_playwright
-import os, sys
-
-html_path = os.path.abspath('docs/index.html')
-file_url = f'file://{html_path}'
-
-errors = []
-
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-
-    # --- Desktop (1440px) ---
-    page = browser.new_page(viewport={'width': 1440, 'height': 900})
-    page.on('console', lambda msg: errors.append(f'[CONSOLE {msg.type}] {msg.text}') if msg.type == 'error' else None)
-    page.goto(file_url, wait_until='networkidle')
-    page.wait_for_timeout(2000)  # Let Vue mount + CDN scripts load
-
-    # Verify critical elements
-    for selector in ['.vl-doc', '#main-content', '[data-include]']:
-        if not page.locator(selector).count():
-            errors.append(f'Missing: {selector}')
-
-    # Check for unstyled content (theme applied?)
-    bg = page.evaluate("() => getComputedStyle(document.querySelector('.vl-doc')).backgroundColor")
-    if bg == 'rgba(0, 0, 0, 0)':
-        errors.append('Theme not applied: .vl-doc has transparent background')
-
-    page.screenshot(path='/tmp/doc-desktop.png', full_page=True)
-
-    # --- Mobile (375px) ---
-    page.set_viewport_size({'width': 375, 'height': 812})
-    page.wait_for_timeout(500)
-    # Check no horizontal overflow
-    overflow = page.evaluate("() => document.body.scrollWidth > window.innerWidth")
-    if overflow:
-        errors.append('Horizontal overflow on mobile (375px)')
-    page.screenshot(path='/tmp/doc-mobile.png', full_page=True)
-
-    # --- i18n (if applicable) ---
-    lang_switcher = page.locator('[data-lang-switch]') or page.locator('.lang-switch')
-    if lang_switcher.count():
-        lang_switcher.first.click()
-        page.wait_for_timeout(500)
-        # Verify VL_LANG changed
-        current = page.evaluate("() => window.VL_LANG && window.VL_LANG.current")
-        if current == 'en':
-            errors.append('Language switch did not change VL_LANG.current')
-
-    browser.close()
-
-if errors:
-    print(f'VERIFICATION FAILED ({len(errors)} issues):')
-    for e in errors:
-        print(f'  - {e}')
-    sys.exit(1)
-else:
-    print('VERIFICATION PASSED')
-    print('Screenshots: /tmp/doc-desktop.png, /tmp/doc-mobile.png')
-```
-
-For architecture diagrams, adapt the selectors (check for `svg`, `.diagram-container`, export toolbar buttons).
-
-**2. If a dev server is needed** (rare for this architecture — file:// works for CDN-based pages):
-
-```bash
-python3 .claude/rui-web-test/scripts/with_server.py \
-  --server "python3 -m http.server 8080 --directory docs" \
-  --port 8080 \
-  -- python verify.py
-```
-
-**3. Report results.** If errors found: list each with context, fix, re-verify. If clean: confirm success, note screenshot paths.
-
-**4. Common issues and fixes:**
-
-| Error | Likely Cause | Fix |
-|-------|-------------|-----|
-| `Vue is not defined` | CDN script not loading | Check Vue CDN URL in `<head>` |
-| `Cannot find template #xxx` | Template ID mismatch | Verify `templateId` matches `<template id="...">` |
-| `window.XXX_CONFIG is undefined` | data.js not executing before index.js | Check script order in index.html |
-| `mountDocComponent is not defined` | mount-component.js not loaded | Check script order in entry point |
-| 404 for index.css | Component not in `_COMPONENTS_WITH_CSS` | Add component name to the Set |
-| Horizontal overflow at 375px | Fixed-width elements | Use responsive units, check layout.css |
-| Low contrast (dark theme) | Text color too close to background | Adjust `--yry-text` in theme CSS or override in tokens.css |
-
 ---
 
 ## Complete End-to-End Example
@@ -316,7 +211,7 @@ User: "Create a documentation page for VideoLingo's TTS engine"
    Key configs: voice profiles, speed/rate, output formats.
 
 3. PHASE 1 — Design Intelligence:
-   $ python3 .claude/rui-ui/scripts/search.py \
+   $ python3 <rui-ui-dir>/scripts/search.py \
        "technical documentation configuration reference developer tools" \
        --design-system -p "VideoLingo TTS"
 

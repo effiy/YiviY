@@ -3,8 +3,9 @@ name: rui-bot
 description: >
   Send WeChat Work (WeCom) bot notifications. Use when the user asks to send a
   notification, notify a WeChat/WeCom channel, or log pipeline messages.
-  Executable: node .claude/rui-bot/send.mjs [options].
-user_invocable: true
+  Executable: node <this-skill-dir>/send.mjs [options], where
+  <this-skill-dir> is the directory containing this SKILL.md
+  (typically .claude/rui-bot).
 lifecycle: default-pipeline
 ---
 
@@ -15,7 +16,7 @@ lifecycle: default-pipeline
 ## Invocation
 
 ```
-node .claude/rui-bot/send.mjs [options]
+node <this-skill-dir>/send.mjs [options]
 ```
 
 ### Options
@@ -103,11 +104,62 @@ Success: HTTP 200–299
 
 ```bash
 # Send notification
-node .claude/rui-bot/send.mjs --story=user-login --content="管线完成"
+node <this-skill-dir>/send.mjs --story=user-login --content="管线完成"
 
 # Log only, no HTTP
-node .claude/rui-bot/send.mjs --story=user-login --content="管线完成" --no-send
+node <this-skill-dir>/send.mjs --story=user-login --content="管线完成" --no-send
 
 # Read content from file
-node .claude/rui-bot/send.mjs --story=user-login --contentFile=message.txt
+node <this-skill-dir>/send.mjs --story=user-login --contentFile=message.txt
 ```
+
+## 规则
+
+- [notification-contracts.md](./rules/notification-contracts.md) — WeCom webhook 通知的输入 / 输出 / 路径所有权 / 失败降级契约。
+
+## 专业代理
+
+- [notification-troubleshooter.md](./agents/notification-troubleshooter.md) — 通知发送失败根因分类与下一步建议。
+- [content-curator.md](./agents/content-curator.md) — 将任意内容塑形为 WeCom 兼容的纯文本消息。
+
+## Borders
+
+### What this skill does
+
+- Send WeCom webhook notifications with retry + backoff
+- Append every send (or `--no-send` log-only attempt) to `docs/故事任务面板/<story>/消息通知列表.md`
+- Truncate messages to 2000 chars and prepend project name header
+
+### What this skill does NOT do
+
+- **Send messages to channels other than WeCom** — non-WeCom transports are out of scope
+- **Schedule or batch notifications** — fire-and-forget only; no built-in queue or cron
+- **Persist message history beyond the per-story markdown log** — no central archive
+- **Subscribe to events from other skills** — caller must invoke explicitly
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| any pipeline rui-* | calls → rui-bot | `[IF-011](../INTERFACES.md#if-011)` |
+| [[rui-skill]] | can target | rui-skill may add evals around rui-bot |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `<this-skill-dir>/` | read+write (owned) |
+| `docs/故事任务面板/<story>/消息通知列表.md` | append-only (owned per-story) |
+| WeCom webhook endpoint | write (HTTP POST) |
+| Anywhere else | no write |
+
+### Invocation
+
+Entry scripts live alongside this SKILL.md:
+
+```bash
+node <this-skill-dir>/send.mjs [options]      # main entry
+node <this-skill-dir>/help.mjs                 # show help
+```
+
+`<this-skill-dir>` is the directory containing this SKILL.md (typically `.claude/rui-bot/`). On first run, both scripts require `--help` to verify environment.

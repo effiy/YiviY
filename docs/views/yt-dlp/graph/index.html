@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>yt-dlp — Source Graph · VideoLingo</title>
-  <meta name="description" content="Interactive source graph for yt-dlp — explore cards, tags, badges, and relationships in the yt-dlp download pipeline.">
+  <title>yt-dlp — Code Dependency Graph · VideoLingo</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23fbbf24'/><text x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23020617' text-anchor='middle'>YT</text></svg>" type="image/svg+xml">
+  <meta name="description" content="Interactive code dependency graph for yt-dlp — explore files, classes, functions, imports, calls, and class hierarchies in the yt-dlp Python codebase.">
 
   <!-- Cytoscape.js + Layout Plugins -->
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/layout-base@1.0.2/layout-base.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cose-base@1.0.3/cose-base.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
 
   <link rel="stylesheet" href="index.css">
@@ -22,8 +25,8 @@
   <!-- Header -->
   <div class="header">
     <div class="pulse-dot"></div>
-    <h1 id="graph-title">yt-dlp · Source Graph</h1>
-    <span class="subtitle" id="graph-subtitle">Download Pipeline — Cards · Tags · Relationships</span>
+    <h1 id="graph-title">yt-dlp · Code Dependency Graph</h1>
+    <span class="subtitle" id="graph-subtitle">Python Source — Files · Classes · Functions · Imports &amp; Calls</span>
     <div class="header-right">
       <button class="btn primary" onclick="downloadPNG()" title="Download PNG (2x)">📥 PNG</button>
       <button class="btn" onclick="resetView()" title="Reset view">↺ Reset</button>
@@ -47,9 +50,9 @@
     </div>
     <div class="toolbar-group">
       <span class="toolbar-label">Search</span>
-      <input type="search" id="search-input" placeholder="Card name or tag..." oninput="doSearch(this.value)">
+      <input type="search" id="search-input" placeholder="File, class, or function..." oninput="doSearch(this.value)">
     </div>
-    <div class="toolbar-group" id="badge-filters">
+    <div class="toolbar-group" id="module-filters">
       <!-- Populated by initUI() -->
     </div>
   </div>
@@ -60,7 +63,9 @@
     <div class="sidebar" id="sidebar">
       <div class="sidebar-section">
         <h3>Stats</h3>
-        <div id="stats-content">Loading...</div>
+        <div id="stats-overview"></div>
+        <div class="stat-section-label">By Module</div>
+        <div id="stats-modules"></div>
       </div>
       <div class="sidebar-section">
         <h3>Legend · Nodes</h3>

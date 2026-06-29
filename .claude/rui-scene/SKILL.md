@@ -1,6 +1,7 @@
 ---
 name: rui-scene
-description: Rewrite and optimize content into professional yry-scene-card data structures. Use when the user wants to create, rewrite, or generate scene cards for tools, features, projects, agents, skills, reports, or any content that should be displayed as a polished card. Also use when the user mentions scene cards, yry-scene-card, card components, asset cards, or wants to convert descriptions into card format — even if they don't explicitly say "scene card."
+description: Rewrite and optimize content into professional yry-scene-card data structures. Use when the user wants to create, rewrite, or generate scene cards for tools, features, projects, agents, skills, reports, or any content that should be displayed as a polished card. Also use when the user mentions scene cards, yry-scene-card, card components, asset cards, or wants to converts descriptions into card format — even if they don't explicitly say "scene card."
+lifecycle: default-pipeline
 ---
 
 # Rui Scene Card
@@ -366,3 +367,47 @@ Before finalizing card data, verify against the Code Health Report standard:
 - [ ] i18n data has identical structure across languages (same fields, same tag count, same links)
 - [ ] Badges and tag modifiers stay identical across languages; only text translates
 - [ ] Output is valid JavaScript — no trailing commas in arrays that would break older parsers
+
+## 规则
+
+- [card-standard.md](./rules/card-standard.md) — YrySceneCard 数据生成的标准 / Tier 分级 / tag modifier 语义 / 12 条门禁检查。
+
+## 专业代理
+
+- [card-writer.md](./agents/card-writer.md) — 把自由描述改写成 Code Health Report 级的卡片数据。
+- [tag-modifier-auditor.md](./agents/tag-modifier-auditor.md) — 校验 tag 的 `modifier` 与文本的语义类一致。
+
+## Borders
+
+### What this skill does
+
+- Rewrite raw content (tool descriptions, feature blurbs, project summaries) into polished `YrySceneCard` props objects
+- Enforce the **Code Health Report standard**: `·` separators, semantic tag modifiers, quantified `desc`, `<strong>` highlights
+- Define a tier system (Rich / Standard / Nav) with minimum field requirements per tier
+- Audit tag modifiers against meaning (`warn` for scores, `red` for risk, `green` for verified, …)
+
+### What this skill does NOT do
+
+- **Generate demo pages** — that is [[rui-demos]]; rui-scene only produces the data, not the page
+- **Mount cards into the DOM** — that is [[rui-html]] via `YrySceneCard.mount()`
+- **Translate between languages** — multilingual data structure (en / zh-CN) is the caller's responsibility; rui-scene operates on the requested locale
+- **Define tag colors** — modifiers (`info`, `accent`, `warn`, `red`, `purple`, `cyan`, `green`) are part of the `YrySceneCard` schema; rui-scene only fills semantic content
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| [[rui-demos]] | downstream consumer | Reads cards from data.js / inline objects — `[IF-003](../INTERFACES.md#if-003)` |
+| [[rui-html]] | downstream consumer | Mounts `YrySceneCard` props — `[IF-007](../INTERFACES.md#if-007)` |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| Caller-provided `data.js` / config object | **write** (data output goes wherever caller specifies) |
+| Component schema reference (`references/yry-scene-card-schema.md`) | read-only — owned by rui-scene |
+| Examples reference (`references/examples.md`) | read-only — owned by rui-scene |
+
+### Invocation
+
+rui-scene has **no CLI entry** — it is invoked through conversation. The user describes what they want carded (tools, features, reports, agents); the skill returns a JavaScript object matching the `YrySceneCard` props schema.

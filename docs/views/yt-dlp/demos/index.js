@@ -1,12 +1,14 @@
 /**
- * yt-dlp Demos — Vue 3 组件
- * 由 assets/mount-component.js 公共工具挂载。
- * 语言切换由 i18n: true 透明处理——模板无需修改。
+ * yt-dlp Demos — Vue 3 Application
+ * =============================================================================
+ * Mounted by assets/mount-component.js via mountDocComponent().
+ * Language switching handled transparently by i18n: true.
  *
- * 功能：
- *   - 类型筛选按钮（动态生成，仅显示有演示的分类）
- *   - 卡片网格（响应式 auto-fill）
- *   - 跨语言透明切换
+ * Features:
+ *   - Dynamic type filter chips (only show types with demos)
+ *   - Responsive card grid with hover effects
+ *   - Cross-language i18n via VL_LANG event bus
+ *   - Complexity badges on cards
  */
 mountDocComponent({
     name: 'DocYtDlpDemos',
@@ -23,20 +25,21 @@ mountDocComponent({
 
         computed: {
             /**
-             * 动态构建筛选按钮列表：先从 demos 中收集实际出现的类型，
-             * 再映射为 { id, label } 数组（"全部" 始终在首位）。
+             * Build filter chip list dynamically from demos data.
+             * "All" is always first; remaining chips only for types
+             * that actually appear in the demos array.
              */
             types: function () {
                 var self = this;
                 var seen = {};
                 var result = [{ id: 'all', label: this.allFilter }];
 
-                (this.demos || []).forEach(function (d) {
+                this.demos.forEach(function (d) {
                     if (!seen[d.type]) {
                         seen[d.type] = true;
                         result.push({
                             id: d.type,
-                            label: self.typeLabels[d.type] || d.type
+                            label: self.typeLabelFor(d.type)
                         });
                     }
                 });
@@ -44,12 +47,12 @@ mountDocComponent({
             },
 
             /**
-             * 按当前筛选类型过滤演示列表。
+             * Filter demos by the currently active type chip.
              */
             filteredDemos: function () {
-                if (this.activeType === 'all') return this.demos || [];
+                if (this.activeType === 'all') return this.demos;
                 var activeType = this.activeType;
-                return (this.demos || []).filter(function (d) {
+                return this.demos.filter(function (d) {
                     return d.type === activeType;
                 });
             }
@@ -57,17 +60,17 @@ mountDocComponent({
 
         methods: {
             /**
-             * 返回指定类型的演示数量（用于筛选按钮上的计数）。
+             * Count how many demos belong to a given type.
              */
             countByType: function (typeId) {
-                if (typeId === 'all') return (this.demos || []).length;
-                return (this.demos || []).filter(function (d) {
+                if (typeId === 'all') return this.demos.length;
+                return this.demos.filter(function (d) {
                     return d.type === typeId;
                 }).length;
             },
 
             /**
-             * 根据类型 ID 返回展示标签。
+             * Map a type ID to its display label (e.g., 'A' → '🛠️ Tool Demos').
              */
             typeLabelFor: function (typeId) {
                 return this.typeLabels[typeId] || typeId;

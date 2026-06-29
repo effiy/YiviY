@@ -1,7 +1,12 @@
 ---
 name: rui-npm
-description: Manage personal npm packages — search, install, update, list, info, uninstall, publish local files/directories, and run via npx. Command: /rui-npm. Executable: node skills/rui-npm/rui-npm.mjs [command].
-user_invocable: true
+description: >
+  Manage personal npm packages — search, install, update, list, info, uninstall,
+  publish local files/directories, and run via npx. Use when the user asks to
+  install, update, list, publish, audit, or otherwise manage npm packages.
+  Executable: node <this-skill-dir>/rui-npm.mjs [command], where
+  <this-skill-dir> is the directory containing this SKILL.md
+  (typically .claude/rui-npm).
 lifecycle: default-pipeline
 ---
 
@@ -9,7 +14,7 @@ lifecycle: default-pipeline
 
 > 个人 npm packages 管理器：搜索 · 安装 · 更新 · 列表 · 信息 · 卸载 · 本地发布 · npx 执行 · CDN 引用 · 账号级管理。
 >
-> **--help / -h**：执行 `node skills/rui-npm/help.mjs` 输出完整帮助（含命令族全景 + 场景示例）。用户输入 `/rui-npm --help` 或 `/rui-npm -h` 或 `/rui-npm help` 时，跳过逻辑，直接运行脚本。
+> **--help / -h**：执行 `node <this-skill-dir>/help.mjs` 输出完整帮助（含命令族全景 + 场景示例）。用户输入 `/rui-npm --help` 或 `/rui-npm -h` 或 `/rui-npm help` 时，跳过逻辑，直接运行脚本。
 
 [命令族全景](#命令族全景) · [子命令](#子命令) · [典型工作流](#典型工作流) · [核心规则](#核心规则) · [降级策略](#降级策略) · [生效标志](#生效标志) · [自循环](#自循环)
 
@@ -302,21 +307,55 @@ flowchart TD
 
 > 本技能 `checkMode: "cli"`——由 dispatcher 按 `0 8 * * 1` 自动调度。6 字段契约与调度规则详见 [rules/loop-engineering.md](../rui/rules/loop-engineering.md)。
 
-## 与 rui 的关系
+## 与 rui 编排的关系
 
-`/rui-npm` 是独立于 rui 编排管线的工具技能。不属于故事管线（init → doc → plan → code → update → yry），用户按需手动调用。被 rui-health 的依赖健康维度和 rui-analysis 的依赖新鲜度检查引用。
+`/rui-npm` 是独立于 rui 编排管线的工具技能，不属于故事管线（init → doc → plan → code → update → yry），用户按需手动调用。本技能不依赖任何上层调度器，也未被任何 rui-* 编排管线作为强制步骤调用。如未来出现管线级的依赖健康或安全审计需求，应由该管线自身新增专属技能（如 rui-health / rui-analysis），而非将职责合并到本技能中。
 
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'primaryColor': '#1e1f2b', 'primaryTextColor': '#a9b1d6', 'primaryBorderColor': '#3d59a1',
-  'lineColor': '#3d59a1', 'secondaryColor': '#2b2d3b', 'tertiaryColor': '#21232f'
-}}}%%
-flowchart LR
-    NPM["/rui-npm<br/>包管理 · 发布 · 审计"]:::phase --> INSTALL["install/update/uninstall"]:::op
-    NPM --> PUBLISH["publish 本地发布"]:::op
-    HEALTH["rui-health"]:::sub -.->|"引用依赖数据"| NPM
+## 专业代理
 
-    classDef phase fill:#2b2d3b,stroke:#3d59a1,color:#a9b1d6
-    classDef op fill:#2b2d3b,stroke:#3d59a1,color:#a9b1d6
-    classDef sub fill:#7c3aed,color:#fff
+- [package-advisor.md](./agents/package-advisor.md) — 需求 → 3–5 个 npm 包候选打分与首选 / 备选。
+- [version-strategist.md](./agents/version-strategist.md) — 按 semver 范围与项目约束，规划分批升级计划。
+
+## Borders
+
+### What this skill does
+
+- Manage npm packages end-to-end: search, install, update, list, info, uninstall, audit, npx, CDN lookup
+- Publish local files / directories to the npm registry
+- Manage npm identity (login / my-packages / deprecate / unpublish)
+- Validate package.json presence, ownership, and authentication before any write operation
+
+### What this skill does NOT do
+
+- **Run on a schedule (cron)** — fire-and-forget CLI only. The earlier mermaid "loop" snippet describes a design idea, not a working scheduler.
+- **Modify `package.json` directly** — invokes `npm install/update/uninstall` which npm itself edits
+- **Replace [[rui-trends]] for repo discovery** — npm registry search is scoped to npm; for GitHub trending see [[rui-trends]]
+- **Execute package code on behalf of the user** — `npx <pkg>` only; no built-in sandboxing, no URL exec
+- **Manage other ecosystems** — pnpm/yarn/bun are out of scope (their CLIs differ; extensions welcome but not in this skill)
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| (standalone) | — | No cross-skill contract; invoked manually for npm tasks |
+| Future `rui-health` / `rui-analysis` | not yet created | If pipeline-level dependency health needs emerge, those become separate skills (see `## 与 rui 编排的关系` above) |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `<this-skill-dir>/` | read+write (owned) |
+| `package.json`, `package-lock.json` (cwd) | delegated to `npm` (this skill shells out; user manages conflicts) |
+| npm registry (HTTP) | read (search/info) + write (publish/deprecate/unpublish) |
+| Anywhere else | no write |
+
+### Invocation
+
+Entry scripts live alongside this SKILL.md:
+
+```bash
+node <this-skill-dir>/rui-npm.mjs <command> [options]   # all commands
+node <this-skill-dir>/help.mjs                          # full help
 ```
+
+`<this-skill-dir>` is the directory containing this SKILL.md (typically `.claude/rui-npm/`). Requires Node.js ≥ 16 and `npm` ≥ 7.0.0.

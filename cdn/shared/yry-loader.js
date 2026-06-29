@@ -245,12 +245,20 @@
             }
         }
 
-        /* ── 模板加载 (AbortController 超时取消) ───────────────── */
+        /* ── 模板加载 (AbortController 超时取消) ─────────────────
+           file:// 协议下 Chromium 禁止 fetch() 访问 file:// URL
+           (即使 --allow-file-access-from-files 也不生效),
+           此时回退到 XMLHttpRequest (配合该 flag 可正常工作)。 */
         function fetchTemplate(templateId, timeoutMs) {
             var url = getTemplateUrl();
             if (!url) return Promise.reject(new Error('[' + componentName + '] 无法推导 index.html URL (需要通过 <script> 引入)'));
             if (!templateId) return Promise.reject(new Error('[' + componentName + '] 缺少 templateId'));
             timeoutMs = timeoutMs || 5000;
+
+            // file:// 协议: 回退到 XHR (Chromium 禁止 fetch() 访问 file://)
+            if (/^file:\/\//i.test(url)) {
+                return fetchTemplateViaXHR(url, templateId, timeoutMs);
+            }
 
             var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
             var tid = setTimeout(function () {
@@ -279,6 +287,42 @@
                     }
                     throw err;
                 });
+        }
+
+        /**
+         * XMLHttpRequest 回退：用于 file:// 协议。
+         * Chromium 143+ 禁止 fetch() 访问 file:// URL，
+         * 但 XHR 配合 --allow-file-access-from-files 仍可工作。
+         */
+        function fetchTemplateViaXHR(url, templateId, timeoutMs) {
+            return new Promise(function (resolve, reject) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.timeout = timeoutMs;
+                xhr.onload = function () {
+                    // file:// 协议 XHR 返回 status 0
+                    if (xhr.status === 200 || xhr.status === 0 || xhr.status === 304) {
+                        try {
+                            var doc = new DOMParser().parseFromString(xhr.responseText, 'text/html');
+                            var tpl = doc.getElementById(templateId);
+                            if (!tpl) {
+                                reject(new Error('未找到 <script type="text/x-template" id="' + templateId + '">'));
+                                return;
+                            }
+                            resolve(tpl.innerHTML);
+                        } catch (e) { reject(e); }
+                    } else {
+                        reject(new Error('HTTP ' + xhr.status + ' ' + xhr.statusText));
+                    }
+                };
+                xhr.onerror = function () {
+                    reject(new Error('模板加载失败 (XHR error): ' + url));
+                };
+                xhr.ontimeout = function () {
+                    reject(new Error('模板加载超时 (' + timeoutMs + 'ms): ' + url));
+                };
+                xhr.send();
+            });
         }
 
         /* ── ready / error 事件派发 ───────────────────────────────

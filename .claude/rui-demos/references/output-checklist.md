@@ -117,7 +117,7 @@ Detailed pre-generation verification. Run through this checklist before generati
 - [ ] "Back to Docs" link points to correct path
 - [ ] Card links work (open correct destinations)
 
-### Automated Check (with rui-web-test)
+### Automated Check
 - [ ] No console errors
 - [ ] Vue app mounts successfully (`Vue.createApp` doesn't throw)
 - [ ] YrySceneCard mounts successfully
@@ -133,3 +133,22 @@ Detailed pre-generation verification. Run through this checklist before generati
 - [ ] "Back to Scene" link points to `../../index.html`
 - [ ] Index page uses Vue 3 filter pattern for type filtering
 - [ ] No-results state handled for empty filter results
+- [ ] Index cards show complexity level (Beginner/Intermediate/Advanced)
+- [ ] Index cards show "what you'll learn" highlights (2-4 bullet points)
+- [ ] Filter chips show count badges (number of demos per type)
+- [ ] Header includes links to diagram and graph (if they exist)
+- [ ] Footer includes back links with emoji icons for visual scannability
+
+### Professional Suite Verification
+
+When generating 3+ demos for one scene, run these cross-demo checks:
+
+- [ ] **Theme consistency**: All demos use the same CDN theme `<link>`. No demo uses inline tokens while others use CDN tokens.
+- [ ] **CDN script order**: All demos load the same CDN scripts in the same order.
+- [ ] **Three-area layout**: All demos have identical card/demo/info area structure.
+- [ ] **Info link parity**: All demos have the same set of info-area navigation links.
+- [ ] **Index completeness**: The demo index lists every demo with matching metadata.
+- [ ] **Mutual linking**: Every demo links back to the index; the index links to every demo.
+- [ ] **Type diversity**: Demos cover complementary aspects (not 3 demos of the same type).
+- [ ] **Data file consistency**: All `data.js` files follow the same cross-language constant pattern.
+- [ ] **Vue app pattern**: All `index.js` files use the same IIFE + manual i18n + timer cleanup pattern.

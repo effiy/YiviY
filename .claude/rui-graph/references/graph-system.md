@@ -1,6 +1,6 @@
-# Graph System Reference — Full Design System
+# Graph System Reference — Code Dependency Graph
 
-> Color palette, layout configurations, node/edge styles, and CSS variables for rui-graph Cytoscape.js graphs.
+> Color palette, layout configurations, node/edge styles, and CSS variables for rui-graph code dependency graphs using Cytoscape.js.
 >
 > **See also:** [[edge-types.md]] for the expanded edge type catalog with creation rules and collision prevention. [[validation.md]] for the complete validation rules and auto-fix pipeline.
 
@@ -19,6 +19,54 @@ All graphs share these base tokens, matching the VideoLingo dark theme:
   --graph-font: 'JetBrains Mono', monospace;
 }
 ```
+
+## Node Types (4 types)
+
+| Node Type | Source | Color | Hex | Shape | Size |
+|-----------|--------|-------|-----|-------|------|
+| **file** | Each `.py` source file | Sky blue | `#38bdf8` | Round-rectangle | 150×58, font-size: 10px, weight: 600 |
+| **class** | Each class definition | Violet | `#a78bfa` | Hexagon | 110×95, font-size: 9px, weight: 600 |
+| **function** | Each function/method def | Emerald | `#34d399` | Ellipse | 125×48, font-size: 9px, weight: 500 |
+| **module** | Package `__init__.py` (namespace) | Amber | `#fbbf24` | Diamond | 80×80, font-size: 9px, weight: 600 |
+
+### File Tier → Size Modifier
+
+File node width scales by line count (a proxy for importance):
+
+| Tier | Line Count | Width | Description |
+|------|-----------|-------|-------------|
+| Core | >1000 | 160 | Main orchestrator / large module |
+| Library | 100–1000 | 140 | Feature module |
+| Utility | <100 | 120 | Small helper / constants |
+
+## Edge Types (5 types)
+
+| Edge Type | Source → Target | Line Style | Width | Color | Meaning |
+|-----------|----------------|------------|-------|-------|---------|
+| `imports` | file → file | Solid arrow | 1.5 | `#475569` | One file imports another |
+| `calls` | function → function | Dashed arrow | 1 | `#94a3b8` | Function calls another |
+| `inherits` | class → class | Bold solid arrow | 2 | `#a78bfa` | Class inherits from superclass |
+| `contains` | file → class/function | Solid no arrow | 0.8 | `#475569` | File defines class/function |
+| `exports` | file → file | Dotted arrow | 1 | `#22d3ee` | `__init__.py` re-exports symbols |
+
+## Color Palette — Entity Type → Cytoscape
+
+| Entity Type | Color | Hex | Background |
+|-------------|-------|-----|------------|
+| `file` | Sky blue | `#38bdf8` | `rgba(8, 51, 68, 0.85)` |
+| `class` | Violet | `#a78bfa` | `rgba(76, 29, 149, 0.85)` |
+| `function` | Emerald | `#34d399` | `rgba(6, 78, 59, 0.85)` |
+| `module` | Amber | `#fbbf24` | `rgba(120, 53, 15, 0.85)` |
+
+### Edge Colors
+
+| Edge Type | Color | Hex |
+|-----------|-------|-----|
+| `imports` | Slate | `#475569` |
+| `calls` | Gray | `#94a3b8` |
+| `inherits` | Violet | `#a78bfa` |
+| `contains` | Slate | `#475569` |
+| `exports` | Cyan | `#22d3ee` |
 
 ## Cytoscape.js Container Styles
 
@@ -58,114 +106,87 @@ const cy = cytoscape({
       }
     },
 
-    /* ===== CARD NODES ===== */
+    /* ===== FILE NODES ===== */
     {
-      selector: 'node[type="card"]',
+      selector: 'node[type="file"]',
       style: {
         'shape': 'round-rectangle',
         'width': 140,
-        'height': 60,
-        'font-size': '11px',
+        'height': 55,
+        'font-size': '10px',
         'font-weight': '600',
-        'padding': '8px',
+        'background-color': 'rgba(8, 51, 68, 0.85)',
+        'border-color': '#38bdf8',
       }
     },
-    // Card: badge=Core
-    { selector: 'node[badge="Core"], node[badge="核心"]',
-      style: { 'background-color': 'rgba(6, 78, 59, 0.85)', 'border-color': '#34d399' } },
-    // Card: badge=Report
-    { selector: 'node[badge="Report"], node[badge="报告"]',
-      style: { 'background-color': 'rgba(136, 19, 55, 0.85)', 'border-color': '#fb7185' } },
-    // Card: badge=Guide
-    { selector: 'node[badge="Guide"], node[badge="指南"]',
-      style: { 'background-color': 'rgba(8, 51, 68, 0.85)', 'border-color': '#38bdf8' } },
-    // Card: badge=OSS
-    { selector: 'node[badge="OSS"]',
-      style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fbbf24' } },
-    // Card: badge=Agent
-    { selector: 'node[badge="Agent"]',
-      style: { 'background-color': 'rgba(76, 29, 149, 0.85)', 'border-color': '#a78bfa' } },
-    // Card: badge=Beta
-    { selector: 'node[badge="Beta"]',
-      style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fb923c' } },
-    // Card: no badge (default)
-    { selector: 'node[type="card"]',
-      style: { 'background-color': 'rgba(8, 51, 68, 0.85)', 'border-color': '#22d3ee' } },
 
-    /* ===== TAG NODES ===== */
+    /* ===== CLASS NODES ===== */
     {
-      selector: 'node[type="tag"]',
+      selector: 'node[type="class"]',
+      style: {
+        'shape': 'hexagon',
+        'width': 110,
+        'height': 95,
+        'font-size': '9px',
+        'font-weight': '600',
+        'background-color': 'rgba(76, 29, 149, 0.85)',
+        'border-color': '#a78bfa',
+      }
+    },
+
+    /* ===== FUNCTION NODES ===== */
+    {
+      selector: 'node[type="function"]',
       style: {
         'shape': 'ellipse',
-        'width': 90,
-        'height': 36,
+        'width': 125,
+        'height': 48,
         'font-size': '9px',
         'font-weight': '500',
+        'background-color': 'rgba(6, 78, 59, 0.85)',
+        'border-color': '#34d399',
       }
     },
-    { selector: 'node[modifier="warn"]',  style: { 'background-color': 'rgba(245, 158, 11, 0.2)', 'border-color': '#f59e0b' } },
-    { selector: 'node[modifier="accent"]',style: { 'background-color': 'rgba(234, 179, 8, 0.2)', 'border-color': '#eab308' } },
-    { selector: 'node[modifier="info"]',  style: { 'background-color': 'rgba(59, 130, 246, 0.2)', 'border-color': '#3b82f6' } },
-    { selector: 'node[modifier="red"]',   style: { 'background-color': 'rgba(239, 68, 68, 0.2)', 'border-color': '#ef4444' } },
-    { selector: 'node[modifier="purple"]',style: { 'background-color': 'rgba(139, 92, 246, 0.2)', 'border-color': '#8b5cf6' } },
-    { selector: 'node[modifier="cyan"]',  style: { 'background-color': 'rgba(6, 182, 212, 0.2)', 'border-color': '#06b6d4' } },
-    { selector: 'node[modifier="pass"], node[modifier="green"]',
-      style: { 'background-color': 'rgba(34, 197, 94, 0.2)', 'border-color': '#22c55e' } },
 
-    /* ===== LINK DESTINATION NODES ===== */
+    /* ===== MODULE NODES ===== */
     {
-      selector: 'node[type="link_dest"]',
+      selector: 'node[type="module"]',
       style: {
         'shape': 'diamond',
-        'width': 60,
-        'height': 60,
-        'font-size': '8px',
-        'background-color': 'rgba(71, 85, 105, 0.4)',
-        'border-color': '#64748b',
-      }
-    },
-
-    /* ===== BADGE NODES ===== */
-    {
-      selector: 'node[type="badge"]',
-      style: {
-        'shape': 'triangle',
-        'width': 40,
-        'height': 40,
-        'font-size': '8px',
+        'width': 80,
+        'height': 80,
+        'font-size': '9px',
+        'font-weight': '600',
+        'background-color': 'rgba(120, 53, 15, 0.85)',
+        'border-color': '#fbbf24',
       }
     },
 
     /* ===== EDGE TYPES ===== */
-    // has_tag: card → tag
+    // imports: file → file
     {
-      selector: 'edge[type="has_tag"]',
-      style: { 'line-style': 'solid', 'width': 1, 'line-color': '#475569', 'target-arrow-shape': 'none', 'curve-style': 'unbundled-bezier' }
+      selector: 'edge[type="imports"]',
+      style: { 'line-style': 'solid', 'width': 1.5, 'line-color': '#475569', 'target-arrow-shape': 'triangle' }
     },
-    // shares_tag: card ↔ card
+    // calls: function → function
     {
-      selector: 'edge[type="shares_tag"]',
-      style: { 'line-style': 'dashed', 'width': 0.5, 'line-color': '#94a3b8', 'target-arrow-shape': 'none', 'opacity': 0.3 }
+      selector: 'edge[type="calls"]',
+      style: { 'line-style': 'dashed', 'width': 1, 'line-color': '#94a3b8', 'target-arrow-shape': 'triangle' }
     },
-    // has_badge: card → badge
+    // inherits: class → class
     {
-      selector: 'edge[type="has_badge"]',
-      style: { 'line-style': 'solid', 'width': 2, 'target-arrow-shape': 'triangle', 'opacity': 0.8 }
+      selector: 'edge[type="inherits"]',
+      style: { 'line-style': 'solid', 'width': 2, 'line-color': '#a78bfa', 'target-arrow-shape': 'triangle' }
     },
-    // shares_badge: card ↔ card
+    // contains: file → class/function
     {
-      selector: 'edge[type="shares_badge"]',
-      style: { 'line-style': 'dashed', 'width': 1, 'target-arrow-shape': 'none', 'opacity': 0.4 }
+      selector: 'edge[type="contains"]',
+      style: { 'line-style': 'solid', 'width': 0.8, 'line-color': '#475569', 'target-arrow-shape': 'none', 'curve-style': 'unbundled-bezier' }
     },
-    // links_to: card → link dest
+    // exports: file → file (re-export)
     {
-      selector: 'edge[type="links_to"]',
-      style: { 'line-style': 'dotted', 'width': 1, 'line-color': '#475569', 'target-arrow-shape': 'triangle', 'opacity': 0.5 }
-    },
-    // shares_link: card ↔ card
-    {
-      selector: 'edge[type="shares_link"]',
-      style: { 'line-style': 'dotted', 'width': 0.5, 'line-color': '#334155', 'target-arrow-shape': 'none', 'opacity': 0.2 }
+      selector: 'edge[type="exports"]',
+      style: { 'line-style': 'dotted', 'width': 1, 'line-color': '#22d3ee', 'target-arrow-shape': 'triangle' }
     },
 
     /* ===== INTERACTION STATES ===== */
@@ -186,11 +207,11 @@ const cy = cytoscape({
     // Dimmed (non-neighbors on hover)
     {
       selector: 'node.dimmed',
-      style: { 'opacity': 0.15 }
+      style: { 'opacity': 0.12 }
     },
     {
       selector: 'edge.dimmed',
-      style: { 'opacity': 0.05 }
+      style: { 'opacity': 0.04 }
     },
     // Search highlight
     {
@@ -203,10 +224,10 @@ const cy = cytoscape({
     name: 'cose-bilkent',
     animate: true,
     animationDuration: 800,
-    nodeRepulsion: 8000,
+    nodeRepulsion: 12000,
     idealEdgeLength: 120,
     gravity: 0.3,
-    numIter: 2000,
+    numIter: 3000,
     tile: true,
   },
 });
@@ -216,24 +237,24 @@ const cy = cytoscape({
 
 ### cose-bilkent (Default — Force-Directed)
 
-Best for: general card graphs, 5–50 nodes.
+Best for: general code graphs, 20–200 nodes. Increased repulsion for code graphs.
 
 ```javascript
 {
   name: 'cose-bilkent',
   animate: true,
   animationDuration: 800,
-  nodeRepulsion: 8000,
+  nodeRepulsion: 12000,
   idealEdgeLength: 120,
   gravity: 0.3,
-  numIter: 2000,
+  numIter: 3000,
   tile: true,
 }
 ```
 
 ### dagre (Hierarchical)
 
-Best for: pipeline cards, step-by-step guides, reports.
+Best for: layered architectures, import chains, dependency trees.
 
 ```javascript
 {
@@ -249,7 +270,7 @@ Best for: pipeline cards, step-by-step guides, reports.
 
 ### breadthfirst
 
-Best for: navigation cards, dependency trees.
+Best for: class hierarchies, strict dependency trees.
 
 ```javascript
 {
@@ -263,7 +284,7 @@ Best for: navigation cards, dependency trees.
 
 ### concentric
 
-Best for: core vs supporting features, hub-and-spoke.
+Best for: core vs utility modules, hub-and-spoke architecture.
 
 ```javascript
 {
@@ -271,7 +292,7 @@ Best for: core vs supporting features, hub-and-spoke.
   animate: true,
   animationDuration: 600,
   concentric: function(node) {
-    return node.data('richness') || 1;
+    return node.data('depth') || 1;
   },
   minNodeSpacing: 40,
 }
@@ -279,7 +300,7 @@ Best for: core vs supporting features, hub-and-spoke.
 
 ### grid
 
-Best for: small sets (<15 nodes), comparison views.
+Best for: small codebases (<20 files), comparison views.
 
 ```javascript
 {
@@ -300,56 +321,89 @@ Best for: symmetric views, no hierarchy implied.
   name: 'circle',
   animate: true,
   animationDuration: 500,
-  radius: 250,
+  radius: Math.max(200, cy.nodes().length * 15),
 }
-```
-
-## Node Sizing
-
-Card node size is proportional to its "richness score":
-
-```javascript
-function calcRichness(card) {
-  let score = 1;  // base
-  if (card.desc) score += Math.min(card.desc.length / 50, 3);  // up to +3 for long desc
-  if (card.tags) score += card.tags.length * 0.5;               // +0.5 per tag
-  if (card.links && card.links.length) score += 1;              // +1 for custom links
-  if (card.meta) score += 1;                                    // +1 for meta
-  if (card.badge) score += 0.5;                                 // +0.5 for badge
-  return Math.round(score);
-}
-
-// Map to size
-const width = 100 + richness * 15;   // 115–175px
-const height = 44 + richness * 8;     // 52–84px
 ```
 
 ## Detail Panel Template
 
-When a card node is clicked, show:
+When a node is clicked, show type-specific detail:
+
+### File Node Detail
 
 ```html
-<div class="detail-panel" id="detail">
-  <div class="detail-header">
-    <h3 id="detail-name">Card Name</h3>
-    <span class="detail-badge" id="detail-badge">Badge</span>
-  </div>
-  <div class="detail-desc" id="detail-desc">
-    <!-- v-html: supports <strong>, <code>, <br> -->
-  </div>
-  <div class="detail-tags" id="detail-tags">
-    <!-- tag chips -->
-  </div>
-  <div class="detail-meta" id="detail-meta">
-    <!-- monospace meta -->
-  </div>
-  <div class="detail-links" id="detail-links">
-    <!-- clickable links -->
-  </div>
-  <div class="detail-stats" id="detail-stats">
-    <!-- connection counts -->
-  </div>
+<div class="detail-header">
+  <h3>📄 file_name.py</h3>
+  <span class="detail-type-tag type-file">File</span>
 </div>
+<div class="detail-meta">path: yt_dlp/module/file_name.py · 1,234 lines</div>
+<div class="detail-section-title">Defines</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('class:ClassName')">class ClassName</li>
+  <li onclick="focusNode('func:function_name')">function_name()</li>
+</ul>
+<div class="detail-section-title">Imports</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('file:yt_dlp/other.py')">other.py</li>
+</ul>
+<div class="detail-section-title">Imported By</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('file:yt_dlp/__init__.py')">__init__.py</li>
+</ul>
+```
+
+### Class Node Detail
+
+```html
+<div class="detail-header">
+  <h3>🔷 ClassName</h3>
+  <span class="detail-type-tag type-class">Class</span>
+</div>
+<div class="detail-meta">Defined in: yt_dlp/module.py</div>
+<div class="detail-section-title">Base Classes</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('class:BaseClass')">BaseClass</li>
+</ul>
+<div class="detail-section-title">Methods</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('func:ClassName.method_name')">method_name()</li>
+</ul>
+```
+
+### Function Node Detail
+
+```html
+<div class="detail-header">
+  <h3>🟢 function_name()</h3>
+  <span class="detail-type-tag type-function">Function</span>
+</div>
+<div class="detail-meta">Defined in: yt_dlp/module.py · Class: ClassName</div>
+<div class="detail-section-title">Calls</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('func:other_function')">other_function()</li>
+</ul>
+<div class="detail-section-title">Called By</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('func:caller')">caller()</li>
+</ul>
+```
+
+### Module Node Detail
+
+```html
+<div class="detail-header">
+  <h3>📦 package_name</h3>
+  <span class="detail-type-tag type-module">Package</span>
+</div>
+<div class="detail-meta">path: yt_dlp/package_name/</div>
+<div class="detail-section-title">Exports</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('file:yt_dlp/package/submodule.py')">submodule.py</li>
+</ul>
+<div class="detail-section-title">Sub-packages</div>
+<ul class="detail-conn-list">
+  <li onclick="focusNode('module:yt_dlp.subpackage')">subpackage</li>
+</ul>
 ```
 
 ## CDN Dependencies
@@ -358,13 +412,10 @@ When a card node is clicked, show:
 <!-- Cytoscape.js 3.x (primary) -->
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 
-<!-- Layout extensions (loaded via CDN) -->
+<!-- Layout extensions -->
 <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
-
-<!-- Export -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
 
 <!-- Font -->
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -377,41 +428,45 @@ When a card node is clicked, show:
 function downloadPNG() {
   const png = cy.png({ full: true, scale: 2, bg: '#020617' });
   const link = document.createElement('a');
-  link.download = 'graph.png';
+  link.download = 'code-graph.png';
   link.href = png;
   link.click();
 }
-
-// Copy to clipboard
-async function copyPNG() {
-  const png = cy.png({ full: true, scale: 2, bg: '#020617' });
-  const blob = await (await fetch(png)).blob();
-  await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-}
 ```
 
-## Filter System
+## Filter System — By Module
 
 ```javascript
-// Filter by badge
-function filterByBadge(badge) {
-  cy.nodes().forEach(n => {
-    if (n.data('type') === 'card') {
-      n.style('display', badge === 'all' || n.data('badge') === badge ? 'element' : 'none');
+// Filter by module/package
+window.filterByModule = function(moduleName, btn) {
+  var buttons = document.querySelectorAll('#module-filters .filter-btn');
+  buttons.forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+
+  if (moduleName === 'all') {
+    cy.nodes().style('display', 'element');
+    cy.edges().style('display', 'element');
+    fitGraph();
+    return;
+  }
+
+  cy.nodes().forEach(function(n) {
+    if (n.data('type') === 'file') {
+      n.style('display', (n.data('module') || '') === moduleName ? 'element' : 'none');
+    } else if (n.data('type') === 'class' || n.data('type') === 'function' || n.data('type') === 'module') {
+      var connected = n.connectedEdges('[type="contains"]').some(function(e) {
+        var fileNode = e.source().data('type') === 'file' ? e.source() : e.target();
+        return fileNode.style('display') !== 'none';
+      });
+      n.style('display', connected ? 'element' : 'none');
     }
   });
-}
 
-// Filter by tag modifier
-function filterByModifier(modifier) {
-  cy.nodes('[type="tag"]').forEach(n => {
-    n.style('display', modifier === 'all' || n.data('modifier') === modifier ? 'element' : 'none');
-  });
-  // Also hide orphaned edges
-  cy.edges().forEach(e => {
+  cy.edges().forEach(function(e) {
     e.style('display', e.source().style('display') !== 'none' && e.target().style('display') !== 'none' ? 'element' : 'none');
   });
-}
+  fitGraph();
+};
 ```
 
 ## Responsive Breakpoints

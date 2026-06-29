@@ -1,0 +1,65 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   rui-graph — Theme Token Bridge
+   Maps --yry-* CDN theme variables to graph-specific --graph-* tokens.
+   Load AFTER the CDN theme CSS, BEFORE index.css.
+   All generated graph pages use these tokens; never hardcode hex values.
+
+   See also: ../rui-diagram/resources/theme-bridge.css (same pattern, --diag-* tokens)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surface ─────────────────────────────────── */
+  --graph-bg:                   var(--yry-bg-primary, #020617);
+  --graph-surface:              var(--yry-bg-secondary, #0f172a);
+  --graph-surface-hover:        color-mix(in srgb, var(--graph-surface) 60%, transparent);
+
+  /* ── Border ──────────────────────────────────── */
+  --graph-border:               var(--yry-border, #1e293b);
+
+  /* ── Text ────────────────────────────────────── */
+  --graph-text:                 var(--yry-text-primary, #f8fafc);
+  --graph-text-soft:            var(--yry-text-secondary, #94a3b8);
+  --graph-text-muted:           var(--yry-text-muted, #64748b);
+
+  /* ── Accent ──────────────────────────────────── */
+  --graph-accent:               var(--yry-accent, #22d3ee);
+  --graph-accent-bg:            var(--yry-accent-muted, rgba(8, 51, 68, 0.4));
+
+  /* ── Status ──────────────────────────────────── */
+  --graph-success:              var(--yry-success, #34d399);
+  --graph-success-bg:           color-mix(in srgb, var(--graph-success) 30%, transparent);
+  --graph-warning:              var(--yry-warning, #f59e0b);
+  --graph-warning-bg:           color-mix(in srgb, var(--graph-warning) 20%, transparent);
+  --graph-error:                var(--yry-error, #ef4444);
+  --graph-error-bg:             color-mix(in srgb, var(--graph-error) 20%, transparent);
+  --graph-info:                 var(--yry-info, #3b82f6);
+  --graph-info-bg:              color-mix(in srgb, var(--graph-info) 20%, transparent);
+
+  /* ── Badge Colors (maps to --yry-chart-*) ────── */
+  --graph-badge-core:           var(--yry-chart-3, #34d399);
+  --graph-badge-core-bg:        color-mix(in srgb, var(--graph-badge-core) 30%, transparent);
+  --graph-badge-report:         var(--yry-chart-6, #fb7185);
+  --graph-badge-report-bg:      color-mix(in srgb, var(--graph-badge-report) 30%, transparent);
+  --graph-badge-guide:          var(--yry-chart-5, #38bdf8);
+  --graph-badge-guide-bg:       color-mix(in srgb, var(--graph-badge-guide) 30%, transparent);
+  --graph-badge-oss:            var(--yry-chart-1, #fbbf24);
+  --graph-badge-oss-bg:         color-mix(in srgb, var(--graph-badge-oss) 20%, transparent);
+  --graph-badge-agent:          var(--yry-chart-2, #a78bfa);
+  --graph-badge-agent-bg:       color-mix(in srgb, var(--graph-badge-agent) 30%, transparent);
+  --graph-badge-beta:           var(--yry-chart-4, #fb923c);
+  --graph-badge-beta-bg:        color-mix(in srgb, var(--graph-badge-beta) 20%, transparent);
+  --graph-badge-default:        var(--graph-accent, #22d3ee);
+  --graph-badge-default-bg:     var(--graph-accent-bg);
+
+  /* ── Edge Colors ─────────────────────────────── */
+  --graph-edge-structural:      var(--graph-text-muted, #475569);
+  --graph-edge-shared:          var(--graph-text-soft, #94a3b8);
+  --graph-edge-external:        var(--graph-text-muted, #475569);
+  --graph-edge-depends:         var(--graph-accent, #22d3ee);
+  --graph-edge-related:         var(--graph-text-muted, #64748b);
+  --graph-edge-extends:         var(--graph-badge-agent, #a78bfa);
+  --graph-edge-implements:      var(--graph-badge-core, #34d399);
+
+  /* ── Font ────────────────────────────────────── */
+  --graph-font:                 var(--yry-font-mono, 'JetBrains Mono', monospace);
+}

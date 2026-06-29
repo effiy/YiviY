@@ -1,6 +1,7 @@
 ---
 name: rui-diagram
-description: Create architecture diagrams (HTML+SVG, dark theme) and run multi-agent codebase analysis producing structured Knowledge Graphs. Use for system diagrams, infrastructure diagrams, cloud architecture, network topology, or codebase understanding. Also handles incremental analysis, diff impact, and subdomain merging.
+description: Create architecture diagrams (HTML+SVG, dark theme) and run multi-agent codebase analysis producing structured Knowledge Graphs. Use for system diagrams, infrastructure diagrams, cloud architecture, network topology, or codebase understanding. Also handles incremental analysis, diff impact, and subdomain merging. **Do not use for Python interactive code graphs** — see [[rui-graph]].
+lifecycle: default-pipeline
 ---
 
 # Rui Diagram
@@ -194,10 +195,11 @@ Self-contained HTML+SVG — dark theme (`#020617`), JetBrains Mono, export toolb
 
 ### Quick Start
 
-1. Copy `resources/template.html`
-2. Build SVG. **Read `references/diagram-system.md`** for color palette, spacing, arrow z-order, masking, legend rules
-3. Update summary cards and footer
-4. Verify: open in browser, test export toolbar
+1. **Select theme** via [[rui-theme]]: pick from 10 presets, generate `--yry-*` CSS.
+2. Copy `resources/template.html`, add theme `<link>` + `<link rel="stylesheet" href="theme-bridge.css">`.
+3. Build SVG. **Read `references/diagram-system.md`** for color palette, spacing, arrow z-order, masking, legend rules. Use `var(--diag-*)` tokens instead of hardcoded hex.
+4. Update summary cards and footer
+5. Visual review: open in browser for final check
 
 ### SVG Construction Rules
 
@@ -297,10 +299,63 @@ After any KG-producing workflow, launch interactive dashboard: hierarchical (dag
 |------|-------------|
 | `references/codebase-analysis.md` | Phase 0 — full pipeline: scanner, analyzer, classifier, reviewer, tour builder, plugin docs, fingerprint system, incremental analysis, KG schema, validation |
 | `references/diagram-system.md` | Building diagrams — color palette, spacing, arrow rules, masking, export toolbar, legend placement |
+| `resources/theme-bridge.css` | CSS token bridge — maps `--yry-*` to diagram-specific `--diag-*` tokens |
 | `.claude/understand-anything/packages/core/src/types.ts` | Canonical type definitions |
 | `.claude/understand-anything/packages/core/src/schema.ts` | Validation pipeline (Zod schemas, alias maps, auto-fix) |
+| `[[rui-theme]]` | Theme selection and CSS generation (10 presets) |
+| `[[rui-ui]]` | Design intelligence for layer color palette and typography |
 | `.claude/understand-anything/packages/core/src/fingerprint.ts` | Fingerprint system (structural hashing, change detection) |
 | `.claude/understand-anything/packages/core/src/change-classifier.ts` | Update decision matrix (SKIP/PARTIAL/ARCHITECTURE/FULL) |
 | `resources/template.html` | Diagram HTML template |
+
+## 规则
+
+- [kg-pipeline-contracts.md](./rules/kg-pipeline-contracts.md) — 知识图谱与 SVG 架构图的 8 阶段产物、节点/边分类、路径所有权与跨技能契约。
+
+## 专业代理
+
+- [node-extractor.md](./agents/node-extractor.md) — 从源码 / 配置提取结构化图节点。
+- [layer-classifier.md](./agents/layer-classifier.md) — 把节点归入 3–10 个层。
+- [tour-builder.md](./agents/tour-builder.md) — 自底向上 5–15 步学习 tour 编排。
+
+## Borders
+
+### What this skill does
+
+- Run multi-agent codebase analysis (Phase 0) → Knowledge Graph (21 node types, 35 edge types across 8 categories)
+- Produce **SVG architecture diagrams** (dark theme, `--yry-*` tokens) from the KG
+- Support incremental updates via fingerprint diff (SKIP / PARTIAL / ARCHITECTURE / FULL)
+- Handle dashboard launch (React app) for interactive KG exploration
+- Cover knowledge/wiki mode (article detection, wikilinks)
+
+### What this skill does NOT do
+
+- **Cytoscape.js interactive graphs** — see [[rui-graph]] (different abstraction, Python + AST)
+- **Codebase understanding without output** — every Phase 0 run writes `knowledge-graph.json`
+- **Per-file diff/impact only** — KG-level blast radius via 1-hop + 2-hop dependents is in scope; single-file blame is not
+- **Live runtime profiling** — static analysis only; no traces, no metrics
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| [[rui-html]] | reads ← rui-diagram | Consumes `knowledge-graph.json` for SVG embedding — `[IF-005](../INTERFACES.md#if-005)` |
+| [[rui-theme]] | calls → rui-theme | Color/typography tokens for SVG |
+| [[rui-ui]] | calls → rui-ui | Layer palette inspiration |
+| [[rui-graph]] | no overlap | Different abstraction (KG vs AST) — `[IF-008](../INTERFACES.md#if-008)` |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `<this-skill-dir>/references/` | read-only — analysis spec, validation spec |
+| `<this-skill-dir>/resources/template.html` | read-only |
+| `.diagram/knowledge-graph.json` | **write** — primary KG output |
+| `.diagram/meta.json`, `.diagram/fingerprint.json` | write — auxiliary artifacts |
+| `docs/views/<name>/diagram/index.html` | write when handing off to [[rui-html]] |
+
+### Invocation
+
+rui-diagram has **no CLI entry** — it is invoked by an agent following the phased pipeline. The shell snippets in Phase 0 (e.g., `python -m`) are documented inline; persistent reuse happens via subagent dispatch.
 
 For documentation pages from a KG, see **[[rui-html]]** — takes the KG produced here through Phases 1–3 (design intelligence → theme selection → verification).

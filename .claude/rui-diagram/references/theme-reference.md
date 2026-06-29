@@ -1,6 +1,6 @@
 # Theme Reference
 
-Quick-reference for all 10 preset CDN themes. Full details (exact hex values, font pairings, usage notes) are in `.claude/rui-theme/themes/<name>.md`. The CDN CSS files are at `cdn/theme/<name>.css`.
+Quick-reference for all 10 preset CDN themes. Full details (exact hex values, font pairings, usage notes) are in `<rui-theme-dir>/themes/<name>.md`. The CDN CSS files are at `cdn/theme/<name>.css`.
 
 ## How Themes Work
 
@@ -64,7 +64,7 @@ When rui-ui's `--design-system` recommends a color palette, match it to the clos
 If none of the 10 presets fit:
 1. Copy an existing `cdn/theme/<name>.css` as a starting point
 2. Modify the hex values in the `:root` block (all `--yry-*` variables must be defined)
-3. Create a matching `.claude/rui-theme/themes/<name>.md` file following the existing format
+3. Create a matching `<rui-theme-dir>/themes/<name>.md` file following the existing format
 4. The token bridge (`docs/styles/tokens.css`) works automatically with any theme that defines the full `--yry-*` variable set
 
 ## Fallback

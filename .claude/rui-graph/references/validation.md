@@ -1,13 +1,13 @@
-# Validation Reference — rui-graph
+# Validation Reference — rui-graph (Code Dependency)
 
-> Complete validation rules, check details, severity classification, and auto-fix guidance for the rui-graph review pipeline.
+> Complete validation rules, check details, severity classification, and auto-fix guidance for code dependency graph validation.
 
 ## Validation Architecture
 
 Validation happens in two layers:
 
-1. **Deterministic script** (`resources/validate-graph.js`) — mechanical checks: schema, referential integrity, uniqueness, color palette, coverage.
-2. **LLM reviewer** (`agents/graph-reviewer.md`) — semantic checks: description quality, relationship plausibility, cluster quality.
+1. **Deterministic checks** — mechanical checks: schema, referential integrity, uniqueness, color palette, file coverage, call depth.
+2. **LLM reviewer** (`agents/graph-reviewer.md`) — semantic checks: import plausibility, class hierarchy accuracy, call graph completeness, module organization.
 
 ## Deterministic Checks
 
@@ -17,9 +17,9 @@ Every node MUST have:
 
 | Field | Type | Non-empty? | Notes |
 |-------|------|------------|-------|
-| `id` | string | Yes | Must match one of the valid prefixes |
-| `type` | string | Yes | One of: `card`, `tag`, `link_dest`, `badge`, `cluster`, `card_group` |
-| `label` | string | Yes | Display label (may include emoji for cards) |
+| `id` | string | Yes | Must match one of: `file:<path>`, `class:<name>`, `func:<name>`, `module:<name>` |
+| `type` | string | Yes | One of: `file`, `class`, `function`, `module` |
+| `label` | string | Yes | Display label (file basename, class name, function signature, module name) |
 
 Every edge MUST have:
 
@@ -28,7 +28,7 @@ Every edge MUST have:
 | `id` | string | Yes | Must be unique across all edges |
 | `source` | string | Yes | Must reference existing node `id` |
 | `target` | string | Yes | Must reference existing node `id` |
-| `type` | string | Yes | One of the 10 valid edge types |
+| `type` | string | Yes | One of: `imports`, `calls`, `inherits`, `contains`, `exports` |
 
 **Auto-fix**: Drop nodes with missing `id` or invalid `type`. Drop edges with missing `source`/`target`/`type`.
 
@@ -36,7 +36,6 @@ Every edge MUST have:
 
 Every `edge.source` and `edge.target` must exist in the node set.
 
-**Implementation**:
 ```javascript
 const nodeIds = new Set(graph.nodes.map(n => n.data.id));
 const danglingEdges = graph.edges.filter(e => {
@@ -44,15 +43,13 @@ const danglingEdges = graph.edges.filter(e => {
 });
 ```
 
-**Auto-fix**: Drop dangling edges (they can't be repaired without the missing node).
+**Auto-fix**: Drop dangling edges.
 
-### Check 3: Card Coverage (Critical)
+### Check 3: File Coverage (Critical)
 
-Every card from `card-analysis.json` must have a corresponding graph node.
+Every target `.py` file from the analysis manifest must have a corresponding `file` node.
 
-**Implementation**: Compare `card-analysis.json` card count against graph node count for type `card`. Also verify individual card IDs.
-
-**Auto-fix**: Not auto-fixable. If cards are missing, the build step must be re-run.
+**Auto-fix**: Not auto-fixable. If files are missing, the build step must be re-run.
 
 ### Check 4: Uniqueness (Critical)
 
@@ -60,114 +57,98 @@ Every card from `card-analysis.json` must have a corresponding graph node.
 - No duplicate edge `id` values
 - No duplicate edge `(source, target, type)` tuples
 
-**Auto-fix**: Keep the last occurrence of duplicate nodes (the build script writes in order, later = updated). Drop duplicate edges.
+**Auto-fix**: Keep last occurrence of duplicate nodes. Drop duplicate edges.
 
 ### Check 5: Color Mapping (Warning)
 
-Badge values on card nodes must match the canonical palette:
+Node types must match the canonical palette:
 
 ```
-Core/核心 → #34d399, Report/报告 → #fb7185, Guide/指南 → #38bdf8,
-OSS → #fbbf24, Agent → #a78bfa, Beta → #fb923c
+file → #38bdf8, class → #a78bfa, function → #34d399, module → #fbbf24
 ```
 
-Tag modifier values must match the canonical palette:
+Edge types must match the canonical line styles:
 
 ```
-warn→#f59e0b, accent→#eab308, info→#3b82f6, red→#ef4444,
-purple→#8b5cf6, cyan→#06b6d4, pass/green→#22c55e
+imports → solid, calls → dashed, inherits → solid bold, contains → solid no arrow, exports → dotted
 ```
 
-**Auto-fix**: Map unknown badge to `cyan` (default). Map unknown modifier to `slate` (`#64748b`). Warn but don't block.
+**Auto-fix**: Map unknown types to sensible defaults. Warn but don't block.
 
 ### Check 6: Completeness (Warning)
 
 - `graph.nodes.length > 0`
 - `graph.edges.length > 0`
-- Every tag from source has a tag node (check tag texts against `card-analysis.json`)
-- Every link destination from source has a `link_dest` node
+- Every file node should have at least one `contains` or `imports` edge
+- Every class node should have exactly one incoming `contains` edge
+- Every function node should have exactly one incoming `contains` edge
+- Every `contains` edge should point to a `class` or `function` node
 
-### Check 7: Richness Consistency (Warning)
+### Check 7: Call Depth (Warning)
 
-Computed richness should match the stored `richness` field on card nodes:
+Find the longest chain of `calls` edges:
 
 ```javascript
-function computeRichness(card) {
-  let s = 1;
-  if (card.desc) s += Math.min(card.desc.replace(/<[^>]*>/g, '').length / 50, 3);
-  if (card.tags) s += card.tags.length * 0.5;
-  if (card.links && card.links.length) s += 1;
-  if (card.meta) s += 1;
-  if (card.badge) s += 0.5;
-  return Math.round(s);
+function maxCallDepth(edges, startFunc) {
+  // BFS/DFS through calls edges to find deepest chain
+  // Warn if depth > 10 (possible recursion / very deep call stack)
+  // Warn if total call edges < 5 (call graph may be incomplete)
 }
 ```
 
-**Threshold**: ±1 difference = warning. >±1 = issue.
+**Auto-fix**: Not auto-fixable. This is informational.
 
 ### Check 8: Orphan Detection (Warning)
 
 Nodes with zero incident edges (no edges where the node is source OR target).
 
-**Implementation**:
-```javascript
-const connectedNodes = new Set();
-graph.edges.forEach(e => {
-  connectedNodes.add(e.data.source);
-  connectedNodes.add(e.data.target);
-});
-const orphans = graph.nodes.filter(n => !connectedNodes.has(n.data.id));
-```
-
-Isolated cards are expected (some cards genuinely don't connect to others). Orphan tag nodes suggest missing `has_tag` edges. Orphan link_dest nodes suggest missing `links_to` edges.
+Isolated files are expected (some files genuinely have no imports). Orphan class/function nodes suggest missing `contains` edges (check that their parent file node exists).
 
 ### Check 9: Self-Reference Detection (Warning)
 
-Edges where `source === target`. Should never happen — indicates a bug in edge generation.
+Edges where `source === target`. Should never happen for `imports`, `calls`, `inherits`, `exports`. Could theoretically happen for `contains` (file containing itself via recursive import) but is still a bug.
 
 **Auto-fix**: Drop self-referencing edges.
 
 ## Runtime Browser Checks
 
-These checks catch bugs that pass structural validation but cause **browser console errors or broken UI interactions**. Run these manually or via automated browser testing.
+### Runtime Check 1: `filterByModule('all', null)` Button State
 
-### Runtime Check 1: `filterByBadge('all', null)` Button State
+**Problem:** `resetView()` calls `filterByModule('all', null)` — the `null` button means no filter button gets the `.active` class after reset.
 
-**Problem:** `resetView()` calls `filterByBadge('all', null)` — the `null` button means no filter button gets the `.active` class after reset.
+**Check:** With browser console open, click any module filter, then press `R`. Verify the "All" filter button has the `.active` class.
 
-**Check:** With browser console open, click any badge filter, then press `R`. Verify the "All" filter button has the `.active` class.
-
-**Auto-fix in template:** Always re-find the "All" button: `document.querySelector('#badge-filters .filter-btn')`.
+**Auto-fix in template:** Always re-find the "All" button: `document.querySelector('#module-filters .filter-btn')`.
 
 ### Runtime Check 2: `escHtml` Single Quote Handling
 
 **Problem:** `escHtml()` doesn't escape `'`, so label values containing `'` break onclick handlers.
 
-**Check:** Verify `escHtml("test'value")` returns a string without raw single quotes. In the generated `index.js`, the function must include `.replace(/'/g, '&#39;')`.
+**Check:** Verify `escHtml("test'value")` returns a string without raw single quotes.
 
 ### Runtime Check 3: Search Edge Dimming
 
 **Problem:** `doSearch()` dims nodes but not edges, leaving edges visible between dimmed nodes.
 
-**Check:** Type a search query that matches some nodes. Verify that edges between non-matching nodes are dimmed (opacity reduced).
+**Check:** Type a search query. Verify that edges between non-matching nodes are dimmed.
 
-### Runtime Check 4: `filterByBadge` Cluster Node Handling
+### Runtime Check 4: `filterByModule` Node Type Handling
 
-**Problem:** The visibility conditional misses `cluster` nodes, leaving them always visible.
+**Problem:** The visibility conditional misses some node types, leaving them always visible.
 
-**Check:** Ensure generated `index.js` includes `|| n.data('type') === 'cluster'` in the filterByBadge non-card visibility conditional.
+**Check:** Ensure generated `index.js` handles all 4 node types: `file`, `class`, `function`, `module`.
 
 ### Runtime Check 5: `focusNode` Empty Collection Guard
 
-**Problem:** Calling `focusNode(id)` with a non-existent ID creates an empty collection; `.length` is 0 and calling `.addClass()` etc. on it fails silently.
+**Problem:** Calling `focusNode(id)` with a non-existent ID creates an empty collection.
 
 **Check:** Verify `focusNode` has `if (!node || !node.length) return;` as its first guard.
 
-### Runtime Check 6: `.detail-badge` Default Colors
+### Runtime Check 6: `.detail-type-tag` Default Colors
 
-**Problem:** The `.detail-badge` base class lacks `border-color`, `color`, and `background`. Unknown badge types render invisible.
+**Problem:** The `.detail-type-tag` base class lacks fallback styling for unknown types.
 
-**Check:** In the generated `index.css`, verify `.detail-badge` has `border: 1px solid var(--border); color: var(--text-soft); background: var(--border);`.
+**Check:** In the generated `index.css`, verify `.detail-type-tag` has `border: 1px solid var(--border); color: var(--text-soft); background: var(--border);`.
 
 ## Severity Classification
 
@@ -176,18 +157,16 @@ These checks catch bugs that pass structural validation but cause **browser cons
 | **BLOCKER** | Graph is structurally broken — missing required data, broken references | Must fix before HTML generation |
 | **WARNING** | Graph is usable but has quality issues | Should fix; OK to ship with warnings noted |
 | **INFO** | Minor observations, suggestions for improvement | Can ship; consider for next iteration |
-| **RUNTIME** | Structural validation passes but browser console errors or broken interactions will occur | Must fix before finalizing — see Runtime Browser Checks above |
+| **RUNTIME** | Structural validation passes but browser errors will occur | Must fix before finalizing |
 
 ## Auto-Fix Pipeline
 
-When validation finds issues, apply fixes in this order:
-
 1. **Drop dangling edges** — remove any edge whose source or target doesn't exist in nodes
 2. **Drop invalid nodes** — remove nodes with missing `id` or invalid `type`
-3. **Deduplicate** — remove duplicate node IDs (keep last), duplicate edge IDs (keep last), duplicate edge keys (keep first)
-4. **Normalize colors** — map unknown badges to cyan, unknown modifiers to slate
-5. **Fix richness** — recompute richness for cards where discrepancy > 1
-6. **Drop self-references** — remove edges where source === target
+3. **Deduplicate** — remove duplicate node IDs (keep last), duplicate edge IDs (keep last)
+4. **Normalize colors** — map unknown node types to file (cyan) as safe default
+5. **Drop self-references** — remove edges where source === target
+6. **Fix missing contains edges** — for any class/function node without a `contains` edge, create one from its parent file
 
 After applying fixes, re-run validation. If critical issues remain, save with warnings and report.
 
@@ -197,20 +176,20 @@ After applying fixes, re-run validation. If critical issues remain, save with wa
 {
   "approved": true,
   "issues": [],
-  "warnings": ["2 orphan nodes: tag:RareTag, tag:AnotherRare"],
+  "warnings": ["2 orphan function nodes: func:helper_a, func:helper_b"],
   "autoFixed": {
     "danglingEdgesRemoved": 0,
     "invalidNodesRemoved": 0,
     "duplicatesRemoved": 0,
     "colorNormalizations": 0,
-    "richnessRecalculations": 1,
-    "selfReferencesRemoved": 0
+    "selfReferencesRemoved": 0,
+    "missingContainsEdges": 1
   },
   "stats": {
-    "totalNodes": 67,
-    "totalEdges": 142,
-    "nodeTypes": {},
-    "edgeTypes": {}
+    "totalNodes": 75,
+    "totalEdges": 150,
+    "nodeTypes": { "file": 22, "class": 25, "function": 25, "module": 3 },
+    "edgeTypes": { "imports": 45, "calls": 40, "inherits": 12, "contains": 50, "exports": 3 }
   }
 }
 ```

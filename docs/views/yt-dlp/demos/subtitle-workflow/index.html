@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subtitle Workflow — Demo · VideoLingo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23708090'/><text x='16' y='22' font-size='16' font-family='monospace' font-weight='bold' fill='%23ffffff' text-anchor='middle'>S</text></svg>" type="image/svg+xml">
+    <meta name="description" content="Animated 5-stage subtitle extraction pipeline — manual + auto captions, format conversion, multi-language matrix">
+
+    <link rel="stylesheet" href="../../../../../cdn/theme/modern-minimalist.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="demos-page">
+    <div id="app">
+        <div class="page">
+            <!-- Card Area -->
+            <section class="card-area">
+                <div id="scene-card"></div>
+            </section>
+
+            <!-- Demo Area -->
+            <section class="demo-area" id="demo-app">
+                <!-- Pipeline Controls -->
+                <div class="pipeline-controls">
+                    <button class="ctrl-btn ctrl-btn--play"
+                            @click="autoPlay"
+                            :disabled="playing">
+                        {{ playing ? ui.pause : ui.autoPlay }}
+                    </button>
+                    <button class="ctrl-btn" @click="resetPipeline"
+                            :disabled="currentStep === -1 && !playing">
+                        {{ ui.reset }}
+                    </button>
+                    <span class="step-indicator" v-if="currentStep >= 0">
+                        {{ ui.step }} {{ currentStep + 1 }} / {{ stageCount }}
+                    </span>
+                </div>
+
+                <!-- Pipeline Flow -->
+                <div class="pipeline-flow">
+                    <template v-for="(stage, i) in displayStages" :key="stage.id">
+                        <div class="pl-node"
+                             :class="{ active: i === currentStep, done: i < currentStep }"
+                             @click="selectStep(i)">
+                            <div class="pl-node__icon">{{ stage.icon }}</div>
+                            <div class="pl-node__label">{{ stage.text }}</div>
+                        </div>
+                        <div class="pl-arrow" v-if="i < displayStages.length - 1"
+                             :class="{ active: i < currentStep }">
+                            <span class="pl-arrow__line"></span>
+                            <span class="pl-arrow__head">→</span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Step Detail Panel -->
+                <div class="step-detail" v-if="currentStep >= 0 && currentStageData">
+                    <div class="step-detail__header">
+                        <span class="step-detail__icon">{{ currentStageData.icon }}</span>
+                        <div>
+                            <h4 class="step-detail__title">{{ currentStageData.text }}</h4>
+                            <p class="step-detail__desc">{{ currentStageData.desc }}</p>
+                        </div>
+                    </div>
+                    <div class="step-detail__body" v-html="currentStageData.detail"></div>
+
+                    <!-- Trace link -->
+                    <div class="step-trace" v-if="currentStageData.trace">
+                        <span class="step-trace__label">{{ ui.codeTrace }}:</span>
+                        <a class="step-trace__link"
+                           :href="graphLink(currentStageData.trace.fileId)"
+                           target="_blank">{{ currentStageData.trace.file }}</a>
+                        <span class="step-trace__arrow">→</span>
+                        <a class="step-trace__link"
+                           :href="graphLink(currentStageData.trace.funcId)"
+                           target="_blank">{{ currentStageData.trace.func }}</a>
+                        <span class="step-trace__desc">{{ currentStageData.trace.desc }}</span>
+                    </div>
+
+                    <!-- Show language matrix at stage 1 (list) -->
+                    <div class="lang-matrix" v-if="currentStage === 0">
+                        <h5 class="lang-matrix__title">{{ ui.langMatrix }}</h5>
+                        <table class="lm-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ ui.colLang }}</th>
+                                    <th>{{ ui.colManual }}</th>
+                                    <th>{{ ui.colAuto }}</th>
+                                    <th>{{ ui.colQuality }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="lang in languages">
+                                    <td class="lm-cell lm-cell--lang">
+                                        <span class="lm-lang-code">{{ lang.code }}</span>
+                                        <span class="lm-lang-name">{{ displayLangName(lang) }}</span>
+                                    </td>
+                                    <td class="lm-cell">
+                                        <span class="lm-check" :class="{ 'lm-check--yes': lang.manual }">
+                                            {{ lang.manual ? ui.yes : ui.no }}
+                                        </span>
+                                    </td>
+                                    <td class="lm-cell">
+                                        <span class="lm-check" :class="{ 'lm-check--yes': lang.auto }">
+                                            {{ lang.auto ? ui.yes : ui.no }}
+                                        </span>
+                                    </td>
+                                    <td class="lm-cell lm-cell--stars">{{ lang.quality }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Show sample output at last stage -->
+                    <div class="sample-output" v-if="currentStage === 4">
+                        <h5 class="sample-output__title">{{ ui.sampleOutput }}</h5>
+                        <p class="sample-output__desc">{{ ui.sampleOutputDesc }}</p>
+                        <div class="sample-output__tabs">
+                            <button v-for="lang in languages.slice(0,4)"
+                                    class="so-tab"
+                                    :class="{ 'so-tab--active': sampleLang === lang.code }"
+                                    @click="sampleLang = lang.code">
+                                {{ lang.code }}
+                            </button>
+                        </div>
+                        <pre class="sample-output__code">{{ sampleSubtitles[sampleLang] }}</pre>
+                    </div>
+                </div>
+
+                <!-- Empty state -->
+                <div class="pipeline-empty" v-if="currentStep === -1">
+                    <div class="pipeline-empty__icon">📝</div>
+                    <p>Click <strong>Auto Play</strong> to watch the 5-stage subtitle extraction pipeline, or click any stage node to inspect it.</p>
+                </div>
+            </section>
+
+            <!-- Info Area -->
+            <section class="info-area">
+                <h3 class="info-area__title">{{ ui.infoHeader }}</h3>
+                <p class="info-area__text" v-html="ui.infoP1"></p>
+                <p class="info-area__text" v-html="ui.infoP2"></p>
+                <p class="info-area__text info-area__text--muted" v-html="ui.infoP3"></p>
+                <div class="info-links">
+                    <a href="../../diagram/index.html" class="info-link">📐 {{ ui.pipelineLink }}</a>
+                    <a href="../../graph/index.html" class="info-link">🕸️ {{ ui.graphLink }}</a>
+                    <a href="../index.html" class="info-link">🎬 {{ ui.allDemosLink }}</a>
+                    <a href="../../../../index.html" class="info-link">🏠 {{ ui.docsHomeLink }}</a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../../cdn/shared/yry-loader.js"></script>
+    <script src="../../../../../cdn/yry-tag-chip/index.js"></script>
+    <script src="../../../../../cdn/yry-scene-card/index.js"></script>
+    <script src="../../../../assets/lang.js"></script>
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

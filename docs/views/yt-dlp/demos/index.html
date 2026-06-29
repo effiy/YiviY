@@ -4,74 +4,184 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>yt-dlp Demos · VideoLingo</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23fbbf24'/><text x='16' y='22' font-size='18' font-family='monospace' font-weight='bold' fill='%23020617' text-anchor='middle'>YT</text></svg>" type="image/svg+xml">
-    <meta name="description" content="Interactive demos for yt-dlp — simulate the download pipeline and explore features">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23708090'/><text x='16' y='22' font-size='16' font-family='monospace' font-weight='bold' fill='%23ffffff' text-anchor='middle'>YT</text></svg>" type="image/svg+xml">
+    <meta name="description" content="Interactive demos for yt-dlp — simulate downloads, compare formats, explore subtitle extraction, and configure options">
 
-    <!-- 1. CDN Theme (dark, tech-oriented) — one line to switch themes -->
-    <link rel="stylesheet" href="../../../../cdn/theme/tech-innovation.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- 2. Page-specific styles -->
+    <!-- Design Tokens (derived from rui-theme Modern Minimalist) -->
+    <style>
+        :root {
+            /* Surface */
+            --yry-bg-primary: #36454f;
+            --yry-bg-secondary: #2e424f;
+            --yry-bg-tertiary: #364d5c;
+            --yry-bg-inverse: #ffffff;
+
+            /* Text */
+            --yry-text-primary: #ffffff;
+            --yry-text-secondary: #b8bdc1;
+            --yry-text-muted: #90989e;
+            --yry-text-heading: #ffffff;
+
+            /* Accent */
+            --yry-accent: #708090;
+            --yry-accent-hover: #1c3956;
+            --yry-accent-muted: rgba(112, 128, 144, 0.15);
+            --yry-accent-soft: rgba(112, 128, 144, 0.08);
+            --yry-accent-text: #ffffff;
+
+            /* Semantic */
+            --yry-success: #24d069;
+            --yry-warning: #d1aa47;
+            --yry-error: #d14747;
+            --yry-info: #478fd1;
+
+            /* Border */
+            --yry-border-color: #445058;
+            --yry-border: 1px solid var(--yry-border-color);
+
+            /* Shape */
+            --yry-radius-sm: 6px;
+            --yry-radius-md: 8px;
+            --yry-radius-lg: 12px;
+            --yry-radius-xl: 16px;
+            --yry-radius-full: 9999px;
+
+            /* Shadow */
+            --yry-shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --yry-shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --yry-shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+            --yry-shadow-glow: 0 0 20px rgba(112,128,144,0.15);
+
+            /* Spacing */
+            --yry-space-1: 4px;
+            --yry-space-2: 8px;
+            --yry-space-3: 12px;
+            --yry-space-4: 16px;
+            --yry-space-5: 20px;
+            --yry-space-6: 24px;
+            --yry-space-7: 32px;
+            --yry-space-8: 40px;
+            --yry-space-10: 48px;
+            --yry-space-12: 64px;
+            --yry-space-16: 80px;
+
+            /* Typography */
+            --yry-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            --yry-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+
+            --yry-font-size-xs: 0.75rem;
+            --yry-font-size-sm: 0.875rem;
+            --yry-font-size-base: 1rem;
+            --yry-font-size-lg: 1.125rem;
+            --yry-font-size-xl: 1.25rem;
+            --yry-font-size-2xl: 1.5rem;
+            --yry-font-size-3xl: 2rem;
+
+            --yry-leading-tight: 1.25;
+            --yry-leading-normal: 1.5;
+            --yry-leading-relaxed: 1.625;
+
+            --yry-tracking-tight: -0.02em;
+            --yry-tracking-normal: 0;
+            --yry-tracking-wide: 0.05em;
+
+            /* Animation */
+            --yry-ease-out: cubic-bezier(0, 0, 0.2, 1);
+            --yry-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+            --yry-duration-fast: 150ms;
+            --yry-duration-base: 200ms;
+            --yry-duration-slow: 300ms;
+
+            /* Layout */
+            --yry-page-max-width: 1200px;
+        }
+    </style>
+
     <link rel="stylesheet" href="index.css">
-
-    <!-- 3. Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
 <body class="demos-page">
 
-    <!--
-        Template: Vue 3 会从此 <template> 渲染组件。
-        mountDocComponent() 在 <template> 前插入挂载 <div>，
-        然后将 Vue app 挂载其上。<template> 本身保持惰性。
-    -->
     <template id="yt-dlp-demos-template">
         <div class="page">
+            <!-- ── Header ─────────────────────────────── -->
             <header class="page-header">
-                <h1>{{ pageTitle }}</h1>
-                <p>{{ pageDescription }}</p>
-                <a href="../diagram/index.html" class="scene-link">{{ diagramLink }}</a>
+                <span class="page-header__eyebrow">VideoLingo · yt-dlp</span>
+                <h1 class="page-header__title">{{ pageTitle }}</h1>
+                <p class="page-header__desc">{{ pageDescription }}</p>
+                <div class="page-header__nav">
+                    <a href="../diagram/index.html" class="page-header__link">
+                        <span class="page-header__link-icon">📐</span>
+                        {{ diagramLink }}
+                    </a>
+                    <a href="../graph/index.html" class="page-header__link">
+                        <span class="page-header__link-icon">🕸️</span>
+                        {{ graphLink }}
+                    </a>
+                </div>
             </header>
 
-            <!-- Type Filters -->
-            <div class="demo-filters">
-                <button v-for="type in types" :key="type.id"
-                        class="filter-btn" :class="{ active: activeType === type.id }"
-                        @click="activeType = type.id">
-                    {{ type.label }} ({{ countByType(type.id) }})
+            <!-- ── Type Filters ───────────────────────── -->
+            <nav class="filter-bar" aria-label="Demo type filter">
+                <button
+                    v-for="type in types"
+                    :key="type.id"
+                    class="filter-chip"
+                    :class="{ 'filter-chip--active': activeType === type.id }"
+                    :aria-pressed="activeType === type.id ? 'true' : 'false'"
+                    @click="activeType = type.id"
+                >
+                    <span class="filter-chip__label">{{ type.label }}</span>
+                    <span class="filter-chip__count">{{ countByType(type.id) }}</span>
                 </button>
-            </div>
+            </nav>
 
-            <!-- Demo Grid -->
+            <!-- ── Demo Grid ──────────────────────────── -->
             <div class="demo-grid">
                 <template v-for="demo in filteredDemos" :key="demo.slug">
-                    <div class="demo-card">
-                        <span class="card-type">{{ typeLabelFor(demo.type) }}</span>
-                        <h3><a :href="demo.href">{{ demo.name }}</a></h3>
-                        <p class="card-desc" v-html="demo.desc"></p>
-                        <div class="card-tags" v-if="demo.tags && demo.tags.length">
-                            <span v-for="tag in demo.tags" class="card-tag">{{ tag }}</span>
+                    <article class="demo-card">
+                        <div class="demo-card__header">
+                            <span class="demo-card__type-badge">{{ typeLabelFor(demo.type) }}</span>
+                            <span class="demo-card__complexity" v-if="demo.complexity">{{ demo.complexity }}</span>
                         </div>
-                        <a :href="demo.href" class="card-action">{{ tryDemo }}</a>
-                    </div>
+                        <h3 class="demo-card__title">
+                            <a :href="demo.href">{{ demo.name }}</a>
+                        </h3>
+                        <p class="demo-card__desc" v-html="demo.desc"></p>
+                        <div class="demo-card__tags" v-if="demo.tags && demo.tags.length">
+                            <span v-for="tag in demo.tags" class="demo-card__tag">{{ tag }}</span>
+                        </div>
+                        <div class="demo-card__highlights" v-if="demo.highlights && demo.highlights.length">
+                            <span v-for="h in demo.highlights" class="demo-card__highlight">✦ {{ h }}</span>
+                        </div>
+                        <a :href="demo.href" class="demo-card__action">
+                            {{ tryDemo }}
+                            <span class="demo-card__action-arrow">→</span>
+                        </a>
+                    </article>
                 </template>
-                <div v-if="filteredDemos.length === 0" class="no-results">
-                    {{ noResults }}
+                <div v-if="filteredDemos.length === 0" class="demo-grid__empty">
+                    <div class="demo-grid__empty-icon">🔍</div>
+                    <p>{{ noResults }}</p>
                 </div>
             </div>
 
-            <div class="back-link">
-                ← <a href="../diagram/index.html">{{ backToDiagram }}</a> ·
-                <a href="../../../index.html">{{ backToDocs }}</a>
-            </div>
+            <!-- ── Footer ─────────────────────────────── -->
+            <nav class="page-footer">
+                <a href="../diagram/index.html" class="page-footer__link">📐 {{ backToDiagram }}</a>
+                <span class="page-footer__sep">·</span>
+                <a href="../graph/index.html" class="page-footer__link">🕸️ {{ backToGraph }}</a>
+                <span class="page-footer__sep">·</span>
+                <a href="../../../index.html" class="page-footer__link">{{ backToDocs }}</a>
+            </nav>
         </div>
     </template>
 
-    <!--
-        Script order is critical:
-        1. mount-component.js — defines mountDocComponent()
-        2. lang.js           — window.VL_LANG must exist before i18n resolution
-        3. data.js           — sets window.YT_DLP_DEMOS_CONFIG
-        4. index.js          — calls mountDocComponent() → Vue.createApp().mount()
-    -->
     <script src="../../../assets/mount-component.js"></script>
     <script src="../../../assets/lang.js"></script>
     <script src="data.js"></script>

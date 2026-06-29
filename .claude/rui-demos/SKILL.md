@@ -1,13 +1,14 @@
 ---
 name: rui-demos
-description: Generate interactive scene demonstration pages from rui-scene card data. Analyze YrySceneCard data structures from INTRO_CONFIG, data.js card arrays, or inline card definitions, and produce self-contained dark-theme HTML demo pages — one 4-file directory per card — that showcase each feature in action. Use when the user wants to create demo pages, feature showcases, interactive demonstrations, or scene HTML pages from cards. Also use when the user mentions 演示页面, demo pages, scene demos, card demonstrations, feature demos, or wants to generate visual showcases from rui-scene card data.
+description: Generate interactive scene demonstration pages from rui-scene card data. Analyze YrySceneCard data structures from INTRO_CONFIG, data.js card arrays, or inline card definitions, and produce self-contained dark-theme HTML demo pages — one 4-file directory per card — that showcase each feature in action. Use when the user wants to create demo pages, feature showcases, interactive demonstrations, or scene HTML pages from cards. Also use when the user mentions 演示页面, demo pages, scene demos, card demonstrations, feature demos,... or wants to generate visual showcases from rui-scene card data.
+lifecycle: default-pipeline
 ---
 
 # Rui Demos
 
 Generate interactive scene demonstration pages from rui-scene card data — one demo directory per card, each containing four modular files: `index.html`, `index.js`, `index.css`, `data.js`.
 
-For creating card data, see **[[rui-scene]]**. For documentation page generation, see **[[rui-html]]**. For graph visualization from cards, see **[[rui-graph]]**. For architecture diagrams, see **[[rui-diagram]]**. For automated testing, see **[[rui-web-test]]**.
+For creating card data, see **[[rui-scene]]**. For documentation page generation, see **[[rui-html]]**. For graph visualization from cards, see **[[rui-graph]]**. For architecture diagrams, see **[[rui-diagram]]**.
 
 ```
 rui-scene card data → Phase 0: Discovery → Phase 1: Classify → Phase 2: Scaffold → Phase 3: Content → Phase 4: Integrate → Phase 5: Validate
@@ -76,6 +77,12 @@ The scene's own `data.js` (if needed as a card source reference) is at `../../da
    - Source graph: `../../graph/index.html` (if viewer has one)
    - All demos: `../index.html`
    - Docs home: `../../../../index.html`
+
+### Standalone Demo Pattern (`views/<name>/demos/`)
+
+When demos live under `docs/views/<name>/demos/<slug>/` (not under `docs/components/`), they are standalone pages with no `data-include` or `mountDocComponent` dependency. This pattern is used for feature-specific demos (e.g., yt-dlp tool demo, graph viewer).
+
+Full code templates: see `references/standalone-demo-pattern.md` (CDN path resolution, manual i18n, YrySceneCard standalone mount, config structure).
 
 ## Decision Tree
 
@@ -159,6 +166,12 @@ See `references/demo-types.md` for the full specification of each type (A–F), 
 6. **Resolve language.** If the card source is a multi-language config (like `INTRO_CONFIG` with `en` and `zh-CN`):
    - Default to `en` for card data (tags, badge, meta are language-agnostic; only `name` and `desc` vary)
    - Ask the user which language to use for demo UI text
+
+7. **Query rui-ui for design intelligence** (recommended):
+   ```bash
+   python3 <rui-ui-dir>/scripts/search.py "<scene description>" --design-system
+   ```
+   Use the returned color palette, typography pairing, and style category to inform the theme selection and demo styling. This ensures demos are visually coherent and accessibility-aware. The recommended style and colors are stored in `_demo-plan.json`.
 
 ### Intermediate Artifact
 
@@ -411,11 +424,15 @@ Phase 4 complete. All demos integrated.
 
 ---
 
-## Phase 5: Validate
+## Phase 5: Validate & Test
 
-**Purpose**: Deterministic validation of all generated demos followed by a final summary report. This phase uses an inline Node.js script (inspired by understand-anything's Phase 6 inline validator) to check structural correctness.
+**Purpose**: Deterministic validation of all generated demos followed by automated browser testing and a final summary report.
 
 ### Steps
+
+#### 5a: Structural Validation (inline Node.js)
+
+Uses the existing inline validator to check file structure, CDN resolution, and code quality.
 
 1. **Write and execute the inline validation script.** This script checks every demo directory for structural correctness:
 
@@ -571,6 +588,10 @@ process.exit(0);
    - Retry validation once after fixes
    - If critical issues remain after one fix attempt, save demos with warnings and report
 
+#### 5b: Browser Verification
+
+Run automated browser tests to catch runtime errors the structural validator cannot detect: open each demo HTML via `file://` and check for console errors, Vue 3 mounting, YrySceneCard rendering, interactive elements, and per-demo screenshots. If any demo fails browser verification, fix and re-run before finalizing.
+
 4. **Run the manual output checklist** from `references/output-checklist.md` for a final quality pass.
 
 5. **Final summary report:**
@@ -581,6 +602,7 @@ process.exit(0);
   ✓ 48/48 CDN paths resolve correctly
   ✓ 0 hardcoded hex colors found
   ✓ All placeholders filled
+  ✓ 12/12 demos pass browser verification
 
 ── Summary ──────────────────────────────────
   Scene:      intro
@@ -663,6 +685,216 @@ When generating demos for a multi-language project:
 
 ---
 
+## Key Patterns
+
+These patterns are used across all demo types and should be followed strictly.
+
+### Timer Management
+
+All `setTimeout`/`setInterval` handles must be tracked for cleanup. Never use bare `setTimeout` in Vue methods:
+
+```javascript
+// In Vue data():
+_timers: [],
+
+// Schedule with tracking
+scheduleTimeout: function(fn, delay) {
+    var self = this;
+    var h = setTimeout(function() {
+        var idx = self._timers.indexOf(h);
+        if (idx >= 0) self._timers.splice(idx, 1);
+        fn();
+    }, delay);
+    this._timers.push(h);
+    return h;
+},
+
+// Cleanup
+clearAllTimers: function() {
+    (this._timers || []).forEach(function(h) { clearTimeout(h); });
+    this._timers = [];
+},
+
+// In beforeUnmount:
+beforeUnmount: function() { this.clearAllTimers(); }
+```
+
+### i18n Resolver (Standalone Demos)
+
+Merge cross-language constants with the current language slice. See the [Standalone Demo Pattern](#standalone-demo-pattern-viewsnamedemos) above for full implementation.
+
+### Stage Trace Pattern (Type A + B)
+
+Each pipeline stage carries a `trace` object linking to the code dependency graph:
+
+```javascript
+// In data.js progressStages:
+{
+    pct: 15, delay: 600,
+    text: 'Extracting video info...',
+    trace: {
+        file: 'YoutubeDL.py',           // Display name (shown in UI)
+        fileId: 'file:YoutubeDL.py',    // Graph node ID (used for deep-link)
+        func: 'extract_info()',         // Display name
+        funcId: 'func:extract_info',    // Graph node ID
+        desc: 'fetches metadata: title, formats, subtitles'
+    }
+}
+```
+
+### Graph Deep-Link
+
+Trace elements should be clickable, opening the code dependency graph focused on the exact node:
+
+```javascript
+// In index.js
+graphLink: function(nodeId) {
+    if (!nodeId) return '#';
+    return '../../graph/index.html?focus=' + encodeURIComponent(nodeId);
+}
+```
+
+```html
+<!-- In index.html -->
+<a class="trace-link trace-file"
+   :href="graphLink(currentStageInfo.trace.fileId)"
+   target="_blank">{{ currentStageInfo.trace.file }}</a>
+```
+
+The graph page must handle `?focus=<nodeId>` by centering and highlighting the node on load.
+
+### Pipeline Flow UI (Type A)
+
+Replace simple progress dots with a horizontal stepped timeline:
+
+```html
+<div class="pipeline-flow" v-if="processing">
+    <div v-for="(stage, i) in stages" class="pf-step"
+         :class="{ done: i < currentStage, current: i === currentStage }">
+        <div class="pf-dot">
+            <span v-if="i < currentStage">✓</span>
+            <span v-else-if="i === currentStage" class="pf-spinner"></span>
+            <span v-else>{{ i + 1 }}</span>
+        </div>
+        <div class="pf-label">{{ stage.text }}</div>
+    </div>
+</div>
+```
+
+CSS: connector lines via `::after` pseudo-elements, spinner animation for current step, accent-colored dots for completed steps.
+
+### Config-Driven Options
+
+Move magic numbers to `data.js` config, never hardcode in Vue methods:
+
+```javascript
+// data.js — cross-language constants
+retryRate: {
+    postPipeline: 0.15,
+    fragmentStage: 0.2,
+    fragmentStageIndex: 3,
+    extraDelayMs: 400
+},
+resolutionSizes: { '4K': '512 MB', '720p': '72 MB', '480p': '24 MB' },
+```
+
+## Professional Quality Standards
+
+These rules were distilled from building professional demo suites (see the yt-dlp demos at `docs/views/yt-dlp/demos/` for the canonical 4-demo reference implementation covering Types A, B, C, F).
+
+### Cross-Demo Consistency (Suite Rule)
+
+When building 3+ demos for one scene, they MUST share these traits:
+
+1. **Unified theme**: All demo pages reference the same CDN theme `<link>`. Never mix inline tokens (`--rui-*`) and CDN tokens (`--yry-*`) in the same suite.
+2. **Consistent info area**: Every demo's info area has the same 4 standard links (diagram, graph, all demos, docs home). Same order, same emoji prefixes.
+3. **Shared CDN scripts**: All demos load the same set of CDN scripts in the same order. The standalone pattern uses: `vue@3`, `yry-loader.js`, `yry-tag-chip/index.js`, `yry-scene-card/index.js`, `lang.js`.
+4. **Identical layout shell**: The three-area layout (card → demo → info) is identical across all demos. Only the demo area content differs.
+5. **Mutual cross-linking**: The demo index page lists all demos with consistent card design. Each demo links back to `../index.html`.
+
+### Checklist Per Demo Type
+
+Beyond the base output checklist, each type has specific professionalism checks:
+
+**Type A (Tool Interface):**
+- [ ] Empty state with clear call-to-action (icon + "paste a URL" text)
+- [ ] 3+ sample inputs as clickable chips (not just a text list)
+- [ ] Progress indicator shows stage count and current step number
+- [ ] Trace/command display shows the equivalent CLI command
+- [ ] Result section has a header with timestamp
+- [ ] At least one configurable option panel (resolution, format, etc.)
+- [ ] Reset button returns to clean empty state
+
+**Type B (Pipeline Visualization):**
+- [ ] Auto-play button with pause capability
+- [ ] Manual step selection by clicking nodes
+- [ ] Step detail panel with: icon + title + description + technical detail + code trace
+- [ ] At least one step shows a supplementary visualization (matrix, sample output)
+- [ ] Connector arrows between pipeline nodes show active/completed states
+- [ ] Reset restores to initial state (step -1, no selection)
+
+**Type C (Comparison Showcase):**
+- [ ] Sortable table or interactive selector (not static divs)
+- [ ] At least 10 variants in the comparison
+- [ ] Visual size/quality indicators (bars, stars, color coding)
+- [ ] Detail panel on click/hover showing full stats
+- [ ] Default/Recommended items visually highlighted
+- [ ] Best-for recommendation text derived from data properties
+
+**Type D (State Machine):**
+- [ ] SVG or CSS-based state diagram with labeled transitions
+- [ ] Action buttons that trigger state changes
+- [ ] Action log with timestamps and autoscroll
+- [ ] Current state is visually prominent (pulsing, accent-colored)
+- [ ] Invalid transitions are visibly disabled
+
+**Type E (Dashboard):**
+- [ ] Chart.js radar or bar chart with dark theme colors
+- [ ] 3-4 metric cards with trend indicators
+- [ ] Expandable recommendation cards with priority badges
+- [ ] Dimension breakdown with score bars and color coding
+- [ ] Chart instance cleaned up in `beforeUnmount()`
+
+**Type F (Guide Walkthrough):**
+- [ ] Step progress dots with connectors (not plain numbers)
+- [ ] Code blocks with filename headers and copy buttons
+- [ ] Copy feedback ("Copied!" with 2s timeout)
+- [ ] Result/tip panel per step explaining the expected outcome
+- [ ] Keyboard navigation (left/right arrow keys)
+- [ ] Prev/Next buttons with disabled states at boundaries
+- [ ] Step counter in nav bar
+
+### The Demo Value Pyramid
+
+Every demo should provide value at four levels:
+
+```
+Level 4: Teach — the user learns something new about the tool
+Level 3: Engage — the user interacts meaningfully (click, type, compare)
+Level 2: Explain — the content shows HOW the feature works
+Level 1: Display — the card data is rendered correctly
+```
+
+A demo that only achieves Level 1 (card rendered, static content) fails. Aim for Level 3 minimum; Level 4 separates professional demos from basic ones.
+
+### Theme Token Discipline
+
+- **Every color** in CSS uses `var(--yry-*)` — zero exceptions for borders, backgrounds, text, shadows
+- **Hover states** use `var(--yry-accent-hover)` for filled elements, `var(--yry-accent)` for border/text color changes
+- **Muted states** use `var(--yry-text-muted)` or `var(--yry-accent-muted)`
+- **Code blocks** use `var(--yry-font-mono)` + `var(--yry-bg-primary)` background + `var(--yry-text-secondary)` text
+- **Success/warning/error** use their semantic tokens: `var(--yry-success)`, `var(--yry-warning)`, `var(--yry-error)`
+- **Never** use the `--rui-*` token family in demo pages — that's for standalone docs pages that define their own design system inline
+
+### Internationalization Rules
+
+For multi-language demo suites:
+- `data.js` uses the cross-language constant pattern: top-level keys for locale-independent data, `en`/`zh-CN` keys for locale-dependent slices
+- `index.js` implements `resolveLang(lang)` that merges cross-language constants with the current language slice
+- The `ui` object is always flat — no nested i18n keys; use `ui.someLabel` not `ui.section.someLabel`
+- Listen to `vl-lang-changed` CustomEvent on `document` for runtime language switching
+- Card data is language-dependent (name, desc, tags, badge text) — provide full card objects per language
+
 ## When to Use This Skill
 
 - User wants to create demo pages for features described in scene cards
@@ -671,6 +903,7 @@ When generating demos for a multi-language project:
 - User wants to generate visual demonstrations from `INTRO_CONFIG` or similar card data
 - User is building a docs site and wants to add interactive demos alongside documentation
 - User wants to create a demo gallery/index for multiple features within a scene
+- User wants to generate a professional demo suite with multiple demo types covering one tool/feature from different angles
 
 ---
 
@@ -719,6 +952,9 @@ When generating demos for a multi-language project:
 - `references/demo-types.md` — Full specification for each demo type (A–F): DOM structure, Vue app template, interactivity requirements, mock data shapes, and examples. **Read this before generating content in Phase 3.**
 - `references/theme-variables.md` — Available `--yry-*` CSS variables and their semantic meanings. **Read this when writing demo styles in Phase 3.**
 - `references/output-checklist.md` — Pre-generation and post-generation verification checklists. **Read this in Phase 5 for manual quality assurance.**
+- `[[rui-theme]]` — Theme selection and CSS generation (10 presets). See `../rui-theme/scripts/generate-theme.py`.
+- `[[rui-ui]]` — Design intelligence for style/color/typography guidance. See `../rui-ui/scripts/search.py`.
+- `[[rui-html]]` — Docs tech stack: Vue 3 CDN, 4-file pattern, CSS token bridge, i18n.
 - `assets/scaffold-index.html` — HTML scaffold template. **Use this in Phase 2.**
 - `assets/scaffold-index.js` — Vue app scaffold template. **Use this in Phase 2.**
 - `assets/scaffold-index.css` — CSS scaffold template. **Use this in Phase 2.**
@@ -758,3 +994,57 @@ Before finalizing generated demos, verify:
 - [ ] Cards use the same rui-scene data as the demo pages
 - [ ] Type filtering works (All / Tool / Pipeline / Comparison / Control / Dashboard / Walkthrough)
 - [ ] "Back to Scene" link works
+
+## 规则
+
+- [scaffold-contracts.md](./rules/scaffold-contracts.md) — 6 阶段管线 / 4 文件结构 / 6 种 demo 类型 / 主题与坐标硬约束。
+
+## 专业代理
+
+- [type-classifier.md](./agents/type-classifier.md) — 把卡片确定性归类到 A–F demo 类型。
+- [mock-data-crafter.md](./agents/mock-data-crafter.md) — 为各 demo 类型产出无网络依赖的种子化 mock 数据。
+
+## Borders
+
+### What this skill does
+
+- Generate 4-file demo directories (`index.html` + `index.js` + `index.css` + `data.js`) from rui-scene card data
+- Classify each card into demo types A–F and produce type-appropriate interactivity
+- Run a 5-phase pipeline (Discovery → Classify → Scaffold → Content → Validate) with gated approval
+- Optionally dispatch up to 5 parallel subagents for 3+ demos
+
+### What this skill does NOT do
+
+- **Create the card data itself** — that is [[rui-scene]]; this skill consumes its output
+- **Design system recommendation** — that is [[rui-ui]] (called from Phase 0 as a recommendation source, not a replacement)
+- **Apply themes to pages** — page mounting of `--yry-*` variables is the responsibility of the demo's own `<link>` tag (use [[rui-theme]] to choose the preset)
+- **Browser/runtime verification** — rui-demos only does static structural validation in Phase 5
+- **Edit existing demos implicitly** — Phase 0 asks confirmation policy (skip / overwrite / update)
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| [[rui-scene]] | upstream producer | Card data source — `[IF-003](../INTERFACES.md#if-003)` |
+| [[rui-ui]] | calls → rui-ui | Phase 0 design system recommendation — `[IF-001](../INTERFACES.md#if-001)` |
+| [[rui-theme]] | calls → rui-theme | Phase 0 theme selection — `[IF-002](../INTERFACES.md#if-002)` |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `<this-skill-dir>/assets/` | read-only — scaffold templates owned by rui-demos |
+| `docs/components/<scene>/demos/<demo-slug>/` | **write** — primary output (4 files per demo + `index.html`) |
+| `_demo-plan.json` per scene | write (intermediate Phase 0 artifact) |
+| Cards in `INTRO_CONFIG` / `data.js` | no write — read only |
+| Anywhere else | no write |
+
+### Invocation
+
+rui-demos has **no CLI entry** — it is invoked by an agent (Claude) following the phased pipeline in this SKILL.md. The Phase 5 inline validator is a one-shot Node script template:
+
+```bash
+node /tmp/rui-demos-validate.cjs docs/components/<scene>/demos/
+```
+
+The validator is meant to be generated per-run and lives in `/tmp/`, not in `<this-skill-dir>`.

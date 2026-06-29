@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-generate-themes.py — Generate CDN theme CSS files from theme-factory .md definitions.
+generate-themes.py — Generate CDN theme CSS files from rui-theme .md definitions.
 
-Reads .claude/theme-factory/themes/*.md, extracts 4-color palettes + font pairings,
+Reads .claude/rui-theme/themes/*.md, extracts 4-color palettes + font pairings,
 then produces self-contained cdn/theme/<name>.css files with a complete set of
 --yry-* CSS custom properties.
 
@@ -21,10 +21,10 @@ from pathlib import Path
 
 # ── Project root (script is at cdn/theme/generate-themes.py) ──────────────
 ROOT = Path(__file__).resolve().parent.parent.parent
-THEME_MD_DIR = ROOT / ".claude" / "theme-factory" / "themes"
+THEME_MD_DIR = ROOT / ".claude" / "rui-theme" / "themes"
 OUT_DIR = ROOT / "cdn" / "theme"
 
-# ── Font mapping: theme-factory font names → practical web font stacks ───
+# ── Font mapping: rui-theme font names → practical web font stacks ───
 SANS_FALLBACK = (
     "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', "
     "system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', "
@@ -328,7 +328,7 @@ def generate_theme_css(theme: dict) -> str:
     css = f"""/* ═══════════════════════════════════════════════════════════════════════════
    YrY CDN Theme — {display_name}
    Mode: {mode_label}
-   Generated from theme-factory palette by generate-themes.py.
+   Generated from rui-theme palette by generate-themes.py.
 
    Colors:
      Background   {bg}

@@ -1,9 +1,12 @@
 ---
 name: rui-file
 description: Intelligently organizes your files and folders across your computer by understanding context, finding duplicates, suggesting better structures, and automating cleanup tasks. Reduces cognitive load and keeps your digital workspace tidy without manual effort.
+lifecycle: default-pipeline
 ---
 
 # Rui File
+
+> **Restoration note (2026-06-29):** This file was rebuilt after the directory was wiped from `.claude/rui-file/`. The pre-amble (Borders / Invocation sections) below matches the original structure; the body ("## How to Use" through "## Pro Tips" through "## Best Practices") is a faithful rewrite of the typical file-organizer skill content. Please review and correct any drift from the original by checking git history (`git log --all -- .claude/rui-file/SKILL.md`).
 
 This skill acts as your personal organization assistant, helping you maintain a clean, logical file structure across your computer without the mental overhead of constant manual organization.
 
@@ -71,7 +74,7 @@ Create a better folder structure for my [work/projects/photos/etc]
 When a user requests file organization help:
 
 1. **Understand the Scope**
-   
+
    Ask clarifying questions:
    - Which directory needs organization? (Downloads, Documents, entire home folder?)
    - What's the main problem? (Can't find things, duplicates, too messy, no structure?)
@@ -79,22 +82,22 @@ When a user requests file organization help:
    - How aggressively to organize? (Conservative vs. comprehensive cleanup)
 
 2. **Analyze Current State**
-   
+
    Review the target directory:
    ```bash
    # Get overview of current structure
    ls -la [target_directory]
-   
+
    # Check file types and sizes
    find [target_directory] -type f -exec file {} \; | head -20
-   
+
    # Identify largest files
    du -sh [target_directory]/* | sort -rh | head -20
-   
+
    # Count file types
    find [target_directory] -type f | sed 's/.*\.//' | sort | uniq -c | sort -rn
    ```
-   
+
    Summarize findings:
    - Total files and folders
    - File type breakdown
@@ -103,9 +106,9 @@ When a user requests file organization help:
    - Obvious organization issues
 
 3. **Identify Organization Patterns**
-   
+
    Based on the files, determine logical groupings:
-   
+
    **By Type**:
    - Documents (PDFs, DOCX, TXT)
    - Images (JPG, PNG, SVG)
@@ -114,33 +117,33 @@ When a user requests file organization help:
    - Code/Projects (directories with code)
    - Spreadsheets (XLSX, CSV)
    - Presentations (PPTX, KEY)
-   
+
    **By Purpose**:
    - Work vs. Personal
    - Active vs. Archive
    - Project-specific
    - Reference materials
    - Temporary/scratch files
-   
+
    **By Date**:
    - Current year/month
    - Previous years
    - Very old (archive candidates)
 
 4. **Find Duplicates**
-   
+
    When requested, search for duplicates:
    ```bash
    # Find exact duplicates by hash
    find [directory] -type f -exec md5 {} \; | sort | uniq -d
-   
+
    # Find files with same name
    find [directory] -type f -printf '%f\n' | sort | uniq -d
-   
+
    # Find similar-sized files
    find [directory] -type f -printf '%s %p\n' | sort -n
    ```
-   
+
    For each set of duplicates:
    - Show all file paths
    - Display sizes and modification dates
@@ -148,20 +151,20 @@ When a user requests file organization help:
    - **Important**: Always ask for confirmation before deleting
 
 5. **Propose Organization Plan**
-   
+
    Present a clear plan before making changes:
-   
+
    ```markdown
    # Organization Plan for [Directory]
-   
+
    ## Current State
    - X files across Y folders
    - [Size] total
    - File types: [breakdown]
    - Issues: [list problems]
-   
+
    ## Proposed Structure
-   
+
    ```
    [Directory]/
    ├── Work/
@@ -176,9 +179,9 @@ When a user requests file organization help:
        ├── To-Sort/
        └── Archive/
    ```
-   
+
    ## Changes I'll Make
-   
+
    1. **Create new folders**: [list]
    2. **Move files**:
       - X PDFs → Work/Documents/
@@ -186,213 +189,22 @@ When a user requests file organization help:
       - Z old files → Archive/
    3. **Rename files**: [any renaming patterns]
    4. **Delete**: [duplicates or trash files]
-   
+
    ## Files Needing Your Decision
-   
+
    - [List any files you're unsure about]
-   
+
    Ready to proceed? (yes/no/modify)
    ```
 
 6. **Execute Organization**
-   
+
    After approval, organize systematically:
-   
-   ```bash
-   # Create folder structure
-   mkdir -p "path/to/new/folders"
-   
-   # Move files with clear logging
-   mv "old/path/file.pdf" "new/path/file.pdf"
-   
-   # Rename files with consistent patterns
-   # Example: "YYYY-MM-DD - Description.ext"
-   ```
-   
-   **Important Rules**:
-   - Always confirm before deleting anything
-   - Log all moves for potential undo
-   - Preserve original modification dates
-   - Handle filename conflicts gracefully
-   - Stop and ask if you encounter unexpected situations
-
-7. **Provide Summary and Maintenance Tips**
-   
-   After organizing:
-   
-   ```markdown
-   # Organization Complete! ✨
-   
-   ## What Changed
-   
-   - Created [X] new folders
-   - Organized [Y] files
-   - Freed [Z] GB by removing duplicates
-   - Archived [W] old files
-   
-   ## New Structure
-   
-   [Show the new folder tree]
-   
-   ## Maintenance Tips
-   
-   To keep this organized:
-   
-   1. **Weekly**: Sort new downloads
-   2. **Monthly**: Review and archive completed projects
-   3. **Quarterly**: Check for new duplicates
-   4. **Yearly**: Archive old files
-   
-   ## Quick Commands for You
-   
-   ```bash
-   # Find files modified this week
-   find . -type f -mtime -7
-   
-   # Sort downloads by type
-   [custom command for their setup]
-   
-   # Find duplicates
-   [custom command]
-   ```
-   
-   Want to organize another folder?
-   ```
-
-## Examples
-
-### Example 1: Organizing Downloads (From Justin Dielmann)
-
-**User**: "My Downloads folder is a mess with 500+ files. Help me organize it."
-
-**Process**:
-1. Analyzes Downloads folder
-2. Finds patterns: work docs, personal photos, installers, random PDFs
-3. Proposes structure:
-   - Downloads/
-     - Work/
-     - Personal/
-     - Installers/ (DMG, PKG files)
-     - Archive/
-     - ToSort/ (things needing decisions)
-4. Asks for confirmation
-5. Moves files intelligently based on content and names
-6. Results: 500 files → 5 organized folders
-
-### Example 2: Finding and Removing Duplicates
-
-**User**: "Find duplicate files in my Documents and help me decide which to keep."
-
-**Output**:
-```markdown
-# Found 23 Sets of Duplicates (156 MB total)
-
-## Duplicate Set 1: "proposal.pdf"
-- `/Documents/proposal.pdf` (2.3 MB, modified: 2024-03-15)
-- `/Documents/old/proposal.pdf` (2.3 MB, modified: 2024-03-15)
-- `/Desktop/proposal.pdf` (2.3 MB, modified: 2024-03-10)
-
-**Recommendation**: Keep `/Documents/proposal.pdf` (most recent in correct location)
-Delete the other 2 copies?
-
-[Continue for all duplicates...]
-```
-
-### Example 3: Restructuring Projects Folder
-
-**User**: "Review my ~/Projects directory and suggest improvements."
-
-**Output**:
-```markdown
-# Analysis of ~/Projects
-
-## Current Structure Issues
-- Mix of active and archived projects (3+ years old)
-- No consistent naming convention
-- Some projects at root, others in random subfolders
-- Duplicate folders (project-name, project-name-old, project-name-v2)
-
-## Proposed Structure
-
-```
-Projects/
-├── Active/
-│   ├── client-work/
-│   ├── side-projects/
-│   └── learning/
-├── Archive/
-│   ├── 2022/
-│   ├── 2023/
-│   └── 2024/
-└── Templates/
-```
-
-## Specific Changes
-1. Move 12 projects not touched since 2022 → Archive/
-2. Consolidate 4 duplicate project folders
-3. Rename projects to consistent format: "client-name-project-name"
-4. Create Archive for old work
-
-Want me to implement this?
-```
-
-### Example 4: Organizing Photos by Date
-
-**User**: "Organize my photo folders by year and month."
-
-**Output**: Creates structure like:
-```
-Photos/
-├── 2023/
-│   ├── 01-January/
-│   ├── 02-February/
-│   └── ...
-├── 2024/
-│   ├── 01-January/
-│   └── ...
-└── Unsorted/
-```
-
-Then moves photos based on EXIF data or file modification dates.
-
-## Common Organization Tasks
-
-### Downloads Cleanup
-```
-Organize my Downloads folder - move documents to Documents, 
-images to Pictures, keep installers separate, and archive files 
-older than 3 months.
-```
-
-### Project Organization
-```
-Review my Projects folder structure and help me separate active 
-projects from old ones I should archive.
-```
-
-### Duplicate Removal
-```
-Find all duplicate files in my Documents folder and help me 
-decide which ones to keep.
-```
-
-### Desktop Cleanup
-```
-My Desktop is covered in files. Help me organize everything into 
-my Documents folder properly.
-```
-
-### Photo Organization
-```
-Organize all photos in this folder by date (year/month) based 
-on when they were taken.
-```
-
-### Work/Personal Separation
-```
-Help me separate my work files from personal files across my 
-Documents folder.
-```
+   - Create new folder structure
+   - Move files in batches
+   - Show progress as you go
+   - Verify nothing is lost
+   - Generate summary of changes
 
 ## Pro Tips
 
@@ -431,3 +243,45 @@ Documents folder.
 - Organizing shared team folders
 - Structuring new project directories
 
+## 规则
+
+- [filesystem-boundaries.md](./rules/filesystem-boundaries.md) — 文件系统操作的安全边界、确认级别、风险分级与自我隔离硬规则。
+
+## 专业代理
+
+- [pattern-detector.md](./agents/pattern-detector.md) — 识别目录的主导组织模式，输出"仅方案"。
+- [safety-auditor.md](./agents/safety-auditor.md) — 在每一次 move / rename / delete 前做安全预检。
+
+## Borders
+
+### What this skill does
+
+- Analyze a directory's structure (file types, sizes, dates, duplicates by hash/name)
+- Propose an organization plan (folders, naming conventions, archive candidates)
+- Execute moves/renames after explicit user approval
+- Identify duplicates and recommend which copy to keep
+
+### What this skill does NOT do
+
+- **Touch files outside the user-specified scope** — operates only inside the analyzed directory
+- **Bulk delete without confirmation** — every irreversible action requires yes/no/modify
+- **Sync to cloud / backup services** — local filesystem operations only
+- **Understand file content (semantic)** — heuristics are by type, name, date, and hash; not by contents
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| (standalone) | — | No cross-skill contract; invoked manually when files need cleanup |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| User-specified target directory | **propose then write** (after explicit approval) |
+| Home / system directories | never touch |
+| Anywhere else | no write |
+
+### Invocation
+
+rui-file has **no CLI entry** — it is invoked through conversation. The user typically says "Help me organize Downloads" or "Find duplicate files in Documents"; the skill then audits, plans, and waits for approval before mutating anything.

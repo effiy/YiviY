@@ -2,6 +2,7 @@
 name: rui-theme
 description: Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly.
 license: Complete terms in LICENSE.txt
+lifecycle: default-pipeline
 ---
 
 
@@ -57,3 +58,55 @@ After a preferred theme is selected:
 
 ## Create your Own Theme
 To handle cases where none of the existing themes work for an artifact, create a custom theme. Based on provided inputs, generate a new theme similar to the ones above. Give the theme a similar name describing what the font/color combinations represent. Use any basic description provided to choose appropriate colors/fonts. After generating the theme, show it for review and verification. Following that, apply the theme as described above.
+
+## 规则
+
+- [token-contracts.md](./rules/token-contracts.md) — 10 套预设主题、自定义主题生成、`--yry-*` token 权威命名与所有权边界。
+
+## 专业代理
+
+- [palette-generator.md](./agents/palette-generator.md) — 自然语言描述 → 12 步色板 + 字体配对。
+- [contrast-checker.md](./agents/contrast-checker.md) — 部署前 WCAG 对比度与状态色辨识度审计。
+
+## Borders
+
+### What this skill does
+
+- Select one of 10 preset themes (`themes/<name>.md`) or generate a custom one via `scripts/generate-theme.py`
+- Emit a `<name>.css` defining the canonical `--yry-*` token set (or output the tokens to stdout)
+- Provide hex values, font pairings, and usage heuristics for each preset
+
+### What this skill does NOT do
+
+- **Inject CSS into pages** — page mounting is the caller's responsibility ([rui-html](../rui-html/SKILL.md), [rui-demos](../rui-demos/SKILL.md), [rui-diagram](../rui-diagram/SKILL.md), [rui-graph](../rui-graph/SKILL.md))
+- **Maintain token names** — the `--yry-*` token set is fixed; this skill fills values, never renames
+- **Replace [[rui-ui]] design intelligence** — rui-ui does BM25 search over a broader corpus; rui-theme is the authoritative color/font source
+- **Provide dark/light toggle** — themes are full presets; per-page dark-mode toggling is out of scope
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| [[rui-html]] | calls → rui-theme | `[IF-006](../INTERFACES.md#if-006)` |
+| [[rui-demos]] | calls → rui-theme | `[IF-002](../INTERFACES.md#if-002)` |
+| [[rui-graph]] | calls → rui-theme | `[IF-009](../INTERFACES.md#if-009)` |
+| [[rui-diagram]] | consumes | references/themes mention rui-theme (color palette source) |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `<this-skill-dir>/themes/` | read+write (owned — preset definitions) |
+| `<this-skill-dir>/scripts/generate-theme.py` | read+write (owned) |
+| `cdn/theme/<name>.css` | consumed by pages; rui-theme produces, pages reference |
+| Theme CSS in any page | read-only from rui-theme's perspective |
+
+### Invocation
+
+Entry script lives alongside this SKILL.md:
+
+```bash
+python3 <this-skill-dir>/scripts/generate-theme.py "<description>" [-o output.css]
+```
+
+`<this-skill-dir>` is the directory containing this SKILL.md (typically `.claude/rui-theme/`).

@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   rui-theme — Modern Minimalist
+   Auto-generated from themes/modern-minimalist.md
+   Generator: .claude/rui-theme/scripts/generate-theme.py
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+
+  /* ── Background & Surface ────────────────────── */
+  --yry-bg-primary: #36454f;
+  --yry-bg-secondary: #2e424f;
+  --yry-bg-tertiary: #364d5c;
+  --yry-bg-inverse: #ffffff;
+
+  /* ── Text & Content ──────────────────────────── */
+  --yry-text-primary: #ffffff;
+  --yry-text-secondary: #b8bdc1;
+  --yry-text-muted: #90989e;
+  --yry-text-heading: #ffffff;
+  --yry-text-inverse: #36454f;
+
+  /* ── Brand & Accent ──────────────────────────── */
+  --yry-accent: #708090;
+  --yry-accent-rgb: 112, 128, 144;
+  --yry-accent-hover: #1c3956;
+  --yry-accent-muted: #161b20;
+  --yry-accent-text: #ffffff;
+
+  /* ── Status Colors ───────────────────────────── */
+  --yry-success: #24d069;
+  --yry-warning: #d1aa47;
+  --yry-error: #d14747;
+  --yry-info: #478fd1;
+
+  /* ── Borders & Lines ─────────────────────────── */
+  --yry-border: #445058;
+  --yry-border-hover: #536672;
+  --yry-border-accent: #141b22;
+
+  /* ── Shadows & Effects ───────────────────────── */
+  --yry-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --yry-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --yry-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* ── Typography ──────────────────────────────── */
+  --yry-font-sans: 'DejaVu Sans', system-ui, -apple-system, sans-serif;
+  --yry-font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  --yry-font-size-xs: 0.65rem;
+  --yry-font-size-sm: 0.75rem;
+  --yry-font-size-base: 0.875rem;
+  --yry-font-size-lg: 1.1rem;
+  --yry-font-size-xl: 1.5rem;
+  --yry-font-size-2xl: 2rem;
+
+  /* ── Spacing & Sizing ────────────────────────── */
+  --yry-space-1: 4px;
+  --yry-space-2: 8px;
+  --yry-space-3: 12px;
+  --yry-space-4: 16px;
+  --yry-space-5: 20px;
+  --yry-space-6: 24px;
+  --yry-space-8: 32px;
+  --yry-radius-sm: 4px;
+  --yry-radius-md: 8px;
+  --yry-radius-lg: 12px;
+
+  /* ── Extended Palette (charts / badges) ──────── */
+  --yry-chart-1: #3b84ce;
+  --yry-chart-2: #753bce;
+  --yry-chart-3: #ce3ba1;
+  --yry-chart-4: #ce583b;
+  --yry-chart-5: #bfce3b;
+  --yry-chart-6: #3bce3b;
+
+  /* ── Animation ──────────────────────────────── */
+  --yry-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --yry-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --yry-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --yry-duration-fast: 150ms;
+  --yry-duration-normal: 250ms;
+  --yry-duration-slow: 400ms;
+
+  /* ── Scrollbar (dark themes) ────────────────── */
+  --yry-scrollbar-track: var(--yry-bg-primary);
+  --yry-scrollbar-thumb: var(--yry-text-muted);
+
+}
+
+/* ── Selection ───────────────────────────────────── */
+::selection {
+  background: #161b20;
+  color: #ffffff;
+}

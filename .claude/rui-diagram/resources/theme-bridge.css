@@ -1,0 +1,43 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   rui-diagram — Theme Token Bridge
+   Maps --yry-* CDN theme variables to diagram-specific --diag-* tokens.
+   Load AFTER the CDN theme CSS, BEFORE any diagram-specific CSS.
+   All generated diagrams use these tokens; never hardcode hex values.
+
+   See also: ../rui-graph/resources/theme-bridge.css (same pattern, --graph-* tokens)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surface ─────────────────────────────────── */
+  --diag-bg:                   var(--yry-bg-primary, #020617);
+  --diag-surface:              var(--yry-bg-secondary, #0f172a);
+  --diag-surface-card:         color-mix(in srgb, var(--diag-surface) 80%, transparent);
+
+  /* ── Border ──────────────────────────────────── */
+  --diag-border:               var(--yry-border, #1e293b);
+  --diag-grid:                 color-mix(in srgb, var(--diag-border) 80%, transparent);
+
+  /* ── Text ────────────────────────────────────── */
+  --diag-text:                 var(--yry-text-primary, #f8fafc);
+  --diag-text-soft:            var(--yry-text-secondary, #94a3b8);
+  --diag-text-muted:           var(--yry-text-muted, #64748b);
+
+  /* ── Accent ──────────────────────────────────── */
+  --diag-accent:               var(--yry-accent, #22d3ee);
+  --diag-accent-bg:            var(--yry-accent-muted, rgba(8, 51, 68, 0.4));
+
+  /* ── Layer Colors (maps to --yry-chart-*) ────── */
+  --diag-layer-ui:             var(--yry-chart-1, #22d3ee);    /* Cyan */
+  --diag-layer-api:            var(--yry-chart-2, #38bdf8);    /* Sky */
+  --diag-layer-service:        var(--yry-chart-3, #34d399);    /* Emerald */
+  --diag-layer-data:           var(--yry-chart-4, #a78bfa);    /* Violet */
+  --diag-layer-infra:          var(--yry-chart-5, #fbbf24);    /* Amber */
+  --diag-layer-config:         var(--yry-text-soft, #94a3b8);  /* Slate */
+  --diag-layer-auth:           var(--yry-error, #fb7185);      /* Rose */
+  --diag-layer-events:         var(--yry-chart-6, #fb923c);    /* Orange */
+  --diag-layer-utility:        var(--yry-text-muted, #64748b); /* Muted slate */
+  --diag-layer-external:       color-mix(in srgb, var(--yry-text-muted, #475569) 70%, transparent);
+
+  /* ── Font ────────────────────────────────────── */
+  --diag-font:                 var(--yry-font-mono, 'JetBrains Mono', monospace);
+}

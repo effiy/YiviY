@@ -74,6 +74,7 @@ window.INTRO_CONFIG = {
                 { name: '🎥 yt-dlp', nameHref: 'https://github.com/yt-dlp/yt-dlp', nameTarget: '_blank', desc: 'YouTube video download via yt-dlp · <strong>1,200+ sites</strong> · format selection · subtitle extraction',
                   tags: [{ text: '1.2k sites', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
                   links: [
+                      { label: '清单', href: 'views/yt-dlp/checklist/index.html',                  target: '' },
                       { label: '图解', href: 'views/yt-dlp/diagram/index.html',                  target: '' },
                       { label: '图谱', href: 'views/yt-dlp/graph/index.html',                     target: '' },
                       { label: '演示', href: 'views/yt-dlp/demos/yt-dlp-tool/index.html',          target: '' },
@@ -219,6 +220,7 @@ window.INTRO_CONFIG = {
                 { name: '🎥 yt-dlp', nameHref: 'https://github.com/yt-dlp/yt-dlp', nameTarget: '_blank', desc: '使用 yt-dlp 下载 YouTube 视频 · <strong>1,200+ 站点</strong> · 格式选择 · 字幕提取',
                   tags: [{ text: '1.2k 站点', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
                   links: [
+                      { label: '清单', href: 'views/yt-dlp/checklist/index.html',                  target: '' },
                       { label: '图解', href: 'views/yt-dlp/diagram/index.html',                  target: '' },
                       { label: '图谱', href: 'views/yt-dlp/graph/index.html',                     target: '' },
                       { label: '演示', href: 'views/yt-dlp/demos/yt-dlp-tool/index.html',          target: '' },

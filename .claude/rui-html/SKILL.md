@@ -1,6 +1,7 @@
 ---
 name: rui-html
 description: Generate and refactor documentation pages using the VideoLingo docs tech stack — Vue 3 CDN, zero-build 4-file component architecture, token-bridged theme system, and vanilla-JS i18n. Use for creating doc pages, refactoring static pages, adding sections, or setting up i18n. Also use when the user wants doc sites, documentation pages, Vue CDN pages, or pages following the docs/ pattern. Takes a Knowledge Graph from [[rui-diagram]] as optional input.
+lifecycle: default-pipeline
 ---
 
 # Rui HTML
@@ -49,7 +50,7 @@ User asks for...
 │  → W7: create index.css → add to _COMPONENTS_WITH_CSS Set
 │
 └─ Full design process (new page / major redesign)
-   → Phase 1 (rui-ui) → Phase 2 (rui-theme) → Phase 3 (rui-web-test)
+   → Phase 1 (rui-ui) → Phase 2 (rui-theme)
 ```
 
 ## Directory Structure
@@ -489,15 +490,12 @@ User asks for new page / redesign
     ▼
 Phase 1: Design Intelligence (rui-ui)
     │  Search UI/UX style guides → style, colors, typography, patterns, anti-patterns
-    │  Command: python3 .claude/rui-ui/scripts/search.py "<query>" --design-system -p "<Project>"
+    │  Command: python3 <rui-ui-dir>/scripts/search.py "<query>" --design-system -p "<Project>"
     ▼
 Phase 2: Theme Selection (rui-theme)
     │  Pick from 10 CDN themes → match to design system palette
     │  Apply by changing ONE <link> in index.html
     ▼
-Phase 3: Post-Generation Verification (rui-web-test)
-    │  Playwright → console errors, responsive layout, i18n, theme
-    │  Command: python3 .claude/rui-web-test/scripts/with_server.py ...
     ▼
 Pre-Delivery Checklist → DONE
 ```
@@ -539,17 +537,11 @@ Dark mode needed?
     └─ Soft/elegant → Desert Rose (#7)
 ```
 
-Full theme details → `.claude/rui-theme/themes/<name>.md`.
+Full theme details → `<rui-theme-dir>/themes/<name>.md`.
 
-### Phase 3: Post-Generation Verification (rui-web-test)
+### Phase 3: Post-Generation Verification
 
-Write Playwright script checking: no console errors, critical elements present, theme applied, responsive at 375/768/1024/1440px, i18n switching works, CDN components render, skip-link accessible. For CDN-based pages, `file://` URLs work directly.
-
-```bash
-python3 .claude/rui-web-test/scripts/with_server.py \
-  --server "python3 -m http.server 8080 --directory docs" --port 8080 \
-  -- python verify.py
-```
+Verify pages render correctly: no console errors, critical elements present, theme applied, responsive at 375/768/1024/1440px, i18n switching works, CDN components render, skip-link accessible. For CDN-based pages, `file://` URLs work directly. Open in browser and run through the Pre-Delivery Checklist.
 
 ## Critical Rules
 
@@ -621,8 +613,60 @@ python3 .claude/rui-web-test/scripts/with_server.py \
 | `docs/components/config/` | Reference — table-based component with i18n |
 | `docs/components/contact/` | Reference — simple text component with i18n |
 | `cdn/theme/*.css` | CDN theme definitions — all define identical `--yry-*` variable names |
-| `.claude/rui-ui/scripts/search.py --help` | Design intelligence CLI reference |
-| `.claude/rui-theme/themes/*.md` | Exact theme hex values and font pairings |
-| `.claude/rui-web-test/SKILL.md` | Playwright verification script patterns |
+| `<rui-ui-dir>/scripts/search.py --help` | Design intelligence CLI reference |
+| `<rui-theme-dir>/themes/*.md` | Exact theme hex values and font pairings |
 
 For architecture diagrams and codebase analysis, see **[[rui-diagram]]**.
+
+## 规则
+
+- [docs-mounting-contracts.md](./rules/docs-mounting-contracts.md) — Vue 3 CDN + 4 文件组件架构、token 桥接、i18n 同构、加载顺序与硬约束。
+
+## 专业代理
+
+- [template-builder.md](./agents/template-builder.md) — 把 markdown 大纲 / 纯稿转换为 Vue 3 `<template>` 片段。
+- [i18n-translator.md](./agents/i18n-translator.md) — 多语言 `data.js` 平行切片的同构翻译。
+- [theme-integrator.md](./agents/theme-integrator.md) — 主题切换时的链接替换、token 审计与对比度 sanity。
+
+## Borders
+
+### What this skill does
+
+- Generate and refactor documentation pages using the VideoLingo 4-file component pattern (`index.html` + `data.js` + `index.js` + `index.css`)
+- Provide `mountDocComponent()` Vue app factory with auto CSS injection and `vl-lang-changed` i18n handling
+- Maintain the `@import` CSS chain (`tokens.css` → `base.css` → `layout.css` → `responsive.css`)
+- Bridge `--yry-*` CDN theme tokens to `--vl-doc-*` docs-specific tokens in `tokens.css`
+
+### What this skill does NOT do
+
+- **Define CDN components** — `yry-loader` / `yry-tag-chip` / `yry-scene-card` / `yry-back-top` live under `docs/cdn/` and are maintained independently
+- **Choose themes** — that is [[rui-theme]]; rui-html references one theme CSS in `<head>`, never curates
+- **Produce diagrams / graphs** — see [[rui-diagram]] (SVG architecture) or [[rui-graph]] (Cytoscape code graph)
+- **Card data generation** — receives cards from [[rui-scene]] data.js
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| [[rui-theme]] | consumes | Token bridge to `--yry-*` — `[IF-006](../INTERFACES.md#if-006)` |
+| [[rui-scene]] | consumes | Mounts `YrySceneCard` props — `[IF-007](../INTERFACES.md#if-007)` |
+| [[rui-diagram]] | consumes | Reads `knowledge-graph.json` for SVG embedding — `[IF-005](../INTERFACES.md#if-005)` |
+| [[rui-demos]] | pattern sibling | Same 4-file pattern; views/ sub-pages are a subset of the same architecture |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `docs/index.html` | **write** (owned) |
+| `docs/index.css`, `docs/styles/*.css` | **write** (owned) |
+| `docs/assets/mount-component.js`, `include.js`, `lang.js`, `main.js` | **write** (owned) |
+| `docs/components/<scene>/` | **write** per scene (one writer per scene, see project_memory.md) |
+| `docs/cdn/<name>/` | read-only — CDN components owned by maintainers |
+| `docs/views/<name>/` | write when generating new sub-pages |
+
+### Key constraints (must not violate)
+
+- `_COMPONENTS_WITH_CSS` Set must list every component with `index.css`
+- Sub-app Vue instances must `unmount()` on `vl-lang-changed` to prevent memory leaks (see project_memory.md)
+- Chart instances and timers must be destroyed in `beforeUnmount`
+- Deprecated: `window.YrYVueCE.define()` and `docs/styles/components.css` (per project_memory.md)

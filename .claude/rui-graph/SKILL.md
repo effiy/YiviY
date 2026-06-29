@@ -1,310 +1,318 @@
 ---
 name: rui-graph
-description: Generate interactive source code relationship graphs (源码图谱) from rui-scene card data using Cytoscape.js. Analyze YrySceneCard data structures, extract nodes and edges from card relationships, and produce self-contained dark-theme HTML with interactive graph visualization. Use when the user wants to generate a graph, chart, or network visualization from scene cards, data.js card arrays, or INTRO_CONFIG. Also use when the user mentions 图谱, source graph, card relationships, dependency graph, or wants to visualize card connections.
+description: Generate interactive code dependency graphs from Python source code using Cytoscape.js. Analyze .py files to extract import relationships, class hierarchies, function call graphs, and module structures, producing self-contained dark-theme HTML with interactive graph visualization. Use when the user wants to visualize code dependencies, import graphs, call graphs, class hierarchies, or module structures. Also use when the user mentions 源码图谱, dependency graph, code graph, import map, function-level dependencies, or wants to see how source files connect. **Do not use for multi-language architecture diagrams** — see [[rui-diagram]].
+lifecycle: default-pipeline
 ---
 
-# Rui Graph
+# Rui Graph — Code Dependency Graph
 
-Generate interactive source code relationship graphs (源码图谱) from rui-scene card data using **Cytoscape.js** — the industry-standard open source graph library. This skill follows a structured phased pipeline for reliable, validated graph generation.
+Generate interactive **code dependency graphs** from Python source code using **Cytoscape.js**. This skill analyzes `.py` files to extract files, classes, functions, and their relationships (imports, calls, inheritance, containment, exports), producing a self-contained dark-theme HTML page with interactive graph visualization.
 
-For creating scene card data, see **[[rui-scene]]**. For architecture diagrams (SVG), see **[[rui-diagram]]**. For documentation page generation, see **[[rui-html]]**.
+For creating documentation pages, see **[[rui-html]]**. For architecture diagrams (SVG), see **[[rui-diagram]]**.
 
 ```
-rui-scene card data → Card Analysis → Node/Edge Extraction → Cytoscape.js Graph
-     (data.js)        (classify)       (relationships)      (interactive HTML)
+Python source tree → AST Parse → Symbol Extraction → Graph Build → Cytoscape.js Graph
+   (.py files)        (imports,     (nodes: file,    (edges: imports,   (interactive HTML)
+                       classes,       class, func,     calls, inherits,
+                       functions)     module)          contains, exports)
 ```
 
 ## What This Skill Does
 
-Takes rui-scene card data (the `YrySceneCard` props objects found in `data.js` files, `INTRO_CONFIG`, or inline card arrays) and transforms it into an interactive, explorable graph:
+Takes a Python source directory and transforms its code structure into an interactive, explorable graph:
 
-- **Cards become nodes** — sized by richness, colored by badge type/domain
-- **Tags become nodes** — colored by semantic modifier (`warn`, `accent`, `info`, etc.)
-- **Relationships become edges** — `has_tag`, `shares_tag`, `links_to`, `shares_badge`, `has_badge`, `depends_on`, `related_to`, `extends`, `implements`
-- **Link destinations become nodes** — external/internal repos, doc pages, demos
-- **Badge groups become nodes** — aggregate badge types
+- **Files become nodes** — rectangle, sized by line count, colored by tier (core/library/utility)
+- **Classes become nodes** — hexagon, colored violet, showing inheritance and methods
+- **Functions become nodes** — ellipse, colored emerald, showing call relationships
+- **Modules (`__init__.py`) become nodes** — diamond, colored amber, showing re-exports
+- **Imports become `imports` edges** — solid arrow between files
+- **Calls become `calls` edges** — dashed arrow between functions
+- **Inheritance becomes `inherits` edges** — bold solid arrow between classes
+- **Containment becomes `contains` edges** — thin solid line from file to its definitions
+- **Re-exports become `exports` edges** — dotted cyan arrow from `__init__.py` to submodules
 
-The output follows the project's file convention — **4 files** in a `graph/` subdirectory alongside the card data source, mirroring `index.html` + `index.js` + `index.css` + `data.js` (same pattern as `rui-scene` and `rui-html` components). Works from `file://` URLs — zero build step, zero dependencies beyond Cytoscape.js CDN. An intermediate `graph-data.json` is also produced for reuse, validation, and incremental updates.
+The output follows the project's file convention — **4 files** in a `graph/` subdirectory: `index.html` + `index.js` + `index.css` + `data.js`. Works from `file://` URLs — zero build step, zero dependencies beyond Cytoscape.js CDN.
 
 ## Decision Tree
 
 ```
-User has card data and wants...
-├─ Interactive graph visualization
-│  → Mode A: Full graph (cards + tags + links + all relationships)
+User has Python source code and wants...
+├─ Interactive graph of the full codebase
+│  → Mode A: Full graph (files + classes + functions + modules + all edges) — DEFAULT
 │
-├─ Simplified card-only network (no tag/link nodes)
-│  → Mode B: Card-to-card relationships only
+├─ Module-level overview (no functions/classes, just files + imports)
+│  → Mode B: Module-only graph
 │
-├─ Single card deep-dive (expand one card's connections)
-│  → Mode C: Ego graph centered on one card
-│
-├─ Compare two card sets (e.g., en vs zh-CN)
-│  → Mode D: Side-by-side or merged with language color
-│
-├─ Embed graph in existing docs page
-│  → Mode E: Generate graph as a standalone view (views/<name>/graph/)
-│
-├─ Analyze and visualize arbitrary JSON/YAML data as a graph
-│  → Mode F: Generic data-to-graph conversion
-│
-└─ Update existing graph incrementally (changed cards only)
-   → Mode G: Incremental update from git diff
+└─ Single module deep-dive (expand one package's internals)
+   → Mode C: Single-module focus
 ```
 
 ---
 
 ## Phased Pipeline
 
-This skill executes graph generation in **5 phases**, inspired by the understand-anything analysis pipeline. Each phase has clear inputs, outputs, and validation gates.
+This skill executes graph generation in **5 phases**.
 
 ### Phase Overview
 
-| Phase | Name | Input | Output | Deterministic |
-|-------|------|-------|--------|:---:|
-| 0 | Pre-flight | User args / file paths | Resolved config, card data source | ✓ |
-| 1 | Parse & Classify | Card data source | `card-analysis.json` | ✗ (LLM-assisted) |
-| 2 | Build Graph | Card analysis | `graph-data.json` (nodes + edges) | ✓ (script) + ✗ (LLM) |
-| 3 | Review & Validate | Graph data | `review.json` (issues + warnings) | ✓ (script) |
-| 4 | Generate HTML | Validated graph data | `index.html` (self-contained) | ✓ |
-| 5 | Save & Report | All artifacts | Final output, summary report | ✓ |
+| Phase | Name | Input | Output |
+|-------|------|-------|--------|
+| 0 | Pre-flight | User args / source directory | Resolved config, file manifest |
+| 1 | Parse & Analyze | Python source files | `code-analysis.json` |
+| 2 | Build Graph | Code analysis | `graph-data.json` (nodes + edges) |
+| 3 | Validate | Graph data | Validation report |
+| 4 | Generate Output | Validated graph data | 4 output files (index.html + js + css + data.js) |
+| 5 | Save & Report | All artifacts | Final output, summary report |
 
 ---
 
 ## Phase 0 — Pre-flight
 
-Determine the card data source, output paths, and mode.
+### Step 1: Resolve Source Directory
 
-### Step 1: Resolve Data Source
+Identify the Python source directory to analyze. Common patterns:
+- `site-packages/<package_name>/` — installed package
+- `src/<package_name>/` — project source
+- User-specified path
 
-Identify the card data location. Common paths:
-- `docs/components/intro/data.js` → `window.INTRO_CONFIG` (features + cards arrays)
-- `docs/components/<name>/data.js` → `window.<NAME>_CONFIG`
-- Any `.js` file exporting a card array or `INTRO_CONFIG`-shaped object
-- User-provided inline JSON
-
-If the data uses `INTRO_CONFIG` pattern with i18n, default to the `en` language slice unless the user specifies otherwise. For multi-language comparison, use Mode D.
+Exclude these subdirectories by default (they add noise):
+- `extractor/`, `downloader/`, `postprocessor/` — plugin-heavy directories with hundreds of similar files
+- `test/`, `tests/` — test files
+- `compat/` — compatibility shims
 
 ### Step 2: Resolve Mode
 
 Parse user intent:
-- `--mode full` or default → Mode A
-- `--mode simple` / `--clean` → Mode B
-- `--mode ego --card <name>` → Mode C
-- `--mode compare --languages en,zh-CN` → Mode D
-- `--mode embed --view <name>` → Mode E
-- `--mode generic` → Mode F
-- `--incremental` / existing graph exists + changed files → Mode G
+- `--mode full` or default → Mode A (all node types, all edge types)
+- `--mode modules` / `--simple` → Mode B (files + modules + imports/exports only)
+- `--mode deep --module <name>` → Mode C (single module + all contained symbols + direct dependencies)
 
-### Step 3: Check for Existing Graph (Incremental)
+### Step 3: Prepare Output Directory
 
-If `graph-data.json` exists at the output location:
-1. Read `meta.json` (if exists) to get last source hash
-2. Compute current source hash: `md5` of the card data
-3. If unchanged → report "Graph is up to date" and **STOP** (or ask: rebuild / review / skip)
-4. If changed → compute diff for incremental update (Mode G)
+Graph output follows the project's file structure convention:
 
-### Step 4: Prepare Output Directory
+| Source | Output Directory | Files |
+|--------|-----------------|-------|
+| `docs/views/<name>/` (standalone) | `docs/views/<name>/graph/` | `index.html`, `index.js`, `index.css`, `data.js` |
+| User-specified path | `<path>/graph/` | same 4 files |
 
-Graph output follows the project's file structure convention. The output directory is determined by the data source:
+### Step 4: Report
 
-| Data Source | Output Directory | Files |
-|-------------|-----------------|-------|
-| `docs/components/<name>/data.js` | `docs/components/<name>/graph/` | `index.html`, `index.js`, `index.css`, `data.js` |
-| `docs/components/intro/data.js` | `docs/components/intro/graph/` | same 4 files |
-| User-specified standalone | `docs/views/<name>/graph/` | same 4 files |
-| Inline data (W3) | user-specified path | same 4 files |
-
-```bash
-mkdir -p docs/components/<name>/graph/
-# or docs/views/<name>/graph/ for standalone views
-```
-
-### Step 5: Report
-
-> `[Phase 0/5] Pre-flight complete. Mode: <mode>, Source: <path>, Cards: <count>`
+> `[Phase 0/5] Pre-flight complete. Mode: <mode>, Source: <path>, Files: <count>`
 
 ---
 
-## Phase 1 — Parse & Classify
+## Phase 1 — Parse & Analyze
 
-Extract and classify all card objects from the data source. This phase combines deterministic extraction with LLM-assisted classification.
+Extract symbols and relationships from Python source files using AST analysis.
 
-### Step 1: Extract Card Data
+### Step 1: Walk Source Tree
 
-Read the source file. Extract all card objects. For `INTRO_CONFIG`-shaped data:
-- `features[]` — feature cards with badges, tags, links
-- `cards[]` — navigation/link cards
+List all `.py` files in the source directory (respecting exclusions). For each file, record:
+- Relative path within the package
+- File basename
+- Whether it's an `__init__.py` (treated as `module` node type)
 
-For each card, capture all fields: `name`, `badge`, `desc`, `tags[{text, modifier}]`, `links[{label, href}]`, `meta`, `nameHref`, `emoji`.
+### Step 2: AST-Parse Each File
 
-### Step 2: Classify Each Card
+For each `.py` file, parse the AST to extract:
 
-For every card extracted, classify using both deterministic rules and LLM judgment:
+**Imports:**
+- `import X` → resolve to target file
+- `from .module import X` → relative import, resolve to sibling file
+- `from package.module import X` → absolute import, resolve within the package
 
-**Deterministic classification:**
-1. **Domain/Tier** — Rich (has meta + tags + badge), Standard (has tags), Nav (has nameHref), or Minimal (name only)
-2. **Badge type** — normalize badge value (Core/核心 → core, Report/报告 → report, etc.)
-3. **Tag profile** — extract tag texts and modifiers; validate modifiers against known set
-4. **Link profile** — `null` (defaults hidden), `[]` (hidden), or `[...]` (custom)
-5. **Richness score** — `1 + min(desc.length / 50, 3) + tags.length * 0.5 + (hasLinks ? 1 : 0) + (hasMeta ? 1 : 0) + (hasBadge ? 0.5 : 0)`
+**Class Definitions:**
+- Class name
+- Base classes (from `ClassDef.bases`)
+- Methods (from `ClassDef.body` — filter for `FunctionDef`)
 
-**LLM-assisted classification:**
-6. **Card category** — infer from name + desc + tags: `tool`, `service`, `library`, `framework`, `pipeline-step`, `resource`, `documentation`, `entry-point`, `config`
-7. **Card relationships** — detect implicit relationships beyond shared tags: `depends_on` (this card describes a tool that depends on another), `related_to` (topical connection), `extends` (this card's subject extends another), `implements` (this card's subject implements a spec/interface)
-8. **Semantic tags** — enrich tags with inferred ones: `video-processing`, `audio-processing`, `ml-model`, `cli-tool`, `web-service`, `data-format`, etc.
+**Function Definitions (module-level):**
+- Function name
+- Calls within body (from `Call` nodes — same-file only, best-effort)
 
-### Step 3: Tag Co-occurrence Analysis
+### Step 3: Classify Each Entity
 
-Build a co-occurrence matrix for all tags:
-- Count how many cards share each tag
-- Tag node size = co-occurrence count (more shared = larger)
-- Detect tag clusters (groups of tags that frequently appear together)
+**File tier:**
+- **Core** — >1000 lines, or top-level orchestrator (e.g., `YoutubeDL.py`, `__init__.py` with `main()`)
+- **Library** — 100–1000 lines, or named feature module
+- **Utility** — <100 lines, or leaf module
 
-### Step 4: Write Card Analysis
+**Class category:**
+- **Orchestrator** — large class with 30+ methods, central to the system
+- **Abstract** — ABC with abstract methods
+- **Data** — dataclass / simple data holder
+- **Handler** — request handler, plugin, or concrete implementation
 
-Write `card-analysis.json` to the intermediate directory:
+**Function role:**
+- **Entry point** — `main()`, `_real_main()`, CLI-facing
+- **Core logic** — key pipeline function
+- **Utility** — helper, formatter, converter
+
+### Step 4: Build Symbol Index
+
+Create a mapping from qualified names to node IDs for edge creation:
+```
+"YoutubeDL" → class:YoutubeDL
+"extract_info" → func:extract_info
+"download" → func:download
+```
+
+### Step 5: Write Code Analysis
+
+Write `code-analysis.json`:
 
 ```json
 {
-  "source": "docs/components/intro/data.js → INTRO_CONFIG.en",
-  "cardCount": 15,
-  "tagCount": 42,
-  "badges": ["Core", "Report", "OSS", "Guide"],
-  "cards": [
+  "source": "site-packages/yt_dlp/",
+  "fileCount": 22,
+  "classCount": 25,
+  "functionCount": 25,
+  "moduleCount": 3,
+  "files": [
     {
-      "id": "card:0",
-      "name": "🎥 yt-dlp",
-      "badge": "OSS",
-      "desc": "YouTube video download · <strong>1,200+ sites</strong>",
-      "tags": [{"text": "1.2k sites", "modifier": "accent"}, {"text": "Python", "modifier": "info"}],
-      "links": [{"label": "GitHub", "href": "https://github.com/yt-dlp/yt-dlp"}],
-      "meta": "MIT · v2024.12.01",
-      "richness": 5,
-      "tier": "rich",
-      "category": "tool",
-      "href": "views/yt-dlp/index.html",
-      "relationships": [
-        {"target": "card:3", "type": "depends_on", "reason": "yt-dlp output feeds into WhisperX"}
-      ],
-      "semanticTags": ["video-download", "cli-tool"]
+      "id": "file:yt_dlp/YoutubeDL.py",
+      "path": "yt_dlp/YoutubeDL.py",
+      "basename": "YoutubeDL.py",
+      "lines": 4542,
+      "tier": "core",
+      "type": "file",
+      "classes": ["class:YoutubeDL"],
+      "functions": [],
+      "imports": ["file:yt_dlp/utils/__init__.py", "file:yt_dlp/networking/__init__.py"],
+      "importedBy": ["file:yt_dlp/__init__.py"]
     }
   ],
-  "tagCooccurrence": {
-    "Python": {"count": 5, "cards": ["card:0", "card:3", "card:7"]},
-    "1.2k sites": {"count": 1, "cards": ["card:0"]}
-  },
-  "tagClusters": [
-    {"name": "Audio Processing", "tags": ["Python", "audio", "whisper", "speech"]},
-    {"name": "Video Pipeline", "tags": ["video", "download", "encode"]}
+  "classes": [
+    {
+      "id": "class:YoutubeDL",
+      "name": "YoutubeDL",
+      "fileId": "file:yt_dlp/YoutubeDL.py",
+      "baseClasses": [],
+      "methods": ["func:extract_info", "func:download", "func:urlopen"],
+      "category": "orchestrator"
+    }
+  ],
+  "functions": [
+    {
+      "id": "func:extract_info",
+      "name": "extract_info",
+      "fileId": "file:yt_dlp/YoutubeDL.py",
+      "classId": "class:YoutubeDL",
+      "calls": ["func:urlopen", "func:process_video_result"],
+      "calledBy": ["func:download"],
+      "role": "core_logic"
+    }
+  ],
+  "modules": [
+    {
+      "id": "module:yt_dlp",
+      "name": "yt_dlp",
+      "path": "yt_dlp/",
+      "initFileId": "file:yt_dlp/__init__.py",
+      "exports": ["file:yt_dlp/YoutubeDL.py", "file:yt_dlp/options.py"]
+    }
   ]
 }
 ```
 
-Report: `Phase 1 complete. Parsed <N> cards, <M> unique tags, <B> badges.`
+Report: `Phase 1 complete. Parsed <N> files, <C> classes, <F> functions, <M> modules.`
 
 ---
 
 ## Phase 2 — Build Graph
 
-Transform card analysis into Cytoscape.js-compatible graph elements. This phase uses a deterministic script for element construction, supplemented by LLM-enhanced edge creation.
+Transform code analysis into Cytoscape.js-compatible graph elements.
 
-### Step 1: Run Graph Builder Script
+### Step 1: Create Nodes
 
-The bundled `resources/build-graph.py` script reads `card-analysis.json` and produces `graph-data.json`:
-
-```bash
-python3 <SKILL_DIR>/resources/build-graph.py \
-  <output_dir>/intermediate/card-analysis.json \
-  <output_dir>/graph-data.json \
-  --mode <mode>
+**File nodes** (one per `.py` file):
+```
+{ data: { id: 'file:yt_dlp/YoutubeDL.py', type: 'file', label: 'YoutubeDL.py',
+          path: 'yt_dlp/YoutubeDL.py', lines: 4542, tier: 'core', module: 'yt_dlp' } }
 ```
 
-The script performs deterministically:
-- Creates Card nodes (with badge→color mapping, richness→size mapping)
-- Creates Tag nodes (with modifier→color mapping, co-occurrence→size mapping)
-- Creates Link Dest nodes (diamond shape)
-- Creates Badge group nodes (triangle shape)
-- Creates `has_tag` edges (card → tag)
-- Creates `shares_tag` edges (card ↔ card, when share ≥1 tag)
-- Creates `has_badge` edges (card → badge)
-- Creates `shares_badge` edges (card ↔ card)
-- Creates `links_to` edges (card → link dest)
-- Creates `shares_link` edges (card ↔ card)
-- Deduplicates nodes by ID
-- Deduplicates edges by `(source, target, type)`
-- Drops dangling edges (source/target not in node set)
-- For Mode B: filters to card-only nodes + shares_tag/shares_badge edges
-- For Mode C: filters to ego graph (1-hop from focal card)
-- For Mode D: merges two card sets with language coloring
-- For Mode G: merges incremental changes into existing graph
+**Class nodes** (one per class definition):
+```
+{ data: { id: 'class:YoutubeDL', type: 'class', label: 'YoutubeDL',
+          file: 'file:yt_dlp/YoutubeDL.py', methodCount: 69 } }
+```
 
-The script also incorporates LLM-discovered edges from Phase 1:
-- `depends_on` edges (card → card, solid, weighted)
-- `related_to` edges (card → card, dashed)
-- `extends` edges (card → card, solid with arrow)
-- `implements` edges (card → card, dotted with arrow)
+**Function nodes** (one per module-level function or key method):
+```
+{ data: { id: 'func:extract_info', type: 'function', label: 'extract_info()',
+          file: 'file:yt_dlp/YoutubeDL.py', class: 'YoutubeDL' } }
+```
 
-### Step 2: Verify Output
+**Module nodes** (one per `__init__.py` / package):
+```
+{ data: { id: 'module:yt_dlp', type: 'module', label: 'yt_dlp',
+          path: 'yt_dlp/', submoduleCount: 3 } }
+```
 
-Check that `graph-data.json` exists and is valid JSON. Verify:
-- `nodes` array exists and is non-empty
-- `edges` array exists
-- All node IDs are unique
-- All edge source/target references exist in nodes
-- Node count matches card count + tag count + link dest count (within mode)
+### Step 2: Create Edges
 
-### Step 3: Report
+**`contains` edges** — file → class/function:
+```javascript
+{ data: { id: 'edge:file_a:class_x:contains', source: 'file:yt_dlp/YoutubeDL.py', target: 'class:YoutubeDL', type: 'contains' } }
+```
+
+**`imports` edges** — importing file → imported file:
+```javascript
+{ data: { id: 'edge:file_a:file_b:imports', source: 'file:yt_dlp/YoutubeDL.py', target: 'file:yt_dlp/utils/__init__.py', type: 'imports' } }
+```
+
+**`inherits` edges** — subclass → superclass:
+```javascript
+{ data: { id: 'edge:class_a:class_b:inherits', source: 'class:UrllibRH', target: 'class:RequestHandler', type: 'inherits' } }
+```
+
+**`calls` edges** — caller → callee:
+```javascript
+{ data: { id: 'edge:func_a:func_b:calls', source: 'func:download', target: 'func:extract_info', type: 'calls' } }
+```
+
+**`exports` edges** — init file → submodule:
+```javascript
+{ data: { id: 'edge:file_a:file_b:exports:symbol', source: 'file:yt_dlp/__init__.py', target: 'file:yt_dlp/YoutubeDL.py', type: 'exports', symbol: 'YoutubeDL' } }
+```
+
+### Step 3: Deduplicate
+
+- Deduplicate nodes by ID
+- Deduplicate edges by `(source, target, type)` tuple
+- Drop any edge whose source or target doesn't exist in nodes
+
+### Step 4: Report
 
 > `Phase 2 complete. Built graph with <N> nodes, <E> edges.`
 
 ---
 
-## Phase 3 — Review & Validate
+## Phase 3 — Validate
 
 Validate the generated graph for correctness, completeness, and quality.
 
-### Step 1: Deterministic Validation Script
+### Step 1: Deterministic Checks
 
-Run the bundled validation script:
-
-```bash
-node <SKILL_DIR>/resources/validate-graph.js \
-  <output_dir>/graph-data.json \
-  <output_dir>/intermediate/review.json
-```
-
-The script checks:
-1. **Schema validation** — every node has `id`, `type`, `label`; every edge has `source`, `target`, `type`
+1. **Schema validation** — every node has `id`, `type` (file/class/function/module), `label`; every edge has `source`, `target`, `type` (imports/calls/inherits/contains/exports)
 2. **Referential integrity** — every edge source/target references an existing node ID
-3. **Uniqueness** — no duplicate node IDs or edge keys
-4. **Color mapping** — badge and modifier colors match the canonical palette
-5. **Edge type validity** — all edge types are in the known set
-6. **Orphan detection** — nodes with zero edges (warning, not critical)
-7. **Card coverage** — every card from source appears as a node
-8. **Richness consistency** — richness scores match computed values
+3. **File coverage** — every `.py` file from the manifest has a corresponding `file` node
+4. **Uniqueness** — no duplicate node IDs or edge IDs
+5. **Color mapping** — node types match the canonical palette (file=#38bdf8, class=#a78bfa, function=#34d399, module=#fbbf24)
+6. **Completeness** — every class/function has a `contains` edge from its parent file
+7. **Call depth** — maximum call chain ≤ 10, total calls ≥ 5
+8. **Orphan detection** — nodes with zero edges (warning for class/function, info for files)
+9. **Self-reference** — no edge where source === target
 
-Output: `{ "issues": [...], "warnings": [...], "stats": {...} }`
+### Step 2: Apply Fixes
 
-### Step 2: LLM Review (Optional, --review flag)
+- Drop dangling edges
+- Add missing `contains` edges for class/function nodes
+- Normalize unknown types to file (cyan) as safe default
+- Drop self-references
 
-If `--review` is specified, dispatch a subagent using the **graph-reviewer** agent definition (`agents/graph-reviewer.md`). The agent reads `graph-data.json`, cross-validates against `card-analysis.json`, and produces a detailed review.
-
-Pass these parameters:
-> Validate the graph at `<output_dir>/graph-data.json`.
-> Card analysis at: `<output_dir>/intermediate/card-analysis.json`
-> Write review to: `<output_dir>/intermediate/review-llm.json`
-
-### Step 3: Apply Fixes
-
-If `issues` array is non-empty:
-- Remove edges with dangling references
-- Fill missing required fields with sensible defaults
-- Normalize color values to canonical palette
-- Re-run validation after fixes
-- If critical issues remain after one fix attempt, save with warnings and report
-
-### Step 4: Report
+### Step 3: Report
 
 > `Phase 3 complete. <X> issues, <Y> warnings. Graph is <VALID/INVALID>.`
 
@@ -312,7 +320,7 @@ If `issues` array is non-empty:
 
 ## Phase 4 — Generate Output Files
 
-Produce the 4-file output package following the project's `index.html` + `index.js` + `index.css` + `data.js` convention.
+Produce the 4-file output package.
 
 ### Step 1: Read Templates
 
@@ -320,30 +328,24 @@ Read the 4 resource templates from `resources/`:
 
 | Template | Purpose |
 |----------|---------|
-| `resources/index.html` | Light wrapper: `<div id="cy">`, sidebar, detail panel, toolbar. Loads `index.css` + `data.js` + `index.js`. |
-| `resources/index.css` | Dark theme styles (CSS variables, layout, responsive breakpoints), JetBrains Mono font import. |
-| `resources/index.js` | Cytoscape.js init, graph style, layout switcher, search, filter, click→detail, hover→highlight, export, keyboard shortcuts. |
-| `resources/data.js` | `window.GRAPH_DATA = { elements: [...], meta: {...} }` — the generated nodes + edges + metadata. |
-
-The templates separate concerns: HTML = structure, CSS = theme, JS = logic, data.js = content. This matches the project's `docs/components/<name>/` pattern.
+| `resources/index.html` | Light wrapper: `<div id="cy">`, sidebar, detail panel, toolbar |
+| `resources/index.css` | Dark theme styles (CSS variables, layout, responsive) |
+| `resources/index.js` | Cytoscape.js init, graph style, layout switcher, search, filter, detail, hover, export |
+| `resources/data.js` | `window.GRAPH_DATA = { elements: [...], meta: {...} }` |
 
 ### Step 2: Inject Graph Data
 
 Generate `data.js` by writing `window.GRAPH_DATA` with:
-- `elements`: the nodes + edges arrays from `graph-data.json` (Cytoscape.js compatible format)
-- `meta`: stats (node count, edge count, card count, badges, source)
+- `elements`: the nodes + edges arrays from Phase 2 (Cytoscape.js compatible format)
+- `meta`: stats (node count, edge count, file count, class count, function count, module count, source)
 
-### Step 3: Mode-Specific Customization
+### Step 3: Customize for Mode
 
-- **Mode B**: `index.js` simplifies sidebar (only card legend), hides tag/badge filters
-- **Mode C**: `index.js` adds "ego center" indicator, breadcrumb to return to full graph
-- **Mode D**: `index.js` adds language toggle, `index.css` adds language color styles
-- **Mode E**: `index.css` uses compact layout, `index.js` omits sidebar init
-- **Mode F**: `index.js` uses generic node colors, no badge/tag assumptions
+- **Mode B**: index.js simplifies sidebar (file + module legend only), hides class/function filters
+- **Mode C**: index.js adds "focal module" indicator, shows only the target module + direct dependencies
 
 ### Step 4: Write Output Files
 
-Save the 4 files to the output directory:
 ```
 <output_dir>/
 ├── index.html
@@ -360,170 +362,84 @@ Save the 4 files to the output directory:
 
 ## Phase 5 — Save & Report
 
-Finalize outputs, clean up, and report to the user.
-
 ### Step 1: Save Graph Data
 
-Copy `graph-data.json` to the output directory (alongside the 4 output files) for future incremental updates and reuse.
+Save `graph-data.json` alongside the 4 output files for future reference and incremental updates.
 
-### Step 2: Write Metadata
-
-Write `meta.json` to the intermediate directory:
-
-```json
-{
-  "version": "1.0.0",
-  "generatedAt": "<ISO 8601>",
-  "sourceHash": "<md5 of card data>",
-  "mode": "full",
-  "cardCount": 15,
-  "nodeCount": 67,
-  "edgeCount": 142,
-  "source": "docs/components/intro/data.js"
-}
-```
-
-### Step 3: Clean Up
-
-Remove intermediate files (keep `graph-data.json` and `meta.json` for incremental updates).
-
-### Step 4: Report Summary
+### Step 2: Report Summary
 
 ```
 ── Rui Graph Summary ──────────────────
-Project: VideoLingo Intro Cards
-Source:  docs/components/intro/data.js → INTRO_CONFIG.en
+Source:  site-packages/yt_dlp/ (22 .py files)
 Mode:    full
 
-Cards:   15 (8 rich, 5 standard, 2 nav)
-Tags:    42 unique
-Badges:  Core(4), Report(3), OSS(3), Guide(3), Agent(2)
-Links:   18 destinations
+Files:    22 (5 core, 12 library, 5 utility)
+Classes:  25
+Functions: 25
+Modules:  3 (yt_dlp, utils, networking)
 
-Nodes:   67 total (15 cards + 42 tags + 6 badges + 4 link dests)
-Edges:   142 total (42 has_tag, 15 has_badge, 35 shares_tag, 18 links_to, 12 shares_badge, 8 depends_on, 12 related_to)
+Nodes:    75 total (22 files + 25 classes + 25 functions + 3 modules)
+Edges:    150 total (45 imports, 40 calls, 12 inherits, 50 contains, 3 exports)
 
-Layers:  (tag clusters) Audio Processing, Video Pipeline, ML Models, DevOps
-
-Output:  docs/components/intro/graph/
+Output:  docs/views/yt-dlp/graph/
          ├── index.html    (structure + toolbar + canvas)
          ├── index.js       (Cytoscape init + interactions)
          ├── index.css      (dark theme + responsive)
-         └── data.js        (GRAPH_DATA: 67 nodes, 142 edges)
+         └── data.js        (GRAPH_DATA: 75 nodes, 150 edges)
 
 Validation: ✓ PASSED (0 issues, 2 warnings)
 ```
 
-### Step 5: Offer Next Steps
+### Step 3: Offer Next Steps
 
-- "Open `index.html` in browser to explore the graph"
-- "Run with `--review` for LLM quality review"
-- "Use `--incremental` to update when card data changes"
+- "Open `index.html` in browser to explore the code dependency graph"
+- "Use `--mode modules` for a simplified module-level view"
+- "Use `--mode deep --module <name>` to focus on a single package"
 
 ---
 
 ## Graph Design System
 
-### Node Types (5 types + 1 mode-specific)
+### Node Types (4 types)
 
 | Node Type | Source | Color | Shape | Size |
 |-----------|--------|-------|-------|------|
-| **Card** | Each `{name, desc, ...}` object | By `badge` (Report=rose, Core=emerald, Guide=sky, OSS=amber, Agent=purple, Beta=orange, default=cyan) | Rounded rectangle | By richness: `100 + richness * 15` × `44 + richness * 8` |
-| **Tag** | Each `tags[{text, modifier}]` | By `modifier` (warn=orange, accent=yellow, info=blue, red=red, purple=violet, cyan=teal, pass=green) | Ellipse | By co-occurrence count: `70 + count * 5` × `30 + count * 3` |
-| **Link Dest** | Each `links[{label, href}]` | Slate `#64748b` | Diamond | Uniform: 60×60 |
-| **Badge** | Each unique `badge` value | Matches badge color | Triangle | Uniform: 44×44 |
-| **Cluster** | Tag co-occurrence clusters | Soft version of dominant modifier | Hexagon | By cluster member count |
-| **Card Group** (Mode D) | Language-specific card sets | Language color (en=blue, zh-CN=red, ja=green) | Rectangle (parent compound) | Wraps child card nodes |
+| **file** | Each `.py` source file | Sky blue `#38bdf8` | Round-rectangle | 140×55, sized by line count |
+| **class** | Each class definition | Violet `#a78bfa` | Hexagon | 110×95 |
+| **function** | Each function/method def | Emerald `#34d399` | Ellipse | 125×48 |
+| **module** | Package `__init__.py` | Amber `#fbbf24` | Diamond | 80×80 |
 
-### Edge Types (9 types)
+### Edge Types (5 types)
 
-| Edge Type | Source → Target | Line Style | Width | Weight | Meaning |
-|-----------|----------------|------------|-------|--------|---------|
-| `has_tag` | Card → Tag | Solid, `#475569` | 1 | 0.8 | This card has this tag |
-| `shares_tag` | Card ↔ Card | Dashed, `#94a3b8` | 0.5 | 0.4 | Two cards share ≥1 tag |
-| `has_badge` | Card → Badge | Solid, colored by badge | 2 | 0.9 | This card has this badge |
-| `shares_badge` | Card ↔ Card | Dashed, colored by badge | 1 | 0.5 | Two cards share same badge |
-| `links_to` | Card → Link Dest | Dotted, `#475569` | 1 | 0.6 | Card links to this URL |
-| `shares_link` | Card ↔ Card | Dotted, `#334155` | 0.5 | 0.3 | Two cards link to same URL |
-| `depends_on` | Card → Card | Solid, `#22d3ee` | 1.5 | 0.7 | Subject dependency (LLM-inferred) |
-| `related_to` | Card → Card | Dashed, `#64748b` | 0.8 | 0.4 | Topical relationship (LLM-inferred) |
-| `extends` | Card → Card | Solid, `#a78bfa` | 1.5 | 0.8 | Subject extends another (LLM-inferred) |
-| `implements` | Card → Card | Dotted, `#34d399` | 1.2 | 0.7 | Subject implements spec (LLM-inferred) |
+| Edge Type | Source → Target | Line Style | Width | Color | Meaning |
+|-----------|----------------|------------|-------|-------|---------|
+| `imports` | file → file | Solid arrow | 1.5 | `#475569` | File imports another |
+| `calls` | function → function | Dashed arrow | 1 | `#94a3b8` | Function calls another |
+| `inherits` | class → class | Bold solid arrow | 2 | `#a78bfa` | Class inherits from superclass |
+| `contains` | file → class/function | Solid no arrow | 0.8 | `#475569` | File defines the symbol |
+| `exports` | file → file | Dotted arrow | 1 | `#22d3ee` | `__init__.py` re-exports |
 
-### Color Palette — Badge → Cytoscape
+### File Tier → Size
 
-| Badge | Color | Hex | Background |
-|-------|-------|-----|------------|
-| `Core` / `核心` | Emerald | `#34d399` | `rgba(6, 78, 59, 0.4)` |
-| `Report` / `报告` | Rose | `#fb7185` | `rgba(136, 19, 55, 0.4)` |
-| `Guide` / `指南` | Sky | `#38bdf8` | `rgba(8, 51, 68, 0.4)` |
-| `OSS` | Amber | `#fbbf24` | `rgba(120, 53, 15, 0.3)` |
-| `Agent` | Purple | `#a78bfa` | `rgba(76, 29, 149, 0.4)` |
-| `Beta` | Orange | `#fb923c` | `rgba(120, 53, 15, 0.3)` |
-| (no badge) | Cyan | `#22d3ee` | `rgba(8, 51, 68, 0.4)` |
-
-### Tag Modifier → Color
-
-| Modifier | Color | Hex |
-|----------|-------|-----|
-| `warn` | Orange | `#f59e0b` |
-| `accent` | Yellow/Amber | `#eab308` |
-| `info` | Blue | `#3b82f6` |
-| `red` | Red | `#ef4444` |
-| `purple` | Violet | `#8b5cf6` |
-| `cyan` | Teal | `#06b6d4` |
-| `pass` / `green` | Emerald | `#22c55e` |
-| (unknown / default) | Slate | `#64748b` |
-
-### Language Colors (Mode D)
-
-| Language | Color | Hex |
-|----------|-------|-----|
-| `en` / English | Blue | `#3b82f6` |
-| `zh-CN` / Chinese | Red | `#ef4444` |
-| `ja` / Japanese | Green | `#22c55e` |
-| `ko` / Korean | Violet | `#8b5cf6` |
-| (other) | Amber | `#f59e0b` |
+| Tier | Line Count | Width | Description |
+|------|-----------|-------|-------------|
+| Core | >1000 | 160 | Main orchestrator / large module |
+| Library | 100–1000 | 140 | Feature module |
+| Utility | <100 | 120 | Small helper / constants |
 
 ## Mode Reference
 
 ### Mode A: Full Graph (Default)
 
-All nodes and edges. Best for exploration. Use when card count ≤ 50.
+All node types (file, class, function, module) and all edge types (imports, calls, inherits, contains, exports). Best for exploring a codebase of 10–50 files.
 
-### Mode B: Card-Only Network
+### Mode B: Module-Only Graph
 
-Only Card nodes + `shares_tag`, `shares_badge`, `depends_on`, `related_to`, `extends`, `implements` edges. No Tag/Link/Badge nodes. Use when >20 cards or "clean" view desired.
+Only file + module nodes with `imports` and `exports` edges. No class/function nodes. Use when the codebase is >50 files or a high-level architecture view is needed.
 
-### Mode C: Ego Graph
+### Mode C: Single-Module Deep-Dive
 
-Single card deep-dive. Specify focal card with `--card <name>`. Shows: focal card + directly connected tags + directly connected cards + link destinations. 1-hop neighborhood. Non-neighbor nodes dimmed to 10% opacity.
-
-### Mode D: Language Comparison
-
-Compare two language versions of the same card set. Cards with same structure but different language connected by `translates_to` edges. Language color overlays on card nodes.
-
-### Mode E: Docs Page Embed
-
-Compact, no-sidebar variant for embedding in existing documentation pages. Output follows the same 4-file convention (`index.html` + `index.js` + `index.css` + `data.js`) but with compact styles and minimized UI. Placed in `docs/views/<name>/graph/` for standalone views or `docs/components/<name>/graph/` for component sub-pages.
-
-### Mode F: Generic Data-to-Graph
-
-Analyze arbitrary JSON/YAML arrays and produce nodes + edges. Auto-detects:
-- Object keys → node properties
-- Array fields with shared values → edges
-- Nested objects → compound/parent nodes
-- String arrays → tag-like nodes
-
-### Mode G: Incremental Update
-
-Update existing `graph-data.json` when source card data changes:
-1. Compute diff (added/removed/modified cards)
-2. Remove nodes/edges for removed cards
-3. Add nodes/edges for new cards
-4. Recompute shared edges (shares_tag, shares_badge, shares_link)
-5. Preserve LLM-inferred edges for unchanged cards
-6. Validate and save
+Focus on one package: show the focal file + all its contained classes/functions + all files it imports + all files that import it. Use for code review or understanding a specific module.
 
 ## Graph Features (All Modes)
 
@@ -531,12 +447,12 @@ Update existing `graph-data.json` when source card data changes:
 
 | Layout | Best For | When to Use |
 |--------|----------|-------------|
-| **cose-bilkent** (default) | General purpose, organic | Most card sets — force-directed with compound support |
-| **dagre LR** | Left→right hierarchy | Pipeline/step cards, reports |
-| **dagre TB** | Top→bottom hierarchy | Dependency chains, layered architecture |
-| **breadthfirst** | Tree, root → leaves | Navigation cards, strict hierarchies |
-| **concentric** | Radial, hub → satellite | Core features + supporting features |
-| **grid** | Even spacing, no overlap | Small card sets (<12), comparison views |
+| **cose-bilkent** (default) | General purpose, organic | Most codebases — force-directed with increased repulsion |
+| **dagre LR** | Left→right hierarchy | Import dependency chains, pipeline architectures |
+| **dagre TB** | Top→bottom hierarchy | Class hierarchies, layered architectures |
+| **breadthfirst** | Tree, root → leaves | Strict dependency trees, class inheritance |
+| **concentric** | Radial, hub → satellite | Core module + supporting utilities |
+| **grid** | Even spacing, no overlap | Small codebases (<15 files) |
 | **circle** | Ring, equidistant | Symmetric view, no hierarchy |
 
 ### Interaction
@@ -546,37 +462,75 @@ Update existing `graph-data.json` when source card data changes:
 | **Pan** | Mouse drag | Move viewport |
 | **Zoom** | Scroll wheel | Zoom in/out |
 | **Select** | Click node | Show detail in side panel |
-| **Focus** | Double-click node | Center + zoom on node, highlight 1-hop |
+| **Focus** | Double-click node / click in detail | Center + zoom on node |
 | **Hover highlight** | Hover node | Highlight 1-hop neighbors, dim others |
-| **Search** | Type in search box | Highlight matching nodes, dim others (debounced 250ms) |
-| **Filter** | Toggle filter buttons | Show/hide by badge type |
+| **Search** | Type in search box | Highlight matching nodes (debounced 250ms) |
+| **Filter** | Toggle module filter buttons | Show/hide by package |
 | **Reset** | Click Reset / press R | Clear search, clear selection, fit view |
 | **Fit** | Click Fit / press F | Fit all visible nodes to viewport |
 
 ### Side Panel (Node Detail)
 
-Clicking a node shows type-specific detail:
+Clicking a node shows a rich, professional detail panel with type-specific content. Every section uses structured layouts with colored stat chips, entity icons, and clickable cross-references.
 
-| Node Type | Detail Content |
-|-----------|---------------|
-| **Card** | Name, badge, full desc (HTML rendered), tags list, meta, links (clickable), connected tag count, related card count, richness score |
-| **Tag** | Tag text, modifier, used-by count, list of cards with this tag (clickable to focus) |
-| **Link Dest** | URL, label, list of cards linking here (clickable to focus) |
-| **Badge** | Badge text, list of cards with this badge (clickable to focus) |
-| **Cluster** | Cluster name, member tags, member cards |
+#### Common Patterns
+
+- **Header**: entity icon + name + type tag (tier/category/role)
+- **Meta block**: key-value rows (Path, Lines, Module, File, Class, Role) in a bordered card
+- **Stat chips row**: color-coded summary badges showing relationship counts
+- **Sections**: each relationship group in its own bordered card with title + count badge + clickable list
+
+#### File Detail
+
+| Section | Content |
+|---------|---------|
+| **Header** | 📄 icon, filename, tier badge (core/library/utility) |
+| **Meta card** | Path (clickable code), Lines, Module (amber) |
+| **Stat chips** | classes count, functions count, imports count, imported-by count |
+| **Defined Symbols** | classes (⬡ icon + class chip) and functions (○ icon + func chip), each clickable |
+| **→ Imports** | files this file imports, with path subtitle, clickable |
+| **← Imported By** | files that import this file, with path subtitle, clickable |
+| **⇢ Re-exports** | `__init__.py` re-exports with symbol name badges |
+
+#### Class Detail
+
+| Section | Content |
+|---------|---------|
+| **Header** | ⬡ icon, class name, category badge (orchestrator/abstract/data/handler) |
+| **Meta card** | File (clickable code), Methods count |
+| **Stat chips** | methods count, extends count, subclasses count |
+| **⬆ Extends** | base classes with ⬡ icon, clickable |
+| **⬇ Extended By** | subclasses with ⬡ icon, clickable |
+| **⚙ Methods** | method names with ○ icon + role subtitle, clickable |
+
+#### Function Detail
+
+| Section | Content |
+|---------|---------|
+| **Header** | ○ icon, function name, role badge (entry point/core logic/utility) |
+| **Meta card** | File (clickable code), Class (violet, if method), Role |
+| **Stat chips** | calls count, called-by count |
+| **→ Calls** | functions this function calls, with `Class.name` subtitle, clickable |
+| **← Called By** | functions that call this function, clickable |
+
+#### Module Detail
+
+| Section | Content |
+|---------|---------|
+| **Header** | ◇ icon, package name, "package" badge |
+| **Meta card** | Path, Sub-packages count |
+| **Stat chips** | files count, exports count |
+| **📄 Contained Files** | files with 📄 icon + tier chip (core/library/utility), clickable |
+| **⇢ Public API (Re-exports)** | exported targets with symbol name badges, clickable |
 
 ### Export
 
 - **Download PNG**: `cy.png({ full: true, scale: 2, bg: '#020617' })` — high-res, dark background
-- **Copy PNG**: Clipboard API with `ClipboardItem` — paste directly into docs/slides
-- **Fallback**: html2canvas CDN loaded as backup if `cy.png()` fails
 
 ## Output File Structure
 
-Graph output follows the project's 4-file convention, matching `docs/components/<name>/`:
-
 ```
-docs/components/<name>/graph/
+docs/views/<name>/graph/
 ├── index.html    ← Light wrapper: toolbar, canvas, sidebar, detail panel
 ├── index.js      ← Cytoscape init, styles, layouts, search, filter, export
 ├── index.css     ← Dark theme CSS variables, layout, responsive breakpoints
@@ -585,210 +539,162 @@ docs/components/<name>/graph/
 
 | File | Role | What It Contains |
 |------|------|-----------------|
-| `index.html` | Structure | Header with title + action buttons, toolbar (layout selector dropdown, search input, badge filter buttons), main layout (sidebar + cy canvas + detail panel), toast, CDN script tags |
-| `index.js` | Logic | `cy` init with `GRAPH_DATA.elements`, `getGraphStyle()` (node/edge styles by type), `switchLayout()` (7 layouts), `doSearch()` (debounced), `filterByBadge()`, click→`updateDetail()`, hover→highlight, PNG export, keyboard shortcuts, `initUI()` (populates stats/legend/filters from `cy` instance) |
-| `index.css` | Theme | `:root` CSS variables (`--bg: #020617`, badge colors), header/toolbar/sidebar styles, graph container, detail panel styles (badge chips, tag chips, link styles), toast, responsive breakpoints (1024px, 768px, 480px) |
-| `data.js` | Data | `window.GRAPH_DATA = { elements: [...nodes/edges...], meta: { nodeCount, edgeCount, cardCount, badges, source } }` — the single injection point |
+| `index.html` | Structure | Header with title + action buttons, toolbar (layout selector, search input, module filter buttons), main layout (sidebar + cy canvas + detail panel), toast, CDN script tags |
+| `index.js` | Logic | `cy` init with `GRAPH_DATA.elements`, `getGraphStyle()` (node/edge styles by type), `switchLayout()` (7 layouts), `doSearch()` (debounced), `filterByModule()`, click→`updateDetail()`, hover→highlight, PNG export, keyboard shortcuts, `initUI()` |
+| `index.css` | Theme | `:root` CSS variables (`--bg: #020617`, file/class/function/module colors), header/toolbar/sidebar styles, graph container, detail panel styles, toast, responsive breakpoints |
+| `data.js` | Data | `window.GRAPH_DATA = { elements: [...nodes/edges...], meta: { nodeCount, edgeCount, fileCount, classCount, functionCount, moduleCount, source } }` |
 
-### Data Injection Pattern
-
-`index.html` loads scripts in order:
-```html
-<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
-
-<link rel="stylesheet" href="index.css">
-<script src="data.js"></script>   <!-- ← window.GRAPH_DATA defined here -->
-<script src="index.js"></script>   <!-- ← reads window.GRAPH_DATA, builds cy -->
-```
-
-This separation means: change data → only regenerate `data.js`; change layout → only edit `index.css`; change interactions → only edit `index.js`.
+---
 
 ## Workflows
 
-### W1: Generate Graph from INTRO_CONFIG
+### W1: Generate Graph from Python Package
 
-Most common flow — graph the `features` + `cards` arrays from `docs/components/intro/data.js`.
+Most common flow — graph an installed or local Python package.
 
-1. Read `docs/components/intro/data.js` (Phase 0)
-2. Extract `window.INTRO_CONFIG.en.features` and `window.INTRO_CONFIG.en.cards` (Phase 1)
-3. Classify each card: tier, badge, tags, links, richness, category, relationships (Phase 1)
-4. Build nodes + edges → `graph-data.json` (Phase 2)
-5. Validate graph (Phase 3)
-6. Generate 4 output files → `docs/components/intro/graph/{index.html,index.js,index.css,data.js}` (Phase 4)
-7. Save artifacts, report summary (Phase 5)
-8. Open in browser for verification
+1. Identify source directory (Phase 0)
+2. Walk `.py` files, AST-parse, extract symbols and relationships (Phase 1)
+3. Build nodes + edges → `graph-data.json` (Phase 2)
+4. Validate graph (Phase 3)
+5. Generate 4 output files (Phase 4)
+6. Save artifacts, report summary (Phase 5)
+7. Open in browser for verification
 
-### W2: Generate Graph from Any data.js
+### W2: Generate Graph from Single File
 
-Same as W1 but for any component's `data.js`.
+For a single Python file with multiple classes/functions.
 
-1. Read target `data.js` (Phase 0)
-2. Extract card arrays (may be nested in language slices) (Phase 1)
-3. Build graph (Phase 2)
-4. Validate, generate HTML, save (Phases 3-5)
+1. Read the `.py` file (Phase 0)
+2. AST-parse to extract classes, functions, internal calls (Phase 1)
+3. Build graph (only `contains` + `calls` edges — no `imports` since it's one file) (Phase 2)
+4. Generate output (Phases 3-5)
 
-### W3: Generate Graph from Inline Card Data
+### W3: Generate Graph from User-Provided Structure
 
-User pastes card data directly in conversation.
+User provides a description or listing of code structure directly.
 
-1. Parse the card objects from the user's message (Phase 0-1)
-2. Classify (Phase 1)
-3. Build graph (Phase 2)
-4. Generate HTML (Phase 4, skip validation by default)
-5. Return HTML content inline or write to file
+1. Parse the code structure from the user's message (Phase 0-1)
+2. Build graph (Phase 2)
+3. Generate HTML (Phase 4, skip validation by default)
+4. Return HTML content inline or write to file
 
-### W4: Compare Two Card Sets
+### W4: Incremental Update
 
-1. Read two card arrays (e.g., features vs cards, or en vs zh-CN) (Phase 0)
-2. Classify both sets independently (Phase 1)
-3. Build merged graph with set membership coloring (Phase 2, Mode D)
-4. Add `translates_to` edges for cards present in both sets (Phase 2)
-5. Generate HTML with comparison legend (Phase 4)
+Update existing `graph-data.json` when source code changes.
 
-### W5: Incremental Update
+1. Hash source files, compare to stored `meta.json` (Phase 0)
+2. Identify changed files (added/removed/modified) (Phase 0)
+3. Parse & analyze only changed files (Phase 1)
+4. Merge changes into existing `graph-data.json` (Phase 2)
+5. Recompute shared edges (imports, exports) (Phase 2)
+6. Validate, generate HTML, save (Phases 3-5)
 
-1. Compute source hash, compare to stored `meta.json` (Phase 0)
-2. Identify changed cards (added/removed/modified) (Phase 0)
-3. Parse & classify only changed cards (Phase 1)
-4. Merge changes into existing `graph-data.json` (Phase 2, Mode G)
-5. Recompute shared edges (shares_tag, shares_badge, shares_link) (Phase 2)
-6. Validate (Phase 3), generate HTML (Phase 4), save (Phase 5)
+---
 
 ## Critical Rules
 
 - **Cytoscape.js from CDN** — use `https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js`. No npm, no build.
 - **Layout plugins from CDN** — `cytoscape-dagre@2.5.0`, `cytoscape-cose-bilkent@4.1.0`, `dagre@0.8.5`.
-- **Self-contained HTML** — no external CSS/JS files beyond CDN. Inline everything.
+- **Self-contained HTML** — no external CSS/JS files beyond CDN.
 - **`file://` URLs must work** — no web server required for the HTML file.
-- **`graph-data.json` for reuse** — always save the intermediate JSON alongside the HTML.
 - **Dark theme** — background `#020617`, surface `#0f172a`, border `#1e293b`. Match VideoLingo design system.
-- **JetBrains Mono** — from Google Fonts CDN. Match rui-diagram and rui-html typography.
-- **Node colors match badge/tag semantics** — use the canonical palettes. Do not invent new color mappings.
-- **Edge types visually distinct** — solid for structural (has_tag, depends_on), dashed for shared (shares_tag, shares_badge), dotted for external (links_to, shares_link).
-- **Preserve card data fidelity** — desc supports HTML (`<strong>`, `<code>`), render in detail panel with `innerHTML`.
+- **JetBrains Mono** — from Google Fonts CDN.
+- **Node colors match entity type** — file=sky blue, class=violet, function=emerald, module=amber. Do not invent new color mappings.
+- **Edge types visually distinct** — solid for structural (imports, inherits, contains), dashed for calls, dotted for exports.
+- **Preserve source code fidelity** — file paths, class names, and function signatures shown in detail panel.
 - **Layout selector works** — switching layouts should animate (`animate: true`).
-- **Export works** — PNG export using `cy.png()` with html2canvas fallback.
+- **Export works** — PNG export using `cy.png()`.
 - **Keyboard accessible** — Ctrl+F → search, Escape → reset, R → reset, F → fit.
 - **Validation before save** — always run Phase 3 validation. Save with warnings if issues cannot be auto-fixed.
-- **Incremental when possible** — if `graph-data.json` + `meta.json` exist, offer incremental update for changed data.
 - **No silent drops** — every warning from validation must appear in the final report.
 
 ## Reference Files
 
 | File | When to Read |
 |------|-------------|
-| `resources/index.html` | Base HTML wrapper template — structure for header, toolbar, canvas, sidebar, detail panel |
-| `resources/index.js` | Graph logic template — Cytoscape init, styles, layout switcher, search, filter, interactions, export |
-| `resources/index.css` | Dark theme stylesheet template — CSS variables, layout, responsive breakpoints |
-| `resources/data.js` | Data template — `window.GRAPH_DATA` shape, copy and inject generated elements |
-| `resources/build-graph.py` | Deterministic graph builder — Phase 2 |
-| `resources/validate-graph.js` | Deterministic validation script — Phase 3 |
-| `references/graph-system.md` | Full graph design system — all node/edge types, color palettes, layout configs, CSS variables |
-| `references/edge-types.md` | Expanded edge type reference with weights, line styles, and creation rules |
+| `resources/index.html` | Base HTML wrapper template |
+| `resources/index.js` | Graph logic template |
+| `resources/index.css` | Dark theme stylesheet template |
+| `resources/data.js` | Data template — `window.GRAPH_DATA` shape |
+| `references/graph-system.md` | Full graph design system — all node/edge types, color palettes, layout configs |
+| `references/edge-types.md` | Expanded edge type reference with creation rules |
 | `references/validation.md` | Validation rules, check details, and fix guidance |
-| `agents/card-analyzer.md` | Agent definition for LLM-assisted card classification (Phase 1) |
-| `agents/graph-builder.md` | Agent definition for LLM-assisted graph assembly (Phase 2) |
-| `agents/graph-reviewer.md` | Agent definition for LLM graph quality review (Phase 3) |
+| `agents/graph-reviewer.md` | Agent definition for LLM graph quality review |
 
 ## Output Checklist
 
 Before finalizing a graph:
 
-- [ ] All cards from source data appear as nodes
-- [ ] Tags have correct modifier colors (not all defaulting to `info`)
-- [ ] Badge nodes use correct badge→color mapping
-- [ ] Edge types are visually distinct (solid/dashed/dotted)
+- [ ] All target `.py` files appear as file nodes
+- [ ] Classes and functions use correct shapes and colors (hexagon=violet, ellipse=emerald)
+- [ ] Module nodes (diamond) correctly represent `__init__.py` packages
+- [ ] `imports` edges connect files based on actual Python imports
+- [ ] `inherits` edges show correct base-class relationships
+- [ ] `contains` edges connect files to their class/function definitions
+- [ ] `calls` edges capture major call paths (best-effort)
+- [ ] `exports` edges for `__init__.py` re-exports
 - [ ] Layout switcher cycles through ≥3 layouts with animation
-- [ ] Search filters work (case-insensitive, debounced)
-- [ ] Click node → detail panel populates with type-specific content
+- [ ] Search works (case-insensitive, debounced, matches file/class/function names)
+- [ ] Click node → detail panel shows code-specific info
 - [ ] Hover → neighbor highlight + dim non-neighbors
-- [ ] Export PNG produces correct image at 2x scale
-- [ ] `file://` URL opens without errors (test in browser)
+- [ ] Export PNG works at 2x scale with dark background
+- [ ] `file://` URL opens without errors
 - [ ] Dark theme applied (`#020617` bg, JetBrains Mono font)
 - [ ] Legend matches actual node/edge colors in the graph
 - [ ] No duplicate node IDs (validated in Phase 3)
-- [ ] No dangling edges — all source/target IDs exist (validated in Phase 3)
-- [ ] `graph-data.json` saved alongside the 4 output files (for incremental updates)
-- [ ] `meta.json` written with source hash and generation metadata
+- [ ] No dangling edges (validated in Phase 3)
 - [ ] Keyboard shortcuts functional (Ctrl+F, Escape, R, F)
-- [ ] `doSearch()` dims edges disconnected from search hits (not just nodes)
-- [ ] `resetView()` properly reactivates the "All" filter button (not `null` btn)
-- [ ] `escHtml()` escapes single quotes (`'` → `&#39;`) for safe onclick attributes
-- [ ] `filterByBadge()` handles all node types: card, tag, link_dest, badge, **cluster**
-- [ ] `focusNode()` guards against empty collection (`!node.length`) before animating
-- [ ] `.detail-badge` has default fallback (border/color/background) for unknown badge types
-- [ ] Output follows project convention: `index.html` + `index.js` + `index.css` + `data.js`
+- [ ] `doSearch()` dims edges disconnected from search hits
+- [ ] `resetView()` properly reactivates the "All" filter button
+- [ ] `escHtml()` escapes single quotes (`'` → `&#39;`)
+- [ ] `filterByModule()` handles all node types: file, class, function, module
+- [ ] `focusNode()` guards against empty collection (`!node.length`)
+- [ ] `.detail-type-tag` has default fallback for unknown entity types
 
 ## Browser Console Error Prevention
 
-The following are **real bugs** found in production graphs. Every generated graph MUST be checked against this list:
+### Bug 1: `resetView` doesn't re-activate filter button
 
-### 🐛 Bug 1: `resetView` doesn't re-activate filter button
+**Symptom:** After clicking a module filter then pressing `R` to reset, no filter button shows as active.
 
-**Symptom:** After clicking a badge filter then pressing `R` to reset, no filter button shows as active.
+**Root cause:** `resetView()` calls `filterByModule('all', null)` — the `null` button means no button gets `.active` class.
 
-**Root cause:** `resetView()` calls `filterByBadge('all', null)` — the `null` button means no button gets `.active` class.
-
-**Fix:** Find the "All" button via `document.querySelector('#badge-filters .filter-btn')` and pass it:
+**Fix:** Find the "All" button via `document.querySelector('#module-filters .filter-btn')` and pass it:
 ```javascript
-var allBtn = document.querySelector('#badge-filters .filter-btn');
-window.filterByBadge('all', allBtn);
+var allBtn = document.querySelector('#module-filters .filter-btn');
+window.filterByModule('all', allBtn);
 ```
 
-### 🐛 Bug 2: `escHtml` doesn't escape single quotes
+### Bug 2: `escHtml` doesn't escape single quotes
 
-**Symptom:** If any badge/label name contains `'`, onclick handlers break with JS syntax error.
-
-**Root cause:** `escHtml()` escapes `&`, `<`, `>`, `"` but NOT `'`. Since onclick attributes use single-quote delimiters (`onclick="fn('val', this)"`), an unescaped `'` in the value breaks the JS.
+**Symptom:** If any label contains `'`, onclick handlers break with JS syntax error.
 
 **Fix:** Add `'` → `&#39;` to `escHtml`:
 ```javascript
 return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 ```
 
-### 🐛 Bug 3: `doSearch` only dims nodes, leaves edges visible
+### Bug 3: `doSearch` only dims nodes, leaves edges visible
 
-**Symptom:** After searching, dimmed nodes have undimmed edges between them, or undimmed edges connect dimmed to highlighted nodes.
+**Symptom:** After searching, dimmed nodes have undimmed edges between them.
 
-**Root cause:** Only `cy.nodes().addClass('dimmed')` is called; edges are never dimmed.
+**Fix:** After setting node classes, dim edges not connected to any search-hit node.
 
-**Fix:** After setting node classes, dim edges not connected to any search-hit node:
-```javascript
-cy.edges().forEach(function(e) {
-  if (e.source().hasClass('search-hit') || e.target().hasClass('search-hit')) {
-    e.removeClass('dimmed');
-  } else {
-    e.addClass('dimmed');
-  }
-});
-```
+### Bug 4: `filterByModule` missing node types
 
-### 🐛 Bug 4: `filterByBadge` missing `cluster` node type
+**Symptom:** When filtering by module, some node types remain visible even when disconnected.
 
-**Symptom:** When filtering by badge, cluster nodes always remain visible even when disconnected from visible cards.
+**Fix:** Ensure all 4 node types (file, class, function, module) are handled in the visibility conditional.
 
-**Root cause:** The visibility logic only handles `card`, `tag`, `link_dest`, and `badge` types. `cluster` nodes are ignored and stay visible.
-
-**Fix:** Add `|| n.data('type') === 'cluster'` to the conditional.
-
-### 🐛 Bug 5: `focusNode` doesn't guard against missing nodes
-
-**Symptom:** If `focusNode('bad-id')` is called (e.g., from a stale detail panel click), `cy.getElementById('bad-id').length` is 0, and subsequent calls silently fail.
+### Bug 5: `focusNode` doesn't guard against missing nodes
 
 **Fix:** Guard with `if (!node || !node.length) return;`
 
-### 🐛 Bug 6: `.detail-badge` has no default colors
-
-**Symptom:** Unknown badge types in the detail panel show a transparent badge with no visible border/background.
-
-**Root cause:** `.detail-badge` base class has `border: 1px solid` without a color, and no `background` or `color`. Only modifier classes (`.badge-core`, etc.) set these.
+### Bug 6: `.detail-type-tag` has no default colors
 
 **Fix:** Add defaults:
 ```css
-.detail-badge {
+.detail-type-tag {
   border: 1px solid var(--border);
   color: var(--text-soft);
   background: var(--border);
@@ -797,38 +703,95 @@ cy.edges().forEach(function(e) {
 
 ## Error Handling
 
-- If card data source is not found → report and **STOP**
-- If card data is malformed → report parsing errors and **STOP**
-- If `build-graph.py` fails → report script errors, retry once with `--verbose`, then **STOP** if still failing
+- If source directory is not found → report and **STOP**
+- If source files are not Python → report and **STOP**
+- If AST parsing fails → report parsing errors and **STOP**
 - If validation finds critical issues → auto-fix once, re-validate. If still failing, save with warnings and report
-- If HTML generation fails → report template errors and **STOP**
 - **Always save partial results** — a graph with warnings is better than no graph
 - **Never silently drop errors** — every failure must be visible in the Phase 5 summary
-- **Run the Browser Console Error Prevention checklist** before finalizing — these are bugs that pass structural validation but fail at runtime
 
 ## Example
 
-### Input: INTRO_CONFIG features array (partial)
+### Input: Python source files (simplified)
 
-```javascript
-[
-  { name: '🎥 yt-dlp', badge: 'OSS',
-    desc: 'YouTube video download · <strong>1,200+ sites</strong>',
-    tags: [{ text: '1.2k sites', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
-    links: [{ label: 'GitHub', href: 'https://github.com/yt-dlp/yt-dlp' }] },
-  { name: '🎙️ WhisperX', badge: 'Core',
-    desc: 'Word-level subtitle recognition · <strong>low-illusion</strong>',
-    tags: [{ text: 'word-level', modifier: 'accent' }, { text: 'Python', modifier: 'info' }, { text: 'diarization', modifier: 'info' }],
-    links: [{ label: 'GitHub', href: 'https://github.com/m-bain/whisperX' }] }
-]
+```python
+# main.py
+from utils import helper
+
+class Pipeline:
+    def run(self):
+        data = load_data()
+        result = helper.process(data)
+        return result
+
+def load_data():
+    return {"key": "value"}
+
+# utils.py
+class Processor:
+    def process(self, data):
+        return self.transform(data)
+
+    def transform(self, data):
+        return str(data)
 ```
 
 ### Output: Interactive Graph
 
-- 2 Card nodes (OSS=amber, Core=emerald)
-- 3 unique Tag nodes (accent=yellow ×2, info=blue for "Python" ×1 shared, info=blue for "diarization" ×1)
-- `has_tag` edges: yt-dlp→"1.2k sites", yt-dlp→"Python", WhisperX→"word-level", WhisperX→"Python", WhisperX→"diarization"
-- `shares_tag` edge: yt-dlp↔WhisperX (share "Python" tag)
-- LLM-inferred: yt-dlp `depends_on` relationship? (maybe — yt-dlp feeds WhisperX if card analysis infers it)
-- Click "🎥 yt-dlp" → panel shows full desc with rendered HTML, all tags, link to GitHub
-- Click "Python" tag → panel shows used by 2 cards: yt-dlp, WhisperX
+- 2 file nodes: `main.py` (core, rectangle, sky blue), `utils.py` (utility, rectangle, sky blue)
+- 2 class nodes: `Pipeline` (hexagon, violet), `Processor` (hexagon, violet)
+- 4 function nodes: `run()`, `load_data()`, `process()`, `transform()` (ellipse, emerald)
+- `imports` edge: `main.py` → `utils.py` (solid arrow, slate)
+- `contains` edges: `main.py` → `Pipeline`, `main.py` → `load_data()`, `utils.py` → `Processor`
+- `calls` edges: `run()` → `load_data()`, `run()` → `process()` (dashed arrow, gray)
+- Click `run()` → detail panel shows: file=main.py, class=Pipeline, calls=load_data(), process()
+- Click `utils.py` → detail panel shows: defines=Processor, imported by=main.py
+
+## 规则
+
+- [code-graph-contract.md](./rules/code-graph-contract.md) — Python AST 依赖图的数据契约、3 种模式、5 阶段产物与硬约束。
+
+## 专业代理
+
+- [python-ast-extractor.md](./agents/python-ast-extractor.md) — 用 `ast` 走 Python 源码并产结构化符号记录。
+- [python-edge-resolver.md](./agents/python-edge-resolver.md) — 解析悬空 import / 类调用的目标。
+
+## Borders
+
+### What this skill does
+
+- Parse Python source via AST → emit nodes (file / class / function / module) and edges (imports / calls / inherits / contains / exports)
+- Generate an interactive **Cytoscape.js** graph embedded in a 4-file page (`index.html` + `index.js` + `index.css` + `data.js`)
+- Tier files (core / library / utility), categorize classes (orchestrator / abstract / data / handler), classify functions (entry / core / utility)
+- Run a 5-phase pipeline (Pre-flight → Parse → Build → Validate → Generate)
+
+### What this skill does NOT do
+
+- **Multi-language architecture diagrams** — see [[rui-diagram]] (21 node types, SVG). rui-graph is Python-only with 4 node types.
+- **Knowledge Graph semantics** — see [[rui-diagram]] for layers/tours/tags/KG schema; rui-graph produces a flat code graph, no LLM-summarized layers
+- **Static SVG output** — interactive Cytoscape only; if you need a printable diagram, use rui-diagram
+- **Real-time call tracing** — static AST only; no runtime profiling
+- **Edit source code** — observation only
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| [[rui-html]] | pattern sibling | Same 4-file structure; rui-html can refactor rui-graph output into a doc page |
+| [[rui-theme]] | calls → rui-theme | Injects theme CSS into graph page — `[IF-009](../INTERFACES.md#if-009)` |
+| [[rui-diagram]] | no overlap | Different abstraction: AST 4-node vs KG 21-node — `[IF-008](../INTERFACES.md#if-008)` |
+| [[rui-skill]] | can target | rui-skill may add evals around rui-graph |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `code-analysis.json`, `graph-data.json` | write (intermediate, may persist) |
+| `docs/views/<name>/graph/` | **write** — primary output (4 files) |
+| Python source tree (input) | no write — read-only |
+
+### Invocation
+
+Graph generation is invoked by an agent following the 5-phase pipeline.
+
+`<this-skill-dir>` is the directory containing this SKILL.md (typically `.claude/rui-graph/`).

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Wizard — Demo · VideoLingo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23708090'/><text x='16' y='22' font-size='16' font-family='monospace' font-weight='bold' fill='%23ffffff' text-anchor='middle'>C</text></svg>" type="image/svg+xml">
+    <meta name="description" content="Step-by-step yt-dlp configuration wizard — build format strings, set subtitle options, configure post-processing, design output templates">
+
+    <link rel="stylesheet" href="../../../../../cdn/theme/modern-minimalist.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="demos-page">
+    <div id="app">
+        <div class="page">
+            <!-- Card Area -->
+            <section class="card-area">
+                <div id="scene-card"></div>
+            </section>
+
+            <!-- Demo Area -->
+            <section class="demo-area" id="demo-app">
+                <!-- Step Progress Dots -->
+                <div class="wizard-progress">
+                    <template v-for="(step, i) in steps" :key="i">
+                        <div class="wz-dot"
+                             :class="{ active: i === currentStep, done: i < currentStep }"
+                             @click="currentStep = i">
+                            <span v-if="i < currentStep">✓</span>
+                            <span v-else>{{ i + 1 }}</span>
+                        </div>
+                        <div class="wz-connector" v-if="i < steps.length - 1"
+                             :class="{ done: i < currentStep }"></div>
+                    </template>
+                </div>
+
+                <!-- Current Step Content -->
+                <div class="wizard-step" v-if="currentStepObj">
+                    <div class="wizard-step__header">
+                        <span class="wizard-step__num">{{ ui.stepCount }} {{ currentStep + 1 }} {{ ui.of }} {{ steps.length }}</span>
+                        <h3 class="wizard-step__title">{{ currentStepObj.title }}</h3>
+                    </div>
+                    <p class="wizard-step__instr">{{ currentStepObj.instruction }}</p>
+
+                    <!-- Code Block -->
+                    <div class="code-block" v-if="currentStepObj.code">
+                        <div class="code-block__header">
+                            <span class="code-block__filename">{{ currentStepObj.filename }}</span>
+                            <button class="code-block__copy-btn" @click="copyCode">
+                                {{ copyFeedback }}
+                            </button>
+                        </div>
+                        <pre class="code-block__pre"><code>{{ currentStepObj.code }}</code></pre>
+                    </div>
+
+                    <!-- Result Preview -->
+                    <div class="wizard-result" v-if="currentStepObj.result">
+                        <span class="wizard-result__icon">💡</span>
+                        <p class="wizard-result__text">{{ currentStepObj.result }}</p>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="wizard-nav">
+                    <button class="wz-nav-btn" @click="prevStep" :disabled="currentStep <= 0">
+                        {{ ui.prevBtn }}
+                    </button>
+                    <span class="wz-nav-count">{{ currentStep + 1 }} / {{ steps.length }}</span>
+                    <button class="wz-nav-btn wz-nav-btn--next" @click="nextStep"
+                            :disabled="currentStep >= steps.length - 1">
+                        {{ ui.nextBtn }}
+                    </button>
+                </div>
+            </section>
+
+            <!-- Info Area -->
+            <section class="info-area">
+                <h3 class="info-area__title">{{ ui.infoHeader }}</h3>
+                <p class="info-area__text" v-html="ui.infoP1"></p>
+                <p class="info-area__text" v-html="ui.infoP2"></p>
+                <p class="info-area__text info-area__text--muted" v-html="ui.infoP3"></p>
+                <div class="info-links">
+                    <a href="../../diagram/index.html" class="info-link">📐 {{ ui.pipelineLink }}</a>
+                    <a href="../../graph/index.html" class="info-link">🕸️ {{ ui.graphLink }}</a>
+                    <a href="../index.html" class="info-link">🎬 {{ ui.allDemosLink }}</a>
+                    <a href="../../../../index.html" class="info-link">🏠 {{ ui.docsHomeLink }}</a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../../cdn/shared/yry-loader.js"></script>
+    <script src="../../../../../cdn/yry-tag-chip/index.js"></script>
+    <script src="../../../../../cdn/yry-scene-card/index.js"></script>
+    <script src="../../../../assets/lang.js"></script>
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

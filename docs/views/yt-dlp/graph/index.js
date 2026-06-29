@@ -1,8 +1,10 @@
 /* ════════════════════════════════════════════════════════════════════════
-   rui-graph — Graph Logic (yt-dlp variant)
+   yt-dlp — Code Dependency Graph Logic
    Reads window.GRAPH_DATA, initializes Cytoscape, wires all interactions.
 
-   Custom badges: Sources (amber), Features (emerald), Reliability (violet)
+   Node types: file, class, function, module
+   Edge types: imports, calls, inherits, contains, exports
+
    Depends on: data.js (window.GRAPH_DATA), Cytoscape.js CDN,
                dagre, cytoscape-dagre, cytoscape-cose-bilkent
    ════════════════════════════════════════════════════════════════════════ */
@@ -12,7 +14,7 @@
 
   var DATA = window.GRAPH_DATA;
   if (!DATA || !DATA.elements) {
-    console.error('rui-graph: window.GRAPH_DATA not found. Ensure data.js is loaded before index.js.');
+    console.error('yt-dlp graph: window.GRAPH_DATA not found. Ensure data.js is loaded before index.js.');
     return;
   }
 
@@ -28,13 +30,12 @@
       name: 'cose-bilkent',
       animate: true,
       animationDuration: 800,
-      nodeRepulsion: 8000,
-      idealEdgeLength: 120,
+      nodeRepulsion: 12000,
+      idealEdgeLength: 130,
       gravity: 0.3,
-      numIter: 2000,
+      numIter: 3000,
       tile: true,
     },
-    wheelSensitivity: 0.3,
     minZoom: 0.15,
     maxZoom: 4,
   });
@@ -76,99 +77,110 @@
         }
       },
 
-      // ── Card nodes by badge ──
-      { selector: 'node[type="card"]',
-        style: { 'shape': 'round-rectangle', 'width': 140, 'height': 60, 'font-size': '11px', 'font-weight': '600' } },
-      // Canonical badges
-      { selector: 'node[badge="Core"], node[badge="核心"]',
-        style: { 'background-color': 'rgba(6, 78, 59, 0.85)', 'border-color': '#34d399' } },
-      { selector: 'node[badge="Report"], node[badge="报告"]',
-        style: { 'background-color': 'rgba(136, 19, 55, 0.85)', 'border-color': '#fb7185' } },
-      { selector: 'node[badge="Guide"], node[badge="指南"]',
-        style: { 'background-color': 'rgba(8, 51, 68, 0.85)', 'border-color': '#38bdf8' } },
-      { selector: 'node[badge="OSS"]',
-        style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fbbf24' } },
-      { selector: 'node[badge="Agent"]',
-        style: { 'background-color': 'rgba(76, 29, 149, 0.85)', 'border-color': '#a78bfa' } },
-      { selector: 'node[badge="Beta"]',
-        style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fb923c' } },
-      // yt-dlp custom badges
-      { selector: 'node[badge="Sources"]',
-        style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fbbf24' } },
-      { selector: 'node[badge="Features"]',
-        style: { 'background-color': 'rgba(6, 78, 59, 0.85)', 'border-color': '#34d399' } },
-      { selector: 'node[badge="Reliability"]',
-        style: { 'background-color': 'rgba(76, 29, 149, 0.85)', 'border-color': '#a78bfa' } },
+      // ── File nodes (round-rectangle, sky blue) ──
+      {
+        selector: 'node[type="file"]',
+        style: {
+          'shape': 'round-rectangle',
+          'width': 140, 'height': 55,
+          'font-size': '10px', 'font-weight': '600',
+          'background-color': 'rgba(8, 51, 68, 0.85)',
+          'border-color': '#38bdf8',
+        }
+      },
+      // Core files are wider
+      {
+        selector: 'node[tier="core"]',
+        style: { 'width': 160 }
+      },
+      // Utility files are narrower
+      {
+        selector: 'node[tier="utility"]',
+        style: { 'width': 120 }
+      },
 
-      // ── Tag nodes by modifier ──
-      { selector: 'node[type="tag"]',
-        style: { 'shape': 'ellipse', 'width': 90, 'height': 36, 'font-size': '9px', 'font-weight': '500' } },
-      { selector: 'node[modifier="warn"]',  style: { 'background-color': 'rgba(245, 158, 11, 0.2)', 'border-color': '#f59e0b' } },
-      { selector: 'node[modifier="accent"]',style: { 'background-color': 'rgba(234, 179, 8, 0.2)', 'border-color': '#eab308' } },
-      { selector: 'node[modifier="info"]',  style: { 'background-color': 'rgba(59, 130, 246, 0.2)', 'border-color': '#3b82f6' } },
-      { selector: 'node[modifier="red"]',   style: { 'background-color': 'rgba(239, 68, 68, 0.2)', 'border-color': '#ef4444' } },
-      { selector: 'node[modifier="purple"]',style: { 'background-color': 'rgba(139, 92, 246, 0.2)', 'border-color': '#8b5cf6' } },
-      { selector: 'node[modifier="cyan"]',  style: { 'background-color': 'rgba(6, 182, 212, 0.2)', 'border-color': '#06b6d4' } },
-      { selector: 'node[modifier="pass"], node[modifier="green"]',
-        style: { 'background-color': 'rgba(34, 197, 94, 0.2)', 'border-color': '#22c55e' } },
+      // ── Class nodes (hexagon, violet) ──
+      {
+        selector: 'node[type="class"]',
+        style: {
+          'shape': 'hexagon',
+          'width': 110, 'height': 95,
+          'font-size': '9px', 'font-weight': '600',
+          'background-color': 'rgba(76, 29, 149, 0.85)',
+          'border-color': '#a78bfa',
+        }
+      },
 
-      // ── Link destination nodes ──
-      { selector: 'node[type="link_dest"]',
-        style: { 'shape': 'diamond', 'width': 60, 'height': 60, 'font-size': '8px',
-                 'background-color': 'rgba(71, 85, 105, 0.4)', 'border-color': '#64748b' } },
+      // ── Function nodes (ellipse, emerald) ──
+      {
+        selector: 'node[type="function"]',
+        style: {
+          'shape': 'ellipse',
+          'width': 125, 'height': 48,
+          'font-size': '9px', 'font-weight': '500',
+          'background-color': 'rgba(6, 78, 59, 0.85)',
+          'border-color': '#34d399',
+        }
+      },
 
-      // ── Badge nodes ──
-      { selector: 'node[type="badge"]',
-        style: { 'shape': 'triangle', 'width': 40, 'height': 40, 'font-size': '8px' } },
+      // ── Module nodes (diamond, amber) ──
+      {
+        selector: 'node[type="module"]',
+        style: {
+          'shape': 'diamond',
+          'width': 80, 'height': 80,
+          'font-size': '9px', 'font-weight': '600',
+          'background-color': 'rgba(120, 53, 15, 0.85)',
+          'border-color': '#fbbf24',
+        }
+      },
 
-      // ── Cluster nodes ──
-      { selector: 'node[type="cluster"]',
-        style: { 'shape': 'hexagon', 'width': 80, 'height': 70, 'font-size': '9px',
-                 'background-color': 'rgba(30, 41, 59, 0.6)', 'border-color': '#475569', 'border-style': 'dashed' } },
-
-      // ── Edge types ──
-      { selector: 'edge[type="has_tag"]',
-        style: { 'line-style': 'solid', 'width': 1, 'target-arrow-shape': 'none', 'curve-style': 'unbundled-bezier' } },
-      { selector: 'edge[type="shares_tag"]',
-        style: { 'line-style': 'dashed', 'width': 0.5, 'line-color': '#94a3b8', 'target-arrow-shape': 'none', 'opacity': 0.3 } },
-      { selector: 'edge[type="has_badge"]',
-        style: { 'line-style': 'solid', 'width': 2, 'opacity': 0.8 } },
-      { selector: 'edge[type="shares_badge"]',
-        style: { 'line-style': 'dashed', 'width': 1, 'target-arrow-shape': 'none', 'opacity': 0.4 } },
-      { selector: 'edge[type="links_to"]',
-        style: { 'line-style': 'dotted', 'width': 1, 'line-color': '#475569', 'opacity': 0.5 } },
-      { selector: 'edge[type="shares_link"]',
-        style: { 'line-style': 'dotted', 'width': 0.5, 'line-color': '#334155', 'target-arrow-shape': 'none', 'opacity': 0.2 } },
-      // LLM-inferred edges
-      { selector: 'edge[type="depends_on"]',
-        style: { 'line-style': 'solid', 'width': 1.5, 'line-color': '#22d3ee', 'opacity': 0.7 } },
-      { selector: 'edge[type="related_to"]',
-        style: { 'line-style': 'dashed', 'width': 0.8, 'line-color': '#64748b', 'target-arrow-shape': 'none', 'opacity': 0.35 } },
-      { selector: 'edge[type="extends"]',
-        style: { 'line-style': 'solid', 'width': 1.5, 'line-color': '#a78bfa', 'opacity': 0.7 } },
-      { selector: 'edge[type="implements"]',
-        style: { 'line-style': 'dotted', 'width': 1.2, 'line-color': '#34d399', 'opacity': 0.6 } },
+      // ── Edge: imports (file → file, solid arrow) ──
+      {
+        selector: 'edge[type="imports"]',
+        style: { 'line-style': 'solid', 'width': 1.5, 'line-color': '#475569', 'target-arrow-shape': 'triangle' }
+      },
+      // ── Edge: calls (function → function, dashed arrow) ──
+      {
+        selector: 'edge[type="calls"]',
+        style: { 'line-style': 'dashed', 'width': 1, 'line-color': '#94a3b8', 'target-arrow-shape': 'triangle' }
+      },
+      // ── Edge: inherits (class → class, bold solid violet arrow) ──
+      {
+        selector: 'edge[type="inherits"]',
+        style: { 'line-style': 'solid', 'width': 2, 'line-color': '#a78bfa', 'target-arrow-shape': 'triangle' }
+      },
+      // ── Edge: contains (file → class/function, thin solid no arrow) ──
+      {
+        selector: 'edge[type="contains"]',
+        style: { 'line-style': 'solid', 'width': 0.8, 'line-color': '#475569', 'target-arrow-shape': 'none', 'curve-style': 'bezier' }
+      },
+      // ── Edge: exports (file → file, dotted cyan arrow) ──
+      {
+        selector: 'edge[type="exports"]',
+        style: { 'line-style': 'dotted', 'width': 1, 'line-color': '#22d3ee', 'target-arrow-shape': 'triangle' }
+      },
 
       // ── Interaction states ──
       { selector: 'node:selected',
-        style: { 'border-width': 3, 'border-color': '#f8fafc', 'shadow-blur': 12, 'shadow-color': '#22d3ee', 'shadow-opacity': 0.4 } },
+        style: { 'border-width': 3, 'border-color': '#f8fafc' } },
       { selector: 'node.highlight', style: { 'border-width': 2.5, 'border-color': '#f8fafc', 'opacity': 1 } },
       { selector: 'edge.highlight', style: { 'opacity': 1, 'width': 2 } },
       { selector: 'node.dimmed', style: { 'opacity': 0.12 } },
       { selector: 'edge.dimmed', style: { 'opacity': 0.04 } },
       { selector: 'node.search-hit',
-        style: { 'border-width': 3, 'border-color': '#fbbf24', 'shadow-blur': 16, 'shadow-color': '#fbbf24', 'shadow-opacity': 0.6 } },
+        style: { 'border-width': 3, 'border-color': '#fbbf24' } },
     ];
   }
 
   /* ════════════════════════════════════════════════════════════════════════
-   * LAYOUT SWITCHER
+   * LAYOUT SWITCHER (7 layouts)
    * ════════════════════════════════════════════════════════════════════════ */
 
   window.switchLayout = function(name) {
     var opts = { animate: true, animationDuration: 600 };
     if (name === 'cose-bilkent') {
-      opts = Object.assign(opts, { name: 'cose-bilkent', nodeRepulsion: 8000, idealEdgeLength: 120, gravity: 0.3, numIter: 2000, tile: true });
+      opts = Object.assign(opts, { name: 'cose-bilkent', nodeRepulsion: 12000, idealEdgeLength: 130, gravity: 0.3, numIter: 3000, tile: true });
     } else if (name === 'dagre') {
       opts = Object.assign(opts, { name: 'dagre', rankDir: 'LR', nodeSep: 60, edgeSep: 20, rankSep: 100 });
     } else if (name === 'dagre-tb') {
@@ -176,7 +188,10 @@
     } else if (name === 'breadthfirst') {
       opts = Object.assign(opts, { name: 'breadthfirst', directed: true, spacingFactor: 1.5 });
     } else if (name === 'concentric') {
-      opts = Object.assign(opts, { name: 'concentric', concentric: function(n) { return n.data('richness') || 1; }, minNodeSpacing: 40 });
+      opts = Object.assign(opts, { name: 'concentric', concentric: function(n) {
+        var t = n.data('type');
+        return t === 'module' ? 3 : t === 'file' ? 2 : t === 'class' ? 1 : 0;
+      }, minNodeSpacing: 40 });
     } else if (name === 'grid') {
       opts = Object.assign(opts, { name: 'grid', cols: Math.ceil(Math.sqrt(cy.nodes().length)) });
     } else if (name === 'circle') {
@@ -186,9 +201,10 @@
   };
 
   /* ════════════════════════════════════════════════════════════════════════
-   * SEARCH
+   * SEARCH — Matching file paths, class names, function names
    * ════════════════════════════════════════════════════════════════════════ */
 
+  var currentFilter = 'yt_dlp'; // Tracks active module filter ('all' or module name)
   var searchTimeout;
   window.doSearch = function(query) {
     clearTimeout(searchTimeout);
@@ -200,9 +216,13 @@
       var found = false;
       cy.nodes().forEach(function(n) {
         var label = (n.data('label') || '').toLowerCase();
-        var tags = (n.data('tags') || []).map(function(t) { return (t.text || t).toLowerCase(); }).join(' ');
-        var desc = (n.data('desc') || '').toLowerCase();
-        if (label.indexOf(q) !== -1 || tags.indexOf(q) !== -1 || desc.indexOf(q) !== -1) {
+        var path = (n.data('path') || '').toLowerCase();
+        var module = (n.data('module') || '').toLowerCase();
+        var cls = (n.data('class') || '').toLowerCase();
+        var role = (n.data('role') || '').toLowerCase();
+        var category = (n.data('category') || '').toLowerCase();
+        if (label.indexOf(q) !== -1 || path.indexOf(q) !== -1 || module.indexOf(q) !== -1 ||
+            cls.indexOf(q) !== -1 || role.indexOf(q) !== -1 || category.indexOf(q) !== -1) {
           n.addClass('search-hit').removeClass('dimmed');
           found = true;
         } else {
@@ -224,29 +244,49 @@
   };
 
   /* ════════════════════════════════════════════════════════════════════════
-   * FILTER BY BADGE
+   * FILTER BY MODULE
    * ════════════════════════════════════════════════════════════════════════ */
 
-  window.filterByBadge = function(badge, btn) {
-    var buttons = document.querySelectorAll('#badge-filters .filter-btn');
-    buttons.forEach(function(b) { b.classList.remove('active'); });
-    if (btn) btn.classList.add('active');
+  window.filterByModule = function(moduleName, btn) {
+    currentFilter = moduleName;
 
-    if (badge === 'all') {
+    // Update toolbar filter buttons
+    var tButtons = document.querySelectorAll('#module-filters .filter-btn');
+    tButtons.forEach(function(b) { b.classList.remove('active'); });
+    // Find the corresponding toolbar button and activate it
+    if (moduleName === 'all') {
+      var allBtn = document.querySelector('#module-filters .filter-btn');
+      if (allBtn) allBtn.classList.add('active');
+    } else {
+      tButtons.forEach(function(b) {
+        if (b.textContent === moduleName) b.classList.add('active');
+      });
+    }
+
+    // Update sidebar module rows
+    var sRows = document.querySelectorAll('#stats-modules .stat-module-row');
+    sRows.forEach(function(r) { r.classList.remove('active'); });
+    if (moduleName !== 'all') {
+      var targetRow = document.querySelector('#stats-modules .stat-module-row[data-module="' + moduleName + '"]');
+      if (targetRow) targetRow.classList.add('active');
+    }
+
+    if (moduleName === 'all') {
       cy.nodes().style('display', 'element');
       cy.edges().style('display', 'element');
+      updateStats(null);
       fitGraph();
       return;
     }
 
     cy.nodes().forEach(function(n) {
-      if (n.data('type') === 'card') {
-        n.style('display', n.data('badge') === badge ? 'element' : 'none');
-      } else if (n.data('type') === 'tag' || n.data('type') === 'link_dest' || n.data('type') === 'badge' || n.data('type') === 'cluster') {
-        var connected = n.connectedEdges().some(function(e) {
-          var srcVis = e.source().style('display');
-          var tgtVis = e.target().style('display');
-          return srcVis !== 'none' && tgtVis !== 'none';
+      var t = n.data('type');
+      if (t === 'file') {
+        n.style('display', (n.data('module') || '') === moduleName ? 'element' : 'none');
+      } else if (t === 'class' || t === 'function' || t === 'module') {
+        var connected = n.connectedEdges('[type="contains"]').some(function(e) {
+          var fileNode = e.source().data('type') === 'file' ? e.source() : e.target();
+          return fileNode.style('display') !== 'none';
         });
         n.style('display', connected ? 'element' : 'none');
       }
@@ -254,16 +294,17 @@
     cy.edges().forEach(function(e) {
       e.style('display', e.source().style('display') !== 'none' && e.target().style('display') !== 'none' ? 'element' : 'none');
     });
+    updateStats(moduleName);
     fitGraph();
   };
 
   /* ════════════════════════════════════════════════════════════════════════
-   * CLICK → DETAIL PANEL
+   * CLICK → DETAIL PANEL (type-specific)
    * ════════════════════════════════════════════════════════════════════════ */
 
   cy.on('tap', 'node', function(evt) {
     var node = evt.target;
-    updateDetail(node.data());
+    updateDetail(node);
   });
 
   cy.on('tap', function(evt) {
@@ -272,138 +313,331 @@
     }
   });
 
-  function updateDetail(data) {
+  function updateDetail(node) {
     var container = document.getElementById('detail-content');
-    var node = cy.getElementById(data.id);
+    var data = node.data();
     var type = data.type;
+    var html = '';
 
-    if (type === 'card') {
-      var connectedTags = node.connectedEdges('[type="has_tag"]').length;
-      var relatedEdges = node.connectedEdges('[type="shares_tag"], [type="shares_badge"], [type="depends_on"], [type="related_to"], [type="extends"], [type="implements"]');
-      var connectedCards = relatedEdges.map(function(e) {
-        var other = e.source().id() === data.id ? e.target() : e.source();
-        return { id: other.id(), label: other.data('label') };
-      });
-      var connectedLinks = node.connectedEdges('[type="links_to"]').length;
+    if (type === 'file') {
+      /* ═══════════════════════════════════════════════════════════════
+       * FILE DETAIL — path, tier, size, module, defines, imports, etc.
+       * ═══════════════════════════════════════════════════════════════ */
 
-      var html = '<div class="detail-header">';
+      // ── Header: filename + tier badge ──
+      html += '<div class="detail-header">';
+      html += '<div class="detail-icon type-file">📄</div>';
+      html += '<div class="detail-header-info">';
       html += '<h3>' + escHtml(data.label || data.id) + '</h3>';
-      if (data.badge) {
-        html += '<span class="detail-badge badge-' + badgeClass(data.badge) + '">' + escHtml(data.badge) + '</span>';
+      html += '<span class="detail-type-tag type-file">' + (data.tier || 'file') + ' tier</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // ── Meta: path, lines, module ──
+      html += '<div class="detail-meta">';
+      html += '<div class="detail-meta-row"><span class="dm-label">Path</span><code>' + escHtml(data.path || '—') + '</code></div>';
+      html += '<div class="detail-meta-row"><span class="dm-label">Lines</span><span class="dm-value">' + (data.lines || '—') + '</span></div>';
+      if (data.module) {
+        html += '<div class="detail-meta-row"><span class="dm-label">Module</span><span class="dm-value" style="color:var(--module)">' + escHtml(data.module) + '</span></div>';
       }
       html += '</div>';
 
-      if (data.desc) {
-        html += '<div class="detail-desc">' + data.desc + '</div>';
-      }
-      if (data.tags && data.tags.length) {
-        html += '<div class="detail-section-title">Tags</div>';
-        html += '<div class="detail-tags">';
-        data.tags.forEach(function(t) {
-          var mod = t.modifier || 'info';
-          html += '<span class="detail-tag tag-' + mod + '">' + escHtml(t.text || t) + '</span>';
-        });
-        html += '</div>';
-      }
-      if (data.meta) {
-        html += '<div class="detail-meta">' + escHtml(data.meta) + '</div>';
-      }
-      if (data.links && data.links.length) {
-        html += '<div class="detail-section-title">Links (' + data.links.length + ')</div>';
-        html += '<div class="detail-links">';
-        data.links.forEach(function(l) {
-          html += '<a class="detail-link" href="' + escHtml(l.href) + '" target="_blank" rel="noopener">' + (l.label || l.href) + '</a>';
-        });
-        html += '</div>';
-      }
-      html += '<div class="detail-stats">';
-      html += connectedTags + ' tags · ' + connectedCards.length + ' related cards · ' + connectedLinks + ' links';
-      if (data.richness) html += ' · Richness: ' + data.richness;
+      // ── Defines (classes + functions via contains edges) ──
+      var defines = node.connectedEdges('[type="contains"]').targets()
+        .filter(function(n) { return n.id() !== data.id; });
+      var definedClasses = defines.filter('[type="class"]');
+      var definedFuncs = defines.filter('[type="function"]');
+
+      // ── Summary stat chips ──
+      html += '<div class="detail-chip-row">';
+      html += '<span class="detail-chip chip-class">' + definedClasses.length + ' classes</span>';
+      html += '<span class="detail-chip chip-func">' + definedFuncs.length + ' functions</span>';
+      var importCount = node.connectedEdges('[type="imports"]').targets().filter(function(n) { return n.id() !== data.id; }).length;
+      var importedByCount = node.connectedEdges('[type="imports"]').sources().filter(function(n) { return n.id() !== data.id; }).length;
+      html += '<span class="detail-chip chip-import">' + importCount + ' imports</span>';
+      html += '<span class="detail-chip chip-imported">' + importedByCount + ' imported-by</span>';
       html += '</div>';
 
-      // Deduplicate related cards by id
-      var seen = {};
-      var uniqueCards = connectedCards.filter(function(c) { return seen[c.id] ? false : (seen[c.id] = true); });
-      if (uniqueCards.length) {
-        html += '<div class="detail-section-title">Related Cards (' + uniqueCards.length + ')</div>';
+      // ── Defines section ──
+      if (definedClasses.length + definedFuncs.length > 0) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">📦 Defined Symbols <span class="detail-count">' + (definedClasses.length + definedFuncs.length) + '</span></div>';
         html += '<ul class="detail-conn-list">';
-        uniqueCards.forEach(function(c) {
-          html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>';
+        definedClasses.forEach(function(n) {
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">⬡</span><span class="detail-stat-chip chip-class">class</span> ' + escHtml(n.data('label')) + '</li>';
+        });
+        definedFuncs.forEach(function(n) {
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">○</span><span class="detail-stat-chip chip-func">func</span> ' + escHtml(n.data('label')) + '</li>';
         });
         html += '</ul>';
-      }
-      container.innerHTML = html;
-
-    } else if (type === 'tag') {
-      var cards = node.connectedEdges('[type="has_tag"]').map(function(e) {
-        var c = e.source().data('type') === 'card' ? e.source() : e.target();
-        return { id: c.id(), label: c.data('label') };
-      });
-      var html = '<div class="detail-header"><h3>🏷️ ' + escHtml(data.label) + '</h3></div>';
-      html += '<div class="detail-meta">Modifier: ' + escHtml(data.modifier || 'info') + ' · Used by ' + cards.length + ' cards</div>';
-      if (cards.length) {
-        html += '<div class="detail-section-title">Cards with this tag</div>';
-        html += '<ul class="detail-conn-list">';
-        cards.forEach(function(c) { html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>'; });
-        html += '</ul>';
-      }
-      container.innerHTML = html;
-
-    } else if (type === 'badge') {
-      var cards = node.connectedEdges('[type="has_badge"]').map(function(e) {
-        var c = e.source().data('type') === 'card' ? e.source() : e.target();
-        return { id: c.id(), label: c.data('label') };
-      });
-      var html = '<div class="detail-header"><h3>🔖 ' + escHtml(data.label) + '</h3></div>';
-      html += '<div class="detail-meta">' + cards.length + ' cards</div>';
-      if (cards.length) {
-        html += '<ul class="detail-conn-list">';
-        cards.forEach(function(c) { html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>'; });
-        html += '</ul>';
-      }
-      container.innerHTML = html;
-
-    } else if (type === 'link_dest') {
-      var cards = node.connectedEdges('[type="links_to"]').map(function(e) {
-        var c = e.source().data('type') === 'card' ? e.source() : e.target();
-        return { id: c.id(), label: c.data('label') };
-      });
-      var html = '<div class="detail-header"><h3>🔗 ' + escHtml(data.label) + '</h3></div>';
-      if (data.url) {
-        html += '<a class="detail-link" href="' + escHtml(data.url) + '" target="_blank" rel="noopener">' + escHtml(data.url) + '</a>';
-      }
-      html += '<div class="detail-meta">Referenced by ' + cards.length + ' cards</div>';
-      if (cards.length) {
-        html += '<ul class="detail-conn-list">';
-        cards.forEach(function(c) { html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>'; });
-        html += '</ul>';
-      }
-      container.innerHTML = html;
-
-    } else if (type === 'cluster') {
-      var memberCards = [];
-      if (data.memberCards) {
-        memberCards = data.memberCards.map(function(id) {
-          var n = cy.getElementById(id);
-          return n.length ? { id: id, label: n.data('label') } : null;
-        }).filter(Boolean);
-      }
-      var html = '<div class="detail-header"><h3>📦 ' + escHtml(data.label) + '</h3></div>';
-      html += '<div class="detail-meta">Tag cluster · ' + (data.memberTags || []).length + ' tags · ' + memberCards.length + ' cards</div>';
-      if (data.memberTags && data.memberTags.length) {
-        html += '<div class="detail-section-title">Member Tags</div>';
-        html += '<div class="detail-tags">';
-        data.memberTags.forEach(function(t) { html += '<span class="detail-tag tag-info">' + escHtml(t) + '</span>'; });
         html += '</div>';
       }
-      if (memberCards.length) {
-        html += '<div class="detail-section-title">Cards in cluster</div>';
+
+      // ── Imports section ──
+      var imports = node.connectedEdges('[type="imports"]').targets()
+        .filter(function(n) { return n.id() !== data.id; });
+      if (imports.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">→ Imports <span class="detail-count">' + imports.length + '</span></div>';
         html += '<ul class="detail-conn-list">';
-        memberCards.forEach(function(c) { html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>'; });
+        imports.forEach(function(n) {
+          html += '<li onclick="focusNode(\'' + n.id() + '\')">' + escHtml(n.data('label')) + ' <span class="detail-sub">' + escHtml(n.data('path') || '') + '</span></li>';
+        });
         html += '</ul>';
+        html += '</div>';
       }
-      container.innerHTML = html;
+
+      // ── Imported-by section ──
+      var importedBy = node.connectedEdges('[type="imports"]').sources()
+        .filter(function(n) { return n.id() !== data.id; });
+      if (importedBy.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">← Imported By <span class="detail-count">' + importedBy.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        importedBy.forEach(function(n) {
+          html += '<li onclick="focusNode(\'' + n.id() + '\')">' + escHtml(n.data('label')) + ' <span class="detail-sub">' + escHtml(n.data('path') || '') + '</span></li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+      // ── Exports section ──
+      var exportsList = node.connectedEdges('[type="exports"]').targets()
+        .filter(function(n) { return n.id() !== data.id; });
+      if (exportsList.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">⇢ Re-exports <span class="detail-count">' + exportsList.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        exportsList.forEach(function(n) {
+          var sym = '';
+          var edgeData = node.connectedEdges('[type="exports"]').filter(function(e) { return e.target().id() === n.id(); });
+          if (edgeData.length) sym = edgeData[0].data('symbol') || '';
+          html += '<li onclick="focusNode(\'' + n.id() + '\')">' + escHtml(n.data('label'));
+          if (sym) html += ' <span class="detail-symbol">' + escHtml(sym) + '</span>';
+          html += '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+    } else if (type === 'class') {
+      /* ═══════════════════════════════════════════════════════════════
+       * CLASS DETAIL — name, file, inheritance, methods, subclasses
+       * ═══════════════════════════════════════════════════════════════ */
+
+      // ── Header ──
+      html += '<div class="detail-header">';
+      html += '<div class="detail-icon type-class">⬡</div>';
+      html += '<div class="detail-header-info">';
+      html += '<h3>' + escHtml(data.label || data.id) + '</h3>';
+      html += '<span class="detail-type-tag type-class">' + (data.category || 'class') + '</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // ── Meta ──
+      html += '<div class="detail-meta">';
+      if (data.file) {
+        var fileNode = cy.getElementById(data.file);
+        html += '<div class="detail-meta-row"><span class="dm-label">File</span><code onclick="focusNode(\'' + escHtml(data.file) + '\')" style="cursor:pointer;color:var(--file)">' + escHtml(fileNode.length ? fileNode.data('path') || fileNode.data('label') : data.file) + '</code></div>';
+      }
+      if (data.methodCount) {
+        html += '<div class="detail-meta-row"><span class="dm-label">Methods</span><span class="dm-value">' + data.methodCount + '</span></div>';
+      }
+      html += '</div>';
+
+      // ── Summary chips ──
+      var bases = node.connectedEdges('[type="inherits"]').targets()
+        .filter(function(n) { return n.id() !== data.id; });
+      var subs = node.connectedEdges('[type="inherits"]').sources()
+        .filter(function(n) { return n.id() !== data.id && n.data('type') === 'class'; });
+      // Methods
+      var methods = [];
+      if (data.file) {
+        var fNode = cy.getElementById(data.file);
+        if (fNode.length) {
+          methods = fNode.connectedEdges('[type="contains"]').targets()
+            .filter(function(n) { return n.data('type') === 'function' && n.data('class') === data.label; });
+        }
+      }
+      html += '<div class="detail-chip-row">';
+      html += '<span class="detail-chip chip-class">' + methods.length + ' methods</span>';
+      if (bases.length) html += '<span class="detail-chip chip-inherit">extends ' + bases.length + '</span>';
+      if (subs.length) html += '<span class="detail-chip chip-inherit">' + subs.length + ' subclasses</span>';
+      html += '</div>';
+
+      // ── Inheritance: Base Classes ──
+      if (bases.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">⬆ Extends <span class="detail-count">' + bases.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        bases.forEach(function(n) {
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">⬡</span>' + escHtml(n.data('label')) + '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+      // ── Subclasses ──
+      if (subs.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">⬇ Extended By <span class="detail-count">' + subs.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        subs.forEach(function(n) {
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">⬡</span>' + escHtml(n.data('label')) + '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+      // ── Methods ──
+      if (methods.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">⚙ Methods <span class="detail-count">' + methods.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        methods.forEach(function(n) {
+          var role = n.data('role') || '';
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">○</span>' + escHtml(n.data('label'));
+          if (role) html += ' <span class="detail-sub">' + escHtml(role) + '</span>';
+          html += '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+    } else if (type === 'function') {
+      /* ═══════════════════════════════════════════════════════════════
+       * FUNCTION DETAIL — name, file, class, role, calls, called-by
+       * ═══════════════════════════════════════════════════════════════ */
+
+      // ── Header ──
+      html += '<div class="detail-header">';
+      html += '<div class="detail-icon type-function">○</div>';
+      html += '<div class="detail-header-info">';
+      html += '<h3>' + escHtml(data.label || data.id) + '</h3>';
+      html += '<span class="detail-type-tag type-function">' + (data.role || 'function') + '</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // ── Meta ──
+      html += '<div class="detail-meta">';
+      if (data.file) {
+        var fNode = cy.getElementById(data.file);
+        html += '<div class="detail-meta-row"><span class="dm-label">File</span><code onclick="focusNode(\'' + escHtml(data.file) + '\')" style="cursor:pointer;color:var(--file)">' + escHtml(fNode.length ? fNode.data('path') || fNode.data('label') : data.file) + '</code></div>';
+      }
+      if (data.class) {
+        html += '<div class="detail-meta-row"><span class="dm-label">Class</span><span class="dm-value" style="color:var(--class)">' + escHtml(data.class) + '</span></div>';
+      }
+      html += '<div class="detail-meta-row"><span class="dm-label">Role</span><span class="dm-value">' + (data.role || 'unknown') + '</span></div>';
+      html += '</div>';
+
+      // ── Call graph ──
+      var callTargets = node.connectedEdges('[type="calls"]').targets()
+        .filter(function(n) { return n.id() !== data.id; });
+      var callers = node.connectedEdges('[type="calls"]').sources()
+        .filter(function(n) { return n.id() !== data.id; });
+
+      html += '<div class="detail-chip-row">';
+      html += '<span class="detail-chip chip-call">calls ' + callTargets.length + '</span>';
+      html += '<span class="detail-chip chip-caller">called-by ' + callers.length + '</span>';
+      html += '</div>';
+
+      // ── Calls ──
+      if (callTargets.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">→ Calls <span class="detail-count">' + callTargets.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        callTargets.forEach(function(n) {
+          var clsRef = n.data('class') || '';
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">○</span>' + escHtml(n.data('label'));
+          if (clsRef) html += ' <span class="detail-sub">' + escHtml(clsRef) + '.' + escHtml(n.data('label')) + '</span>';
+          html += '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+      // ── Called By ──
+      if (callers.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">← Called By <span class="detail-count">' + callers.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        callers.forEach(function(n) {
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">○</span>' + escHtml(n.data('label')) + '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+    } else if (type === 'module') {
+      /* ═══════════════════════════════════════════════════════════════
+       * MODULE DETAIL — package name, path, sub-packages, files, exports
+       * ═══════════════════════════════════════════════════════════════ */
+
+      // ── Header ──
+      html += '<div class="detail-header">';
+      html += '<div class="detail-icon type-module">◇</div>';
+      html += '<div class="detail-header-info">';
+      html += '<h3>' + escHtml(data.label || data.id) + '</h3>';
+      html += '<span class="detail-type-tag type-module">package</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // ── Meta ──
+      html += '<div class="detail-meta">';
+      if (data.path) {
+        html += '<div class="detail-meta-row"><span class="dm-label">Path</span><code>' + escHtml(data.path) + '</code></div>';
+      }
+      if (data.submoduleCount !== undefined) {
+        html += '<div class="detail-meta-row"><span class="dm-label">Sub-packages</span><span class="dm-value">' + data.submoduleCount + '</span></div>';
+      }
+      html += '</div>';
+
+      // ── Contained files ──
+      var containedFiles = cy.nodes('[type="file"]').filter(function(n) {
+        return n.data('module') === data.label;
+      });
+      html += '<div class="detail-chip-row">';
+      html += '<span class="detail-chip chip-file">' + containedFiles.length + ' files</span>';
+      var exportCount = node.connectedEdges('[type="exports"]').targets().filter(function(n) { return n.id() !== data.id; }).length;
+      if (exportCount) html += '<span class="detail-chip chip-export">' + exportCount + ' exports</span>';
+      html += '</div>';
+
+      // ── Files list ──
+      if (containedFiles.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">📄 Contained Files <span class="detail-count">' + containedFiles.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        containedFiles.forEach(function(n) {
+          var tier = n.data('tier') || '';
+          html += '<li onclick="focusNode(\'' + n.id() + '\')"><span class="detail-entity-icon">📄</span>' + escHtml(n.data('label'));
+          if (tier) html += ' <span class="detail-stat-chip chip-tier">' + escHtml(tier) + '</span>';
+          html += '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+      // ── Exports ──
+      var exportsList = node.connectedEdges('[type="exports"]').targets()
+        .filter(function(n) { return n.id() !== data.id; });
+      if (exportsList.length) {
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">⇢ Public API (Re-exports) <span class="detail-count">' + exportsList.length + '</span></div>';
+        html += '<ul class="detail-conn-list">';
+        exportsList.forEach(function(n) {
+          var sym = '';
+          var edgeData = node.connectedEdges('[type="exports"]').filter(function(e) { return e.target().id() === n.id(); });
+          if (edgeData.length) sym = edgeData[0].data('symbol') || '';
+          html += '<li onclick="focusNode(\'' + n.id() + '\')">' + escHtml(n.data('label'));
+          if (sym) html += ' <span class="detail-symbol">' + escHtml(sym) + '</span>';
+          html += '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
     }
+
+    container.innerHTML = html;
   }
 
   window.focusNode = function(id) {
@@ -412,7 +646,7 @@
     cy.nodes().removeClass('search-hit dimmed');
     node.addClass('search-hit');
     cy.animate({ center: { eles: node }, zoom: 1.5 }, { duration: 400 });
-    updateDetail(node.data());
+    updateDetail(node);
   };
 
   /* ════════════════════════════════════════════════════════════════════════
@@ -441,9 +675,8 @@
     cy.nodes().removeClass('search-hit dimmed');
     cy.edges().removeClass('dimmed');
     document.getElementById('search-input').value = '';
-    // Re-activate the "All" filter button
-    var allBtn = document.querySelector('#badge-filters .filter-btn');
-    window.filterByBadge('all', allBtn);
+    // Reset to yt_dlp module filter
+    window.filterByModule('yt_dlp');
     fitGraph();
   };
 
@@ -460,7 +693,7 @@
     try {
       var png = cy.png({ full: true, scale: 2, bg: '#020617' });
       var link = document.createElement('a');
-      link.download = 'graph.png';
+      link.download = 'yt-dlp-code-graph.png';
       link.href = png;
       link.click();
       showToast('PNG downloaded ✓');
@@ -491,22 +724,6 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  function badgeClass(badge) {
-    if (!badge) return '';
-    var b = badge.toLowerCase();
-    if (b.indexOf('core') !== -1 || b.indexOf('核心') !== -1) return 'badge-core';
-    if (b.indexOf('report') !== -1 || b.indexOf('报告') !== -1) return 'badge-report';
-    if (b.indexOf('guide') !== -1 || b.indexOf('指南') !== -1) return 'badge-guide';
-    if (b.indexOf('oss') !== -1) return 'badge-oss';
-    if (b.indexOf('agent') !== -1) return 'badge-agent';
-    if (b.indexOf('beta') !== -1) return 'badge-beta';
-    // yt-dlp custom badges
-    if (b.indexOf('sources') !== -1) return 'badge-sources';
-    if (b.indexOf('features') !== -1) return 'badge-features';
-    if (b.indexOf('reliability') !== -1) return 'badge-reliability';
-    return '';
-  }
-
   function showToast(msg) {
     var toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -515,67 +732,133 @@
   }
 
   /* ════════════════════════════════════════════════════════════════════════
-   * INIT — Populate title, sidebar stats, legend, badge filters
+   * INIT — Populate title, sidebar stats, legend, module filters
    * ════════════════════════════════════════════════════════════════════════ */
 
+  /* ── Compute per-module stats from graph data ── */
+  function getModuleStats(moduleName) {
+    var files = cy.nodes('[type="file"]').filter(function(n) {
+      return n.data('module') === moduleName;
+    });
+    var classCount = 0, funcCount = 0;
+    files.forEach(function(f) {
+      f.connectedEdges('[type="contains"]').targets().forEach(function(t) {
+        if (t.data('type') === 'class') classCount++;
+        else if (t.data('type') === 'function') funcCount++;
+      });
+    });
+    return { files: files.length, classes: classCount, functions: funcCount };
+  }
+
+  /* ── Update stats panel: overview + module rows (null) or filtered view (module name) ── */
+  function updateStats(filteredModule) {
+    var overviewEl = document.getElementById('stats-overview');
+    var modulesEl = document.getElementById('stats-modules');
+    var sectionLabel = document.querySelector('#stats-modules').previousElementSibling;
+
+    if (!filteredModule) {
+      // ── All modules view ──
+      if (sectionLabel) sectionLabel.style.display = '';
+      var allFiles = cy.nodes('[type="file"]');
+      var allClasses = cy.nodes('[type="class"]');
+      var allFuncs = cy.nodes('[type="function"]');
+      var allModules = cy.nodes('[type="module"]');
+
+      var html = '';
+      html += '<div class="stat-row"><span class="stat-label">Files</span><span class="stat-val">' + allFiles.length + '</span></div>';
+      html += '<div class="stat-row"><span class="stat-label">Classes</span><span class="stat-val">' + allClasses.length + '</span></div>';
+      html += '<div class="stat-row"><span class="stat-label">Functions</span><span class="stat-val">' + allFuncs.length + '</span></div>';
+      html += '<div class="stat-row"><span class="stat-label">Modules</span><span class="stat-val">' + allModules.length + '</span></div>';
+      html += '<div class="stat-row"><span class="stat-label">Edges</span><span class="stat-val">' + cy.edges().length + '</span></div>';
+      overviewEl.innerHTML = html;
+
+      // Build module rows
+      var uniqueModules = [];
+      var seenMods = {};
+      allFiles.forEach(function(f) {
+        var m = f.data('module');
+        if (m && !seenMods[m]) { seenMods[m] = true; uniqueModules.push(m); }
+      });
+      uniqueModules.sort();
+      var modHtml = '';
+      uniqueModules.forEach(function(m) {
+        var s = getModuleStats(m);
+        modHtml += '<div class="stat-module-row' + (currentFilter === m ? ' active' : '') + '" data-module="' + escHtml(m) + '" onclick="filterByModule(\'' + escHtml(m) + '\', this)">';
+        modHtml += '<span class="stat-module-name">' + escHtml(m) + '</span>';
+        modHtml += '<span class="stat-module-counts">' + s.files + 'f · ' + s.classes + 'c · ' + s.functions + 'fn</span>';
+        modHtml += '</div>';
+      });
+      modulesEl.innerHTML = modHtml;
+    } else {
+      // ── Filtered module view ──
+      if (sectionLabel) sectionLabel.style.display = 'none';
+      var s = getModuleStats(filteredModule);
+      // Count visible edges (faster: count across all)
+      var visEdges = 0;
+      cy.edges().forEach(function(e) {
+        if (e.style('display') !== 'none') visEdges++;
+      });
+
+      var html = '';
+      html += '<div class="stat-filtered-label">' + escHtml(filteredModule) + '</div>';
+      html += '<div class="stat-row"><span class="stat-label">Files</span><span class="stat-val">' + s.files + ' / ' + cy.nodes('[type="file"]').length + '</span></div>';
+      html += '<div class="stat-row"><span class="stat-label">Classes</span><span class="stat-val">' + s.classes + ' / ' + cy.nodes('[type="class"]').length + '</span></div>';
+      html += '<div class="stat-row"><span class="stat-label">Functions</span><span class="stat-val">' + s.functions + ' / ' + cy.nodes('[type="function"]').length + '</span></div>';
+      html += '<div class="stat-row"><span class="stat-label">Edges</span><span class="stat-val">' + visEdges + ' / ' + cy.edges().length + '</span></div>';
+      overviewEl.innerHTML = html;
+      modulesEl.innerHTML = '';
+    }
+  }
+
   function initUI() {
-    // Stats
-    var cards = cy.nodes('[type="card"]');
-    var tags = cy.nodes('[type="tag"]');
-    var badges = cy.nodes('[type="badge"]');
-    var linkDests = cy.nodes('[type="link_dest"]');
-    var clusters = cy.nodes('[type="cluster"]');
+    // Stats — yt_dlp module only
+    updateStats('yt_dlp');
 
-    var statsHtml = '';
-    if (cards.length) statsHtml += '<div class="stat-row"><span class="stat-label">Cards</span><span class="stat-val">' + cards.length + '</span></div>';
-    if (tags.length) statsHtml += '<div class="stat-row"><span class="stat-label">Tags</span><span class="stat-val">' + tags.length + '</span></div>';
-    if (badges.length) statsHtml += '<div class="stat-row"><span class="stat-label">Badges</span><span class="stat-val">' + badges.length + '</span></div>';
-    if (linkDests.length) statsHtml += '<div class="stat-row"><span class="stat-label">Links</span><span class="stat-val">' + linkDests.length + '</span></div>';
-    if (clusters.length) statsHtml += '<div class="stat-row"><span class="stat-label">Clusters</span><span class="stat-val">' + clusters.length + '</span></div>';
-    statsHtml += '<div class="stat-row"><span class="stat-label">Edges</span><span class="stat-val">' + cy.edges().length + '</span></div>';
-    document.getElementById('stats-content').innerHTML = statsHtml;
-
-    // Legend — nodes
+    // Legend — Nodes
     var nodeLegend = '';
     var nodeColors = [
-      ['OSS', '#fbbf24', 'rgba(120, 53, 15, 0.85)'],
-      ['Sources', '#fbbf24', 'rgba(120, 53, 15, 0.85)'],
-      ['Features', '#34d399', 'rgba(6, 78, 59, 0.85)'],
-      ['Reliability', '#a78bfa', 'rgba(76, 29, 149, 0.85)'],
-      ['Tag', '#64748b', 'rgba(100, 116, 139, 0.2)'],
-      ['Link Dest', '#64748b', 'rgba(71, 85, 105, 0.4)'],
+      ['File', '#38bdf8', 'rgba(8, 51, 68, 0.85)'],
+      ['Class', '#a78bfa', 'rgba(76, 29, 149, 0.85)'],
+      ['Function', '#34d399', 'rgba(6, 78, 59, 0.85)'],
+      ['Module/Package', '#fbbf24', 'rgba(120, 53, 15, 0.85)'],
     ];
     nodeColors.forEach(function(pair) {
       nodeLegend += '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid ' + pair[1] + ';background:' + pair[2] + '"></span>' + pair[0] + '</div>';
     });
     document.getElementById('legend-nodes').innerHTML = nodeLegend;
 
-    // Legend — edges
+    // Legend — Edges
     document.getElementById('legend-edges').innerHTML =
-      '<div class="legend-item"><span class="legend-line" style="background:#475569"></span> has_tag (solid)</div>' +
-      '<div class="legend-item"><span class="legend-line" style="background:#94a3b8;border-top:1.5px dashed #94a3b8"></span> shares_tag (dashed)</div>' +
-      '<div class="legend-item"><span class="legend-line" style="background:#475569;border-top:1.5px dotted #475569"></span> links_to (dotted)</div>' +
-      '<div class="legend-item"><span class="legend-line" style="background:#22d3ee"></span> depends_on (cyan)</div>' +
-      '<div class="legend-item"><span class="legend-line" style="background:#64748b;border-top:1.5px dashed #64748b"></span> related_to (dashed)</div>';
+      '<div class="legend-item"><span class="legend-line" style="background:#475569;position:relative;">' +
+        '<span style="position:absolute;right:-5px;top:50%;border:3px solid transparent;border-left:5px solid #475569;transform:translateY(-50%)"></span></span> imports (solid arrow)</div>' +
+      '<div class="legend-item"><span class="legend-line" style="background:transparent;border-top:1.5px dashed #94a3b8"></span> calls (dashed arrow)</div>' +
+      '<div class="legend-item"><span class="legend-line" style="background:#a78bfa;height:2px"></span> inherits (bold violet)</div>' +
+      '<div class="legend-item"><span class="legend-line" style="background:#475569;height:1px"></span> contains (thin solid)</div>' +
+      '<div class="legend-item"><span class="legend-line" style="background:transparent;border-top:1.5px dotted #22d3ee"></span> exports (dotted cyan)</div>';
 
-    // Badge filter buttons
-    var uniqueBadges = [];
-    var seenBadges = {};
-    cards.forEach(function(c) {
-      var b = c.data('badge');
-      if (b && !seenBadges[b]) { seenBadges[b] = true; uniqueBadges.push(b); }
-    });
-    var filterHtml = '<span class="toolbar-label">Filter</span>';
-    filterHtml += '<button class="filter-btn active" onclick="filterByBadge(\'all\', this)">All</button>';
-    uniqueBadges.forEach(function(b) {
-      filterHtml += '<button class="filter-btn" onclick="filterByBadge(\'' + escHtml(b) + '\', this)">' + escHtml(b) + '</button>';
-    });
-    document.getElementById('badge-filters').innerHTML = filterHtml;
+    // Module filter hidden — only yt_dlp module shown
+  }
+
+  /* ── Deep-link: ?focus=<nodeId> from demos/diagram ── */
+  function handleDeepLink() {
+    var params = new URLSearchParams(window.location.search);
+    var focusId = params.get('focus');
+    if (!focusId) return;
+    var node = cy.getElementById(focusId);
+    if (!node || !node.length) return;
+    // Wait a tick for layout to settle, then focus
+    setTimeout(function() {
+      cy.nodes().removeClass('search-hit dimmed');
+      node.addClass('search-hit');
+      cy.animate({ center: { eles: node }, zoom: 1.5 }, { duration: 500 });
+      updateDetail(node);
+    }, 600);
   }
 
   cy.ready(function() {
     initUI();
-    fitGraph();
+    filterByModule('yt_dlp');
+    handleDeepLink();
   });
 
   // Handle resize

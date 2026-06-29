@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>[GRAPH_TITLE] — Source Graph</title>
+  <title>[GRAPH_TITLE] — Code Dependency Graph</title>
 
   <!-- Cytoscape.js + Layout Plugins -->
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
@@ -46,9 +46,9 @@
     </div>
     <div class="toolbar-group">
       <span class="toolbar-label">Search</span>
-      <input type="search" id="search-input" placeholder="Card name or tag..." oninput="doSearch(this.value)">
+      <input type="search" id="search-input" placeholder="File, class, or function..." oninput="doSearch(this.value)">
     </div>
-    <div class="toolbar-group" id="badge-filters">
+    <div class="toolbar-group" id="module-filters">
       <!-- Populated by initUI() -->
     </div>
   </div>

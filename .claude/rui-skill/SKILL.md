@@ -1,6 +1,7 @@
 ---
 name: rui-skill
 description: Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.
+lifecycle: default-pipeline
 ---
 
 # Rui Skill
@@ -224,7 +225,7 @@ Once all runs are done:
 
 1. **Grade each run** — spawn a grader subagent (or grade inline) that reads `agents/grader.md` and evaluates each assertion against the outputs. Save results to `grading.json` in each run directory. The grading.json expectations array must use the fields `text`, `passed`, and `evidence` (not `name`/`met`/`details` or other variants) — the viewer depends on these exact field names. For assertions that can be checked programmatically, write and run a script rather than eyeballing it — scripts are faster, more reliable, and can be reused across iterations.
 
-2. **Aggregate into benchmark** — run the aggregation script from the skill-creator directory:
+2. **Aggregate into benchmark** — run the aggregation script from the rui-skill directory:
    ```bash
    python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <name>
    ```
@@ -235,7 +236,7 @@ Put each with_skill version before its baseline counterpart.
 
 4. **Launch the viewer** with both qualitative outputs and quantitative data:
    ```bash
-   nohup python <skill-creator-path>/eval-viewer/generate_review.py \
+   nohup python <rui-skill-path>/eval-viewer/generate_review.py \
      <workspace>/iteration-N \
      --skill-name "my-skill" \
      --benchmark <workspace>/iteration-N/benchmark.json \
@@ -483,3 +484,56 @@ Repeating one more time the core loop here for emphasis:
 Please add steps to your TodoList, if you have such a thing, to make sure you don't forget. If you're in Cowork, please specifically put "Create evals JSON and run `eval-viewer/generate_review.py` so human can review test cases" in your TodoList to make sure it happens.
 
 Good luck!
+
+## 规则
+
+- [skill-lifecycle.md](./rules/skill-lifecycle.md) — 技能的 draft / eval / describe-optimize 全周期契约、grader 字段固定、路径所有权与跨技能硬约束。
+
+## Borders
+
+### What this skill does
+
+- Create new skills from scratch (SKILL.md + frontmatter + bundled resources)
+- Improve existing skills (description optimization, eval-driven iteration)
+- Run evals via subagents (`run_eval.py`, `run_loop.py`)
+- Aggregate benchmarks with mean ± stddev (`aggregate_benchmark.py`)
+- Package skills (`package_skill.py`)
+- Launch eval viewer (HTML report) for human review (`eval-viewer/generate_review.py`)
+
+### What this skill does NOT do
+
+- **Execute skills by itself** — rui-skill orchestrates subagents that load the target skill; the target skill does the work
+- **Replace any specific rui-\* skill's domain logic** — every rui-* skill owns its own logic; rui-skill only iterates on their `SKILL.md` and bundled resources
+- **Carry historic state** — each invocation is stateless; workspace is per-skill, per-iteration under `<skill-name>-workspace/`
+- **Define a topic-specific SKILL.md schema** — the schema lives in `references/schemas.md` (evals.json, grading.json, history.json) and is documented inline above
+
+### Coordinated with
+
+| Skill | Direction | See |
+|-------|-----------|-----|
+| Any rui-\* skill | rui-skill acts on target | `[IF-010](../INTERFACES.md#if-010)` |
+| (none — meta) | — | rui-skill is the **only** skill that orchestrates other skills |
+
+### Output ownership
+
+| Path | Permission |
+|------|-----------|
+| `<this-skill-dir>/scripts/`, `references/`, `agents/`, `assets/` | read-only (owned) |
+| `<target-skill>/` | **propose then write** via the iteration loop after user approval |
+| `<target-skill-name>-workspace/iteration-N/` | **write** — eval + grading output |
+| `eval-viewer/` output | write |
+| Anywhere else | no write |
+
+### Invocation
+
+rui-skill is invoked through conversation. The user typically says "create a skill for X" or "improve rui-Y"; the skill then drives the create / eval / iterate / package loop. Entry scripts:
+
+```bash
+python3 <this-skill-dir>/scripts/run_eval.py --target-skill <name>          # run evals
+python3 <this-skill-dir>/scripts/aggregate_benchmark.py <workspace-dir>      # aggregate
+python3 <this-skill-dir>/scripts/improve_description.py <target-skill-dir>  # optimize description
+python3 <this-skill-dir>/scripts/package_skill.py <target-skill-dir>        # produce bundle
+python3 <this-skill-dir>/eval-viewer/generate_review.py <workspace-dir> --benchmark <path>  # human review
+```
+
+`<this-skill-dir>` is the directory containing this SKILL.md (typically `.claude/rui-skill/`).

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Format Selector — Demo · VideoLingo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23708090'/><text x='16' y='22' font-size='16' font-family='monospace' font-weight='bold' fill='%23ffffff' text-anchor='middle'>F</text></svg>" type="image/svg+xml">
+    <meta name="description" content="Compare video/audio format combinations — resolution, codec, file size, and compatibility tradeoffs">
+
+    <link rel="stylesheet" href="../../../../../cdn/theme/modern-minimalist.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="demos-page">
+    <div id="app">
+        <div class="page">
+            <!-- Card Area -->
+            <section class="card-area">
+                <div id="scene-card"></div>
+            </section>
+
+            <!-- Demo Area -->
+            <section class="demo-area" id="demo-app">
+                <!-- Controls -->
+                <div class="demo-controls">
+                    <div class="control-group">
+                        <button v-for="cat in categories"
+                                class="ctrl-btn"
+                                :class="{ 'ctrl-btn--active': activeCategory === cat.id }"
+                                @click="activeCategory = cat.id">
+                            {{ cat.label }}
+                        </button>
+                    </div>
+                    <div class="control-group">
+                        <button class="ctrl-btn ctrl-btn--small"
+                                :class="{ 'ctrl-btn--active': sortBy === 'size' }"
+                                @click="sortBy = 'size'">
+                            {{ ui.sortBySize }}
+                        </button>
+                        <button class="ctrl-btn ctrl-btn--small"
+                                :class="{ 'ctrl-btn--active': sortBy === 'quality' }"
+                                @click="sortBy = 'quality'">
+                            {{ ui.sortByQuality }}
+                        </button>
+                    </div>
+                    <div class="control-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" v-model="highlightDefault">
+                            {{ ui.highlightDefault }}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Format Table -->
+                <div class="table-wrap">
+                    <table class="fmt-table">
+                        <thead>
+                            <tr>
+                                <th @click="sortBy = 'resolution'" class="sortable">
+                                    {{ ui.colResolution }}
+                                    <span v-if="sortBy === 'resolution'">▼</span>
+                                </th>
+                                <th>{{ ui.colCodec }}</th>
+                                <th>{{ ui.colContainer }}</th>
+                                <th>{{ ui.colBitrate }}</th>
+                                <th @click="sortBy = 'size'" class="sortable">
+                                    {{ ui.colSize }}
+                                    <span v-if="sortBy === 'size'">▼</span>
+                                </th>
+                                <th @click="sortBy = 'quality'" class="sortable">
+                                    {{ ui.colQuality }}
+                                    <span v-if="sortBy === 'quality'">▼</span>
+                                </th>
+                                <th>{{ ui.colCompat }}</th>
+                                <th>{{ ui.colNote }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="fmt in sortedFormats"
+                                :key="fmt.id"
+                                class="fmt-row"
+                                :class="{ 'fmt-row--selected': selectedId === fmt.id, 'fmt-row--default': highlightDefault && fmt.isDefault }"
+                                @click="selectFormat(fmt)">
+                                <td class="fmt-cell fmt-cell--resolution">
+                                    <span class="fmt-default-star" v-if="fmt.isDefault">★</span>
+                                    {{ fmt.resolution }}
+                                </td>
+                                <td class="fmt-cell fmt-cell--codec">
+                                    <span class="codec-badge" :class="'codec-badge--' + fmt.codec.toLowerCase()">
+                                        {{ fmt.codec }}
+                                    </span>
+                                </td>
+                                <td class="fmt-cell fmt-cell--mono">{{ fmt.container }}</td>
+                                <td class="fmt-cell fmt-cell--mono">{{ fmt.bitrate }}</td>
+                                <td class="fmt-cell fmt-cell--mono fmt-cell--size">
+                                    {{ fmt.sizePerMin }} MB
+                                    <div class="size-bar">
+                                        <div class="size-bar__fill" :style="{ width: sizeBarWidth(fmt) }"></div>
+                                    </div>
+                                </td>
+                                <td class="fmt-cell fmt-cell--stars">{{ fmt.quality }}</td>
+                                <td class="fmt-cell fmt-cell--stars">{{ fmt.compatibility }}</td>
+                                <td class="fmt-cell fmt-cell--note">
+                                    <span v-if="fmt.isDefault" class="default-tag">{{ ui.defaultLabel }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Detail Panel -->
+                <div class="detail-panel" v-if="selectedFormat">
+                    <h4 class="detail-panel__title">{{ ui.selectedFormat }}</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-item__label">{{ ui.detailResolution }}</span>
+                            <span class="detail-item__value">{{ selectedFormat.resolution }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-item__label">{{ ui.detailCodec }}</span>
+                            <span class="detail-item__value">{{ selectedFormat.codec }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-item__label">{{ ui.detailContainer }}</span>
+                            <span class="detail-item__value fmt-cell--mono">{{ selectedFormat.container }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-item__label">{{ ui.detailBitrate }}</span>
+                            <span class="detail-item__value fmt-cell--mono">{{ selectedFormat.bitrate }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-item__label">{{ ui.detailSizePerMin }}</span>
+                            <span class="detail-item__value fmt-cell--mono">{{ selectedFormat.sizePerMin }} MB</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-item__label">{{ ui.detailQuality }}</span>
+                            <span class="detail-item__value">{{ selectedFormat.quality }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-item__label">{{ ui.detailCompatibility }}</span>
+                            <span class="detail-item__value">{{ selectedFormat.compatibility }}</span>
+                        </div>
+                        <div class="detail-item detail-item--full">
+                            <span class="detail-item__label">{{ ui.estimatedSize }} 10 {{ ui.minuteVideo }}</span>
+                            <span class="detail-item__value detail-item__value--big">
+                                {{ (selectedFormat.sizePerMin * 10) }} MB
+                            </span>
+                        </div>
+                    </div>
+                    <p class="detail-panel__bestfor">
+                        <strong>{{ ui.bestFor }}</strong> {{ bestForText(selectedFormat) }}
+                    </p>
+                </div>
+
+                <!-- Note -->
+                <p class="demo-note">{{ ui.ytdlpNote }}</p>
+            </section>
+
+            <!-- Info Area -->
+            <section class="info-area">
+                <h3 class="info-area__title">{{ ui.infoHeader }}</h3>
+                <p class="info-area__text" v-html="ui.infoP1"></p>
+                <p class="info-area__text" v-html="ui.infoP2"></p>
+                <p class="info-area__text info-area__text--muted" v-html="ui.infoP3"></p>
+                <div class="info-links">
+                    <a href="../../diagram/index.html" class="info-link">📐 {{ ui.pipelineLink }}</a>
+                    <a href="../../graph/index.html" class="info-link">🕸️ {{ ui.graphLink }}</a>
+                    <a href="../index.html" class="info-link">🎬 {{ ui.allDemosLink }}</a>
+                    <a href="../../../../index.html" class="info-link">🏠 {{ ui.docsHomeLink }}</a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="../../../../../cdn/shared/yry-loader.js"></script>
+    <script src="../../../../../cdn/yry-tag-chip/index.js"></script>
+    <script src="../../../../../cdn/yry-scene-card/index.js"></script>
+    <script src="../../../../assets/lang.js"></script>
+    <script src="data.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>
