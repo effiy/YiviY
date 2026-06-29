@@ -21,18 +21,27 @@
     'use strict';
 
     includeHTML().then(function () {
-        var sections = document.querySelectorAll('section[id]');
 
         /* ── Scroll Spy ──────────────────────────────────
-           每次滚动事件重新查询 .nav-link，以兼容 Vue 语言
-           切换时重建 DOM 节点的情况。                         */
+           每次滚动事件重新查询 section[id] 与 .nav-link，
+           以兼容 Vue 组件异步挂载与语言切换导致的 DOM 变化。  */
 
         function updateActiveLink() {
             var current = '';
+            var sections = document.querySelectorAll('section[id]');
             sections.forEach(function (section) {
                 var top = section.offsetTop - 100;
                 if (window.scrollY >= top) current = section.id;
             });
+
+            /* 页面底部容错：若已滚动到接近页面底部，且最后一个 section
+               未被阈值捕获（页面不够长，scrollIntoView 无法将其顶部
+               推到视口上方），强制使用最后一个 section */
+            var atBottom = window.innerHeight + Math.round(window.scrollY) >= document.documentElement.scrollHeight - 10;
+            if (atBottom && sections.length) {
+                current = sections[sections.length - 1].id;
+            }
+
             var navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(function (link) {
                 link.classList.toggle('active', link.getAttribute('href') === '#' + current);
@@ -44,7 +53,11 @@
         /* ── Smooth Scroll ──────────────────────────────
            使用事件委托：绑定在侧栏容器上，点击 .nav-link
            时拦截并平滑滚动。语言切换后 Vue 重建 DOM 节点，
-           委托模式不受影响。                                 */
+           委托模式不受影响。
+
+           点击时立即更新 active 状态，避免依赖 scroll 事件
+          （smooth-scroll 到页面底部的 section 时可能不触发
+           足够多的 scroll 事件导致高亮丢失）。               */
 
         var sidebar = document.getElementById('sidebar-root');
         if (sidebar) {
@@ -53,7 +66,15 @@
                 if (!link) return;
                 e.preventDefault();
                 var target = document.querySelector(link.getAttribute('href'));
-                if (target) target.scrollIntoView({ behavior: 'smooth' });
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    /* 立即高亮被点击的链接，消除 scroll 事件延迟/丢失 */
+                    var clickedHref = link.getAttribute('href');
+                    var allLinks = document.querySelectorAll('.nav-link');
+                    allLinks.forEach(function (l) {
+                        l.classList.toggle('active', l.getAttribute('href') === clickedHref);
+                    });
+                }
             });
         }
 

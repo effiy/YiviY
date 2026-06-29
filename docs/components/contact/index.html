@@ -1,0 +1,11 @@
+<template id="contact-template">
+    <section id="contact">
+        <h2>{{ title }}</h2>
+        <ul class="contact-list">
+            <li v-for="(ch, cIdx) in channels" :key="cIdx" v-html="ch.html"></li>
+        </ul>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

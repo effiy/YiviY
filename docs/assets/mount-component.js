@@ -36,7 +36,7 @@ function getKnownLangCodes() {
     if (window.VL_LANG && window.VL_LANG.available) {
         return window.VL_LANG.available.map(function (l) { return l.code; });
     }
-    return ['en', 'zh-CN', 'zh-TW', 'ja', 'es', 'ru', 'fr'];
+    return ['en', 'zh-CN'];
 }
 
 /**

@@ -1,0 +1,14 @@
+<template id="license-template">
+    <section id="license">
+        <h2>{{ title }}</h2>
+        <p>{{ content }}</p>
+        <p>
+            <template v-for="(proj, pIdx) in constants.thanks" :key="proj.name">
+                <a :href="proj.url" target="_blank">{{ proj.name }}</a><span v-if="pIdx < constants.thanks.length - 1">, </span>
+            </template>
+        </p>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

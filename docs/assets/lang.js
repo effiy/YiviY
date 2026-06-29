@@ -27,12 +27,7 @@
 
     var AVAILABLE = [
         { code: 'en',    label: 'English',    native: 'English',   emoji: '🇬🇧' },
-        { code: 'zh-CN', label: '简体中文',  native: '简体中文', emoji: '🇨🇳' },
-        { code: 'zh-TW', label: '繁體中文',  native: '繁體中文', emoji: '🇭🇰' },
-        { code: 'ja',    label: '日本語',    native: '日本語',   emoji: '🇯🇵' },
-        { code: 'es',    label: 'Español',   native: 'Español',  emoji: '🇪🇸' },
-        { code: 'ru',    label: 'Русский',   native: 'Русский',  emoji: '🇷🇺' },
-        { code: 'fr',    label: 'Français',  native: 'Français', emoji: '🇫🇷' }
+        { code: 'zh-CN', label: '简体中文',  native: '简体中文', emoji: '🇨🇳' }
     ];
 
     /* 构建 code → item 查找表 */
@@ -52,10 +47,7 @@
 
         /* 2. 浏览器语言 */
         var navLang = (navigator.language || '').toLowerCase();
-        if (navLang.indexOf('zh-tw') === 0 || navLang.indexOf('zh-hk') === 0) return 'zh-TW';
         if (navLang.indexOf('zh') === 0) return 'zh-CN';
-        var primary = navLang.split('-')[0];
-        if (LANG_MAP[primary]) return primary;
 
         /* 3. 默认值 */
         return DEFAULT_LANG;

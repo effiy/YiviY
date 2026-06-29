@@ -599,8 +599,7 @@ config.yaml  ←── 唯一配置源 (~140 行 YAML)
     <div class="diagram"><pre>
 translations/
 ├── translations.py     ← t("key") 查找 (无缓存，每次 json.load)
-├── en.json (fallback) / zh-CN.json / zh-HK.json
-├── ja.json / es.json / ru.json / fr.json</pre></div>
+├── en.json (fallback) / zh-CN.json</pre></div>
 
     <h3>8.3 文档站架构</h3>
     <p>文档站采用 <strong>Vue 3 CDN + data-include 声明式组件</strong> 架构。18 个组件遵循三元组模式 (index.html + data.js + index.js)，通过 CSS 变量 (--vl-doc-*) 统一设计语言。</p>

@@ -1,0 +1,11 @@
+<template id="limitations-template">
+    <section id="limitations">
+        <h2>{{ title }}</h2>
+        <ol class="limitations-list">
+            <li v-for="(item, iIdx) in items" :key="iIdx" v-html="item.html"></li>
+        </ol>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>

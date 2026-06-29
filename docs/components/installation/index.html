@@ -23,6 +23,58 @@
             </tr>
         </table>
         <p>All dependencies are installed automatically by <code>python setup_env.py</code> or <code>python install.py</code>.</p>
+
+        <!-- ── Installation ──────────────────────────────── -->
+        <h2>{{ install.title }}</h2>
+        <p v-html="install.helpNote.html"></p>
+
+        <div class="callout callout-warning">
+            <p><strong>{{ install.cuda.label }}</strong> {{ install.cuda.intro }}</p>
+            <ol class="callout-list">
+                <li v-for="(step, sIdx) in install.cuda.steps" :key="sIdx" v-html="step.html"></li>
+            </ol>
+        </div>
+
+        <div class="callout callout-warning">
+            <p><strong>{{ install.ffmpeg.label }}</strong> {{ install.ffmpeg.intro }}</p>
+            <ul class="callout-list">
+                <li v-for="(inst, iIdx) in install.ffmpeg.installs" :key="iIdx">
+                    <strong>{{ inst.platform }}:</strong> <code>{{ inst.command }}</code>
+                    <span v-if="inst.via"> ({{ inst.via }})</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- ── Method: uv (Recommended) ──────────────────── -->
+        <h3>{{ methods.uv.title }}</h3>
+        <p v-html="methods.uv.intro.html"></p>
+        <ol class="install-steps">
+            <li v-for="(step, sIdx) in methods.uv.steps" :key="sIdx">
+                <p>{{ step.desc }}</p>
+                <pre><code>{{ step.command }}</code></pre>
+            </li>
+        </ol>
+        <p class="alt-note">{{ methods.uv.alt }}</p>
+
+        <!-- ── Method: Conda ─────────────────────────────── -->
+        <h3>{{ methods.conda.title }}</h3>
+        <div class="callout callout-warning">
+            <p v-html="methods.conda.warning.html"></p>
+        </div>
+        <details>
+            <summary>{{ methods.conda.summary }}</summary>
+            <ol class="install-steps">
+                <li v-for="(step, sIdx) in methods.conda.steps" :key="sIdx">
+                    <p>{{ step.desc }}</p>
+                    <pre><code>{{ step.command }}</code></pre>
+                </li>
+            </ol>
+        </details>
+
+        <!-- ── Docker ────────────────────────────────────── -->
+        <h3>{{ methods.docker.title }}</h3>
+        <p>{{ methods.docker.intro }}</p>
+        <pre><code>{{ methods.docker.commands.join('\n') }}</code></pre>
     </section>
 </template>
 

@@ -25,49 +25,4 @@ window.FOOTER_CONFIG = {
         ],
         meta: '由 VideoLingo 团队用 ❤️ 构建'
     },
-    'zh-TW': {
-        tagline: 'VideoLingo — 連接世界每一幀',
-        license: 'Apache 2.0 授權條款',
-        links: [
-            { label: 'GitHub',        href: 'https://github.com/Huanshere/VideoLingo' },
-            { label: 'videolingo.io', href: 'https://videolingo.io' }
-        ],
-        meta: '由 VideoLingo 團隊用 ❤️ 構建'
-    },
-    ja: {
-        tagline: 'VideoLingo — フレームごとに世界をつなぐ',
-        license: 'Apache 2.0 ライセンス',
-        links: [
-            { label: 'GitHub',        href: 'https://github.com/Huanshere/VideoLingo' },
-            { label: 'videolingo.io', href: 'https://videolingo.io' }
-        ],
-        meta: 'VideoLingo チームが ❤️ を込めて作成'
-    },
-    es: {
-        tagline: 'VideoLingo — Conecta el mundo, cuadro a cuadro',
-        license: 'Licencia Apache 2.0',
-        links: [
-            { label: 'GitHub',        href: 'https://github.com/Huanshere/VideoLingo' },
-            { label: 'videolingo.io', href: 'https://videolingo.io' }
-        ],
-        meta: 'Creado con ❤️ por el equipo de VideoLingo'
-    },
-    ru: {
-        tagline: 'VideoLingo — Соединяем мир, кадр за кадром',
-        license: 'Лицензия Apache 2.0',
-        links: [
-            { label: 'GitHub',        href: 'https://github.com/Huanshere/VideoLingo' },
-            { label: 'videolingo.io', href: 'https://videolingo.io' }
-        ],
-        meta: 'Создано с ❤️ командой VideoLingo'
-    },
-    fr: {
-        tagline: 'VideoLingo — Connectez le monde, image par image',
-        license: 'Licence Apache 2.0',
-        links: [
-            { label: 'GitHub',        href: 'https://github.com/Huanshere/VideoLingo' },
-            { label: 'videolingo.io', href: 'https://videolingo.io' }
-        ],
-        meta: 'Créé avec ❤️ par l\'équipe VideoLingo'
-    }
 };
