@@ -13,7 +13,7 @@ Reports benefit from score tags, methodology badges, dimension counts, and dated
     nameHref: 'views/health-report/index.html',
     nameTarget: '',
     badge: 'Report',
-    desc: '7-dimension static analysis · quantitative scoring · <strong>26 improvements</strong> identified · 56h governance roadmap',
+    desc: '7-dimension static analysis · quantitative scoring · <strong>26 improvements</strong> · 56h governance roadmap',
     tags: [
         { text: '58 / 100', modifier: 'warn' },
         { text: '7 dimensions', modifier: 'info' },
@@ -45,7 +45,7 @@ Reports benefit from score tags, methodology badges, dimension counts, and dated
     badge: 'Report',
     desc: 'OWASP Top 10 coverage · dependency scan · <strong>3 critical</strong> findings · 12 total vulnerabilities',
     tags: [
-        { text: '3 critical', modifier: 'fail' },
+        { text: '3 critical', modifier: 'red' },
         { text: 'OWASP', modifier: 'purple' },
         { text: '12 findings', modifier: 'warn' }
     ],
@@ -60,7 +60,7 @@ Reports benefit from score tags, methodology badges, dimension counts, and dated
     badge: 'Report',
     desc: 'Lighthouse 95/100 · <strong>Core Web Vitals all green</strong> · 1.2s FCP · 0.08s CLS',
     tags: [
-        { text: '95 / 100', modifier: 'pass' },
+        { text: '95 / 100', modifier: 'green' },
         { text: 'Lighthouse', modifier: 'purple' },
         { text: '1.2s FCP', modifier: 'info' }
     ],
@@ -73,23 +73,34 @@ Reports benefit from score tags, methodology badges, dimension counts, and dated
 Feature cards are typically rendered in grids. Keep descriptions tight, use `links: []` to suppress default links, and badge only the core features.
 
 ```javascript
-// Core features with badges
+// Core features with badges + tags (Standard tier)
 [
-    { name: '🎙️ WhisperX',     badge: 'Core', desc: 'Word-level and low-illusion subtitle recognition with WhisperX',                                        links: [] },
-    { name: '📝 NLP Split',    badge: 'Core', desc: 'NLP and AI-powered subtitle segmentation for natural reading flow',                                      links: [] },
-    { name: '📚 Term Base',    badge: 'Core', desc: 'Custom + AI-generated terminology database ensuring translation consistency',                             links: [] },
-    { name: '🔄 3-Step T-R-A', badge: 'Core', desc: 'Translate → Reflect → Adapt pipeline for cinematic translation quality',                                   links: [] },
-    { name: '✅ Netflix 1-Line',badge: 'Core', desc: 'Netflix-standard single-line subtitles only — no multi-line clutter',                                      links: [] },
-    { name: '🗣️ Multi-TTS',    badge: 'Core', desc: 'Dubbing via GPT-SoVITS, Azure TTS, OpenAI TTS, Edge TTS, and more',                                        links: [] },
+    { name: '🎙️ WhisperX',     badge: 'Core', desc: 'Word-level subtitle recognition · <strong>low-illusion</strong> output · speaker diarization · multi-language',
+      tags: [{ text: 'word-level', modifier: 'accent' }, { text: 'diarization', modifier: 'info' }], links: [] },
+    { name: '📝 NLP Split',    badge: 'Core', desc: 'NLP and AI-powered subtitle segmentation · <strong>natural reading flow</strong> · sentence-boundary detection',
+      tags: [{ text: 'AI-driven', modifier: 'purple' }, { text: 'sentence-aware', modifier: 'info' }], links: [] },
+    { name: '📚 Term Base',    badge: 'Core', desc: 'Custom + AI-generated terminology · <strong>translation consistency</strong> · domain-specific glossaries',
+      tags: [{ text: 'AI + Custom', modifier: 'purple' }, { text: 'glossary', modifier: 'info' }], links: [] },
+    { name: '🔄 3-Step T-R-A', badge: 'Core', desc: 'Translate → Reflect → Adapt pipeline · <strong>cinematic-quality</strong> translation · self-critique loop',
+      tags: [{ text: '3-stage', modifier: 'purple' }, { text: 'self-critique', modifier: 'accent' }], links: [] },
+    { name: '✅ Netflix 1-Line',badge: 'Core', desc: 'Netflix-standard single-line subtitles · <strong>no multi-line clutter</strong> · character-length check',
+      tags: [{ text: 'Netflix', modifier: 'accent' }, { text: '1-line', modifier: 'info' }], links: [] },
+    { name: '🗣️ Multi-TTS',    badge: 'Core', desc: 'Multi-engine TTS dubbing · <strong>GPT-SoVITS</strong> · Azure · OpenAI · Edge · voice cloning',
+      tags: [{ text: '5 engines', modifier: 'cyan' }, { text: 'voice-clone', modifier: 'accent' }], links: [] },
 ]
 
-// Supporting features (no badge)
+// Supporting features with tags (Standard tier — no badge)
 [
-    { name: '🚀 One-Click Start', desc: 'Launch and process in Streamlit with a single command',                                                  links: [] },
-    { name: '🌍 i18n UI',         desc: 'Multi-language support throughout the Streamlit interface',                                              links: [] },
-    { name: '📝 Resume',          desc: 'Detailed logging with progress checkpointing — pause and resume anytime',                                 links: [] },
-    { name: '🔍 Model Picker',    desc: 'Auto-fetch full model list from your provider API, with search and filter',                              links: [] },
-    { name: '⏯️ Task Control',    desc: 'Pause, resume, or stop processing at any pipeline step',                                                   links: [] }
+    { name: '🚀 One-Click Start', desc: 'Streamlit one-click launch · <strong>zero-config</strong> · real-time progress visualization',
+      tags: [{ text: 'zero-config', modifier: 'accent' }, { text: 'Streamlit', modifier: 'info' }], links: [] },
+    { name: '🌍 i18n UI',         desc: 'Multi-language Streamlit UI · <strong>zh-CN · en · ja · zh-TW</strong> · auto-detect browser locale',
+      tags: [{ text: '4 languages', modifier: 'cyan' }, { text: 'auto-detect', modifier: 'info' }], links: [] },
+    { name: '📝 Resume',          desc: 'Detailed logging with checkpointing · <strong>pause and resume</strong> anytime · progress recovery',
+      tags: [{ text: 'checkpoint', modifier: 'info' }, { text: 'recovery', modifier: 'accent' }], links: [] },
+    { name: '🔍 Model Picker',    desc: 'Auto-fetch full model list from API · <strong>search and filter</strong> · model comparison',
+      tags: [{ text: 'auto-fetch', modifier: 'accent' }, { text: 'search', modifier: 'info' }], links: [] },
+    { name: '⏯️ Task Control',    desc: 'Pause, resume, or stop at any step · <strong>real-time task control</strong> · graceful state transitions',
+      tags: [{ text: 'real-time', modifier: 'accent' }, { text: '3 states', modifier: 'cyan' }], links: [] }
 ]
 ```
 
@@ -102,7 +113,7 @@ Tool cards should include language/ecosystem tags and links to source/docs.
     name: 'yt-dlp Wrapper',
     nameHref: 'https://github.com/yt-dlp/yt-dlp',
     badge: 'OSS',
-    desc: 'Feature-complete YouTube downloader — <strong>1,200+ supported sites</strong> · format selection · subtitle extraction · sponsorblock integration',
+    desc: 'Feature-complete YouTube downloader · <strong>1,200+ supported sites</strong> · format selection · subtitle extraction · sponsorblock integration',
     tags: [
         { text: 'Python', modifier: 'info' },
         { text: 'CLI', modifier: 'info' },
@@ -125,7 +136,7 @@ Project cards summarize a repo for discovery. Include license, stars, primary la
     name: 'VideoLingo',
     nameHref: 'https://github.com/Huanshere/VideoLingo',
     badge: 'OSS',
-    desc: 'All-in-one video translation, localization & dubbing — <strong>Netflix-quality subtitles</strong> · AI dubbing · Streamlit UI · i18n support',
+    desc: 'All-in-one video translation, localization & dubbing · <strong>Netflix-quality subtitles</strong> · AI dubbing · Streamlit UI · i18n support',
     tags: [
         { text: 'Python', modifier: 'info' },
         { text: 'Streamlit', modifier: 'info' },
@@ -169,12 +180,12 @@ Doc page cards for navigation grids. Use `nameTarget: ''` for same-page fragment
 
 ```javascript
 [
-    { name: 'Quick Start',      nameHref: '#quick-start',  nameTarget: '', desc: 'Get running in 3 minutes with uv or Docker — from zero to translated video' },
-    { name: 'Configuration',    nameHref: '#config',       nameTarget: '', desc: 'Every knob in config.yaml explained — LLM, Whisper, TTS, output settings' },
-    { name: 'API Setup',        nameHref: '#api-config',   nameTarget: '', desc: 'LLM providers · Whisper variants · TTS engines — all APIs documented' },
-    { name: 'Dubbing Guide',    nameHref: '#dubbing',      nameTarget: '', desc: '9 TTS engines compared side-by-side with quality assessments and pro tips' },
-    { name: 'Troubleshooting',  nameHref: '#troubleshooting', nameTarget: '', desc: 'Common pitfalls and their fixes — dependency conflicts, API errors, CUDA issues' },
-    { name: 'Pipeline Deep Dive', nameHref: '#workflow',   nameTarget: '', desc: 'Step-by-step walkthrough: download → transcribe → segment → translate → dub' }
+    { name: 'Quick Start',      nameHref: '#quick-start',  nameTarget: '', desc: 'Get running in 3 minutes with uv or Docker · <strong>zero to translated video</strong>' },
+    { name: 'Configuration',    nameHref: '#config',       nameTarget: '', desc: 'Every knob in config.yaml explained · LLM · Whisper · TTS · output settings' },
+    { name: 'API Setup',        nameHref: '#api-config',   nameTarget: '', desc: 'LLM providers · Whisper variants · TTS engines · <strong>all APIs documented</strong>' },
+    { name: 'Dubbing Guide',    nameHref: '#dubbing',      nameTarget: '', desc: '<strong>9 TTS engines</strong> compared side-by-side · quality assessments · pro tips' },
+    { name: 'Troubleshooting',  nameHref: '#troubleshooting', nameTarget: '', desc: 'Common pitfalls and their fixes · dependency conflicts · API errors · CUDA issues' },
+    { name: 'Pipeline Deep Dive', nameHref: '#workflow',   nameTarget: '', desc: 'Step-by-step walkthrough: <strong>download · transcribe · segment · translate · dub</strong>' }
 ]
 ```
 
@@ -185,10 +196,10 @@ Metric cards with large numbers and trend indicators.
 ```javascript
 {
     name: 'Monthly Active Users',
-    desc: 'Global MAU across all platforms — <strong>+23% MoM</strong> · iOS 45% · Android 38% · Web 17%',
+    desc: 'Global MAU across all platforms · <strong>+23% MoM</strong> · iOS 45% · Android 38% · Web 17%',
     tags: [
         { text: '142K', modifier: 'accent' },
-        { text: '+23% MoM', modifier: 'pass' },
+        { text: '+23% MoM', modifier: 'green' },
         { text: '3 platforms', modifier: 'info' }
     ],
     meta: 'June 2026 · vs. 115K May 2026',
@@ -231,7 +242,7 @@ desc: 'A tool for processing videos and making subtitles' // Too vague — no sp
 
 ### ✅ Specific, scannable descriptions
 ```javascript
-desc: 'All-in-one video translation — <strong>Netflix-quality subtitles</strong> · AI dubbing · multi-TTS · Streamlit UI'
+desc: 'All-in-one video translation · <strong>Netflix-quality subtitles</strong> · AI dubbing · multi-TTS · Streamlit UI'
 ```
 
 ### ❌ Tags as instructions
@@ -251,7 +262,7 @@ tags: [{ text: '58/100', modifier: 'info' }, { text: 'Critical', modifier: 'info
 
 ### ✅ Semantic modifier usage
 ```javascript
-tags: [{ text: '58/100', modifier: 'warn' }, { text: '3 critical', modifier: 'fail' }]
+tags: [{ text: '58/100', modifier: 'warn' }, { text: '3 critical', modifier: 'red' }]
 ```
 
 ### ❌ Missing links: [] when defaults would be useful
@@ -266,4 +277,63 @@ tags: [{ text: '58/100', modifier: 'warn' }, { text: '3 critical', modifier: 'fa
     { label: '源码', href: 'https://github.com/user/repo', target: '_blank' },
     { label: '文档', href: 'https://repo.readthedocs.io', target: '_blank' }
 ]}
+```
+### ❌ Missing tags on feature cards
+```javascript
+// Feature cards with no tags — violates Standard tier requirement
+{ name: '🎥 yt-dlp', desc: 'YouTube video download via yt-dlp · <strong>1,200+ sites</strong> · format selection',
+  links: [
+      { label: '清单', href: '...', target: '_blank' },
+      { label: '架构', href: '...', target: '_blank' },
+      { label: '图谱', href: '...', target: '_blank' },
+      { label: '源码', href: '...', target: '_blank' },
+      { label: '测试', href: '...', target: '_blank' },
+      { label: '演示', href: '...', target: '_blank' },
+      { label: '审查', href: '...', target: '_blank' }
+  ]}
+```
+
+### ✅ Tags required, links kept lean
+```javascript
+// Feature card with tags + lean links (Standard tier)
+{ name: '🎥 yt-dlp', desc: 'YouTube video download via yt-dlp · <strong>1,200+ sites</strong> · format selection · subtitle extraction',
+  tags: [{ text: '1.2k sites', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
+  // For internal cards: use links: null to get defaults
+  // For external tools: use 3-5 custom links
+  links: [
+      { label: '源码', href: 'https://github.com/yt-dlp/yt-dlp', target: '_blank' },
+      { label: '文档', href: 'https://github.com/yt-dlp/yt-dlp#readme', target: '_blank' }
+  ]}
+```
+
+### ❌ Duplicating 7 baseline links per card in a grid
+```javascript
+// Every card repeats the same 7 links — visual noise, maintenance burden
+{ name: 'Card 1', desc: '...', links: [
+    { label: '清单', href: '...' }, { label: '架构', href: '...' },
+    { label: '图谱', href: '...' }, { label: '源码', href: '...' },
+    { label: '测试', href: '...' }, { label: '演示', href: '...' },
+    { label: '审查', href: '...' }
+]},
+{ name: 'Card 2', desc: '...', links: [
+    { label: '清单', href: '...' }, { label: '架构', href: '...' },
+    { label: '图谱', href: '...' }, { label: '源码', href: '...' },
+    { label: '测试', href: '...' }, { label: '演示', href: '...' },
+    { label: '审查', href: '...' }
+]}
+// ... repeat 10 more times
+```
+
+### ✅ Use `links: null` for defaults, customize only when different
+```javascript
+// Internal cards: fall back to defaults
+{ name: '📝 NLP Split', desc: '...', tags: [...], links: null },
+{ name: '📚 Term Base', desc: '...', tags: [...], links: null },
+// External tool card: customize with 3-5 tool-specific links
+{ name: '🎥 yt-dlp', desc: '...', tags: [...],
+  links: [
+      { label: '源码', href: 'https://github.com/yt-dlp/yt-dlp', target: '_blank' },
+      { label: '文档', href: 'https://github.com/yt-dlp/yt-dlp#readme', target: '_blank' },
+      { label: 'Wiki', href: 'https://github.com/yt-dlp/yt-dlp/wiki', target: '_blank' }
+  ]}
 ```

@@ -49,10 +49,15 @@
     .vl-doc h2 { font-size: 20px; margin-top: 32px; }
     .vl-doc h3 { font-size: 16px; }
 
-    /* 移动端卡片网格单列 */
+    /* 移动端卡片网格单列 · 间距收紧 */
     .vl-doc .card-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 16px;
+        margin: 20px 0;
+    }
+    .vl-doc .card-grid [class*="-feature-slot"],
+    .vl-doc .card-grid [class*="-card-slot"] {
+        min-height: 0;
     }
 }
 
@@ -67,6 +72,10 @@
 @media (max-width: 374px) {
     .vl-doc .main {
         padding: 56px 14px 32px;
+    }
+    .vl-doc .card-grid {
+        gap: 12px;
+        margin: 16px 0;
     }
     .vl-doc pre {
         padding: 12px 14px;

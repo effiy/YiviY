@@ -2,17 +2,15 @@
  * Intro
  * intro 组件专属样式：
  *   - .readme-hero / .readme-title / .readme-subtitle / .trendshift-*
- *   - .feature-grid / .intro-feature-slot / .tagline / .hero-cta
+ *   - .intro-feature-slot / .intro-card-slot / .tagline / .hero-cta
  *   - .intro-lead  引导段大字
  * 跨 section 共享的 .card / .card-grid / .badge 等已统一收敛到
  * docs/styles/base.css，不在此处重复。
  *
  * v4 改进：
- *   - feature-list 重写为 feature-grid 卡片网格（YrySceneCard 渲染）
- *   - 复用 docs/styles/base.css 中的 .card-grid（repeat(auto-fill, minmax(...)))
- *   - feature-grid 增加紧凑列宽 minmax(180px, 1fr) 与较窄 gap，匹配
- *     12 项特性卡的密度
- *   - feature-grid 节点交错入场动画（--card-delay 由 Vue 模板按 fIdx 线性
+ *   - feature-list 重写为 YrySceneCard 卡片网格，与 site cards 共用 .card-grid
+ *   - 复用 docs/styles/base.css 中的 .card-grid（repeat(auto-fill, minmax(280px, 1fr))）
+ *   - 卡片节点交错入场动画（--card-delay 由 Vue 模板按 fIdx 线性
  *     推算后通过 :style 注入，YrySceneCard 通过 CSS variable 消费，
  *     取代原 12 条 nth-child 规则）
  *
@@ -160,20 +158,11 @@
 }
 
 /* ═══════════════════════════════════════════════════════
- * Feature Grid（YrySceneCard 渲染的 12 项特性卡）
+ * Feature Slots（YrySceneCard 渲染的 12 项特性卡）
  * ───────────────────────────────────────────────────────
- * 复用 docs/styles/base.css 中的 .card-grid 布局，
- * 这里仅做密度与间距的差异化覆盖：
- *   · 列宽更紧凑（180px vs 260px）— 12 项需要更密的网格
- *   · gap 略小（12px vs 16px）— 紧凑视觉密度
+ * 复用 .card-grid 布局（base.css），与下方 site cards 统一列宽与间距。
+ * 仅保留 slot 骨架屏样式。
  * ═══════════════════════════════════════════════════════ */
-.vl-doc #intro .feature-grid {
-    /* 覆盖 base.css 的 .card-grid 列宽：12 项特性需要更紧凑的网格 */
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
-    margin: 20px 0;
-    animation: vl-doc-fade-in 0.4s var(--vl-doc-ease-out) 0.36s both;
-}
 
 /* 特性卡 slot 骨架屏 — 卡片异步加载时显示 shimmer */
 .vl-doc .intro-feature-slot:empty {
@@ -251,10 +240,12 @@
 }
 
 /* ═══════════════════════════════════════════════════════
- * Card Grid
+ * Card Grid — 入场动画
+ * 卡片自身已有 YrySceneCard 驱动 --card-delay 交错动画,
+ * 此处仅需容器淡入,延迟略早于首卡动画基线。
  * ═══════════════════════════════════════════════════════ */
 .vl-doc #intro .card-grid {
-    animation: vl-doc-fade-in 0.4s var(--vl-doc-ease-out) 0.92s both;
+    animation: vl-doc-fade-in 0.4s var(--vl-doc-ease-out) 0.30s both;
 }
 
 /* 卡片插槽骨架屏 — 卡片异步加载时显示 shimmer */
@@ -286,7 +277,6 @@
     .vl-doc .readme-hero,
     .vl-doc .readme-hero > *,
     .vl-doc #intro > h2,
-    .vl-doc #intro .feature-grid,
     .vl-doc .tagline,
     .vl-doc #intro .demo-grid,
     .vl-doc #intro .card-grid,

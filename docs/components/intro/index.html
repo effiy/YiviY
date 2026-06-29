@@ -51,14 +51,14 @@
         </h2>
 
         <!--
-            Feature 卡片网格：每个 .intro-feature-slot 是 YrySceneCard 的挂载点。
-            Vue 仅负责渲染容器骨架，由 index.js 的 mounted 钩子调用
-            window.YrySceneCard.mount() 注入实际卡片内容。
-            features 每项为 { name, desc, badge?, links: [] }（对齐 YrySceneCard props）。
+            Feature 卡片网格：与下方 site cards 共用 .card-grid 布局。
+            每个 .intro-feature-slot 是 YrySceneCard 的挂载点，
+            由 index.js 的 mounted 钩子调用 window.YrySceneCard.mount() 注入。
+            features 每项为 { name, desc, badge?, tags, links }（对齐 YrySceneCard props）。
             --card-delay 在 :style 内按 index 线性递增 (基线 0.40s + 40ms * fIdx)，
-            YrySceneCard 读取该变量驱动交错入场动画，省去 12 条 nth-child CSS 规则。
+            YrySceneCard 读取该变量驱动交错入场动画。
         -->
-        <div class="card-grid feature-grid">
+        <div class="card-grid">
             <div v-for="(feat, fIdx) in overview.features"
                  :key="fIdx"
                  :id="'intro-feature-' + fIdx"

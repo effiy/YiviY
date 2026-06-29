@@ -14,6 +14,57 @@ Takes raw content (tool descriptions, feature blurbs, project summaries, agent s
 - Passed directly to `window.YrySceneCard.mount(data, element)`
 - Written as a standalone `data.js` for a new page or component
 
+## The Code Health Report Standard
+
+The **Code Health Report** card is the canonical reference — every `yry-scene-card` should match its **richness, precision, and structural completeness**. Study it before generating any card data:
+
+```javascript
+{
+    name: 'Code Health Report',
+    nameHref: 'views/health-report/index.html',
+    nameTarget: '',
+    badge: 'Report',
+    desc: '7-dimension static analysis · quantitative scoring · <strong>26 improvements</strong> identified · 56h governance roadmap',
+    tags: [
+        { text: '58 / 100', modifier: 'warn' },
+        { text: '7 dimensions', modifier: 'info' },
+        { text: '26 actions', modifier: 'cyan' }
+    ],
+    meta: 'Assessment date 2026-06-28 · Technical Due Diligence'
+}
+```
+
+### Why This Is the Standard
+
+| Aspect | What It Demonstrates |
+|--------|---------------------|
+| **`desc`** | Uses `·` separators (not commas) · embeds key metrics inline · `<strong>` on the actionable insight · ends with a concrete outcome ("56h roadmap") |
+| **`tags`** | Exactly 3 tags — the sweet spot · every tag has a **semantic** modifier (`warn` for score, `info` for dimensions, `cyan` for count) · tags are **self-describing classifiers**, not instructions |
+| **`badge`** | `'Report'` signals the card type at a glance — uppercase, scannable |
+| **`meta`** | Monospace-provenance: date + methodology context · uses `·` separators |
+| **`nameHref` + `nameTarget: ''`** | Links to a dedicated detail page in the same window — the card is a **gateway**, not a dead end |
+| **No `links` override** | Falls back to data.js defaults (清单/架构/图谱/源码/测试/演示/审查) — the right call for project-internal reports |
+
+### Standard Rules (Apply to Every Card)
+
+1. **`desc` must use `·` (U+00B7) as separator** — never commas, never plain spaces between features. At least one `<strong>` for the key takeaway.
+2. **Every Rich and Standard tier card MUST have 2–4 `tags`** with semantic modifiers. A Standard/Rich card without tags is incomplete. Not everything is `info` — match the modifier to the meaning: scores → `warn`/`green`/`red`, methodology → `purple`, counts → `cyan`, highlights → `accent`.
+3. **Quantify everything** — "7 dimensions" not "multiple dimensions", "26 actions" not "several fixes", "56h roadmap" not "improvement plan".
+4. **Every card has a `meta` or a clear reason not to** — provenance matters. Dates, versions, contexts.
+5. **Badges are type classifiers** — `'Report'`, `'Core'`, `'Agent'`, `'OSS'`, `'Beta'`. Uppercase, one word, scannable.
+
+### Card Quality Tiers
+
+Not every card needs every field, but the floor rises with context:
+
+| Tier | Use Case | Minimum Fields | Target Fields |
+|------|----------|---------------|---------------|
+| **Rich** | Reports, audits, tools, projects, agents | name, desc (with `·` + `<strong>`), **tags (2–4, semantic modifiers, required)**, badge | + meta, + nameHref, + custom links |
+| **Standard** | Feature grids, capability cards | name, desc (with `·` + `<strong>`), **tags (2–4, semantic modifiers, required)** | + badge (if core), + meta |
+| **Nav** | Documentation page navigation | name, nameHref, nameTarget: `''`, desc (concise, `·` for multiple points) | + badge (if new/special), + tags |
+
+**Key principle**: A nav card should never be just `{ name, nameHref, desc: 'one vague sentence' }`. Even the simplest nav card needs specificity — "Get running in 3 minutes with uv or Docker" beats "Quick start guide".
+
 ## The yry-scene-card Component
 
 The component lives at `cdn/yry-scene-card/` and is a Vue 3 asset card component. It renders a dark-themed card with:
@@ -33,10 +84,21 @@ The component lives at `cdn/yry-scene-card/` and is a Vue 3 asset card component
 | `nameTarget` | String | No | Link target, default `_blank` (new window). Use `''` for same-window |
 | `badge` | String | No | Small badge after title (e.g. `"新"`, `"核心"`, `"Report"`) |
 | `desc` | String | No | Description text. Supports **HTML** — use `<strong>`, `<br>`, `<code>` for rich formatting |
-| `tags` | Array | No | Tag chips: `[{ text, modifier, href? }]`. Modifier: `info` (default), `accent`, `warn`, `red`, `purple`, `cyan`, `pass`, `fail` |
+| `tags` | Array | No | Tag chips: `[{ text, modifier, href? }]`. Modifier: `info` (default), `accent`, `warn`, `red`, `purple`, `cyan`, `green` |
 | `meta` | String | No | Monospace footer text, good for dates/versions/stats |
 | `demo` | String | No | Demo URL. Auto-appended as "演示" link (deduped) |
 | `links` | Array | No | Bottom links: `[{ icon, label, href, target }]`. `null` = use data.js defaults. `[]` = hide all links. `[...]` = custom override. `{name}` in href is replaced with URL-encoded `props.name` |
+
+#### Links Convention
+
+When customizing `links`, prefer lean, card-specific links over duplicating the 7 baseline defaults:
+
+- **Feature grid cards** → `links: []` (hide defaults) — tags alone provide enough classification; bottom links add visual noise in a dense grid
+- **External tool cards** (yt-dlp, WhisperX) → 3–5 custom links pointing to that tool's own repo, docs, and community
+- **Internal VideoLingo cards** → `links: null` (use defaults) — the 7 baseline links (清单/架构/图谱/源码/测试/演示/审查) already point to the right places
+- **Report/audit cards** → 2–4 custom links to the report detail page, data sources, and methodology docs
+
+**Never** copy the same 7–9 link objects across every card in a grid — it's visual noise, a maintenance burden, and defeats the purpose of per-card link customization.
 
 ### Tags Convention
 
@@ -76,17 +138,17 @@ If the user provides raw content, don't ask everything at once — extract what 
 
 ### Step 2: Analyze and Extract
 
-For each piece of content, identify:
+For each piece of content, identify what belongs in each slot. **Reference the Code Health Report standard** to determine what level of richness is appropriate:
 
 1. **Core identity** — What's the one-line essence? → `name`
 2. **Relationship** — Does it link somewhere? → `nameHref`, `nameTarget`
-3. **Notability** — Is it new / core / featured? → `badge`
-4. **Description** — What does it do, why does it matter? → `desc`
-5. **Classifiers** — What categories, scores, dimensions? → `tags`
-6. **Provenance** — When, which version, what context? → `meta`
+3. **Notability** — Is it new / core / featured? → `badge` (type classifier: `'Report'`, `'Core'`, `'Agent'`, `'OSS'`)
+4. **Description** — What does it do, why does it matter? → `desc` (must use `·` + `<strong>` per standard)
+5. **Classifiers** — What categories, scores, dimensions? → `tags` (2–4, semantic modifiers required)
+6. **Provenance** — When, which version, what context? → `meta` (required for Rich tier)
 7. **Resources** — Where can users go next? → `links`, `demo`
 
-If the raw content is thin, enrich it with professional language — add specificity, quantify where possible, use consistent terminology.
+If the raw content is thin, enrich it with professional language — add specificity, quantify where possible, use consistent terminology. **Every card should aim for at least the Standard tier.**
 
 ### Step 3: Generate the Data
 
@@ -94,28 +156,46 @@ Produce a JavaScript object following the yry-scene-card props schema. Every car
 
 #### Writing the `desc` Field
 
-The description is the heart of the card. Follow these rules:
+The description is the heart of the card. **The Code Health Report desc is the canonical pattern:**
 
-- **Lead with the what** — "7-dimension static analysis · quantitative scoring · 26 improvements · 56h roadmap"
-- **Use `·` (middle dot, U+00B7) as separator** between dimensions or features — it reads cleaner than commas
+```
+'7-dimension static analysis · quantitative scoring · <strong>26 improvements</strong> identified · 56h governance roadmap'
+```
+
+Follow these rules for every card:
+
+- **Lead with the what** — the primary dimension or capability first
+- **Use `·` (middle dot, U+00B7) as separator** — never commas, never plain spaces between features. This is the single most visible consistency marker across all cards.
+- **Always include at least one `<strong>`** (Rich and Standard tiers) — the key takeaway or most impressive metric gets emphasis
 - **Support HTML**: use `<strong>` for emphasis, `<br>` for line breaks, `<code>` for technical terms
 - **Keep it concise**: 1–2 lines max. Cards are scannable, not encyclopedic
 - **Be specific**: "9 TTS engines compared with pro tips" beats "Multiple TTS support"
+- **End with outcome or scale**: "56h governance roadmap", "5-week implementation plan", "Netflix-quality subtitles"
 
 #### Writing the `tags` Field
 
-Tags give at-a-glance classification. Each tag needs:
-- `text` — short label (2–10 chars ideal, max ~15)
-- `modifier` — semantic color:
-  - `info` (default blue) — neutral classification
-  - `accent` (yellow) — highlighted/featured
-  - `warn` (orange) — caution/score
-  - `red` — negative/risk
-  - `purple` — methodology
-  - `cyan` — count/action
-  - `pass` (green) — positive/verified
-  - `fail` (red variant) — negative/failed
-- `href` (optional) — make the tag clickable
+Tags give at-a-glance classification. **The Code Health Report tags are the canonical pattern** — exactly 3 tags, each with a distinct semantic modifier that matches its meaning:
+
+```javascript
+tags: [
+    { text: '58 / 100', modifier: 'warn' },     // score → warn (caution)
+    { text: '7 dimensions', modifier: 'info' },   // structure → info (neutral)
+    { text: '26 actions', modifier: 'cyan' }      // count → cyan (actionable)
+]
+```
+
+Each tag needs:
+- `text` — short label (2–15 chars). Must be a **self-describing classifier**, not an instruction. "7 dimensions" not "View details".
+- `modifier` — semantic color. **Audit every tag**: does the modifier match what the text means?
+  - `info` (default blue) — neutral classification: dimensions, languages, types
+  - `accent` (yellow) — highlighted/featured: key metrics, standout features
+  - `warn` (orange) — caution/score: numerical scores, medium-risk findings
+  - `red` — negative/risk/failure: score gaps ("5.6 → 7.9"), critical issues ("3 critical"), failed status
+  - `purple` — methodology/approach: "ATAM", "TDD", "AI-driven"
+  - `cyan` — count/action: "26 actions", "10 items"
+  - `green` — positive/verified: "95/100", "Verified"
+
+**Tag count rule**: 2–4 tags per card. 3 is the sweet spot. Each card's tag set should be a distinct "fingerprint" — no two cards should have identical tag configurations.
 
 #### Output Format
 
@@ -153,24 +233,29 @@ Ask if they want adjustments. Common iteration points:
 
 ## Design Principles
 
-### 1. Professional Precision
-Every card should feel like it was written by someone who deeply understands the subject. Use domain-appropriate terminology. Quantify when possible ("7 dimensions" not "multiple dimensions").
+### 1. The Code Health Report Baseline
+Every card you generate should pass the "Code Health Report test": if you placed your card next to the Code Health Report standard, would they feel like the same product? If your card is missing tags, has no `<strong>` emphasis, uses commas instead of `·`, or lacks specific numbers — it fails the test. **Start from the standard and remove only what the context genuinely doesn't need.**
 
-### 2. Scannable Structure
-Cards are read in grids. The eye scans: name → badge → tags → desc (roughly in that order). Make each layer independently informative — the name alone should give the gist, the tags alone should classify it.
+### 2. Professional Precision
+Every card should feel like it was written by someone who deeply understands the subject. Use domain-appropriate terminology. Quantify when possible ("7 dimensions" not "multiple dimensions", "56h roadmap" not "improvement plan", "5.6 → 7.9" not "score improved").
 
-### 3. Consistent Rhythm
-Use emoji prefixes on names for visual rhythm (🎥 🎙️ 📝 📚 🔄 ✅ 🗣️ 🚀 🌍 🔍 ⏯️). Use `·` separators in desc for feature lists. Keep tag counts consistent across similar cards.
+### 3. Scannable Structure
+Cards are read in grids. The eye scans: name → badge → tags → desc (roughly in that order). Make each layer independently informative — the name alone should give the gist, the tags alone should classify it. A card without tags is a missed opportunity for at-a-glance classification.
 
-### 4. Actionable Links
-Every card should answer "what next?" — either through `nameHref`, `links`, or `demo`. Don't leave the user at a dead end. The `links` array, when customized, should point to the most relevant 3–5 destinations for that specific card.
+### 4. Consistent Rhythm
+Use emoji prefixes on names for visual rhythm (🎥 🎙️ 📝 📚 🔄 ✅ 🗣️ 🚀 🌍 🔍 ⏯️). Use `·` separators in desc for feature lists — never commas, never plain spaces. Keep tag counts balanced (2–4 per card).
 
-### 5. Language Awareness
+### 5. Actionable Links
+Every card should answer "what next?" — either through `nameHref`, `links`, or `demo`. Don't leave the user at a dead end. The `links` array, when customized, should point to the most relevant 3–7 destinations for that specific card. For internal project pages, prefer `nameHref` + `nameTarget: ''` (same-window navigation to a detail view).
+
+### 6. Language Awareness
 When generating i18n data:
 - English: concise, direct, technical
 - Chinese (zh-CN): natural, slightly more descriptive
 - Japanese (ja): polite, precise, with katakana for technical terms
 - Other languages: match the natural cadence and technical conventions of that language
+
+**i18n consistency rule**: All languages must have the same card structure (same fields, same tags count, same links). Only the text content translates — badges, tag modifiers, and link URLs stay identical.
 
 ## Examples
 
@@ -202,12 +287,22 @@ When generating i18n data:
 **Output:**
 ```javascript
 [
-    { name: '🎥 yt-dlp',       desc: 'YouTube video download via yt-dlp',                              links: [] },
-    { name: '🎙️ WhisperX',     badge: 'Core', desc: 'Word-level and low-illusion subtitle recognition', links: [] },
-    { name: '📝 NLP Split',    badge: 'Core', desc: 'NLP and AI-powered subtitle segmentation',         links: [] },
-    { name: '📚 Term Base',    badge: 'Core', desc: 'Custom + AI-generated terminology for coherent translation', links: [] }
+    { name: '🎥 yt-dlp', desc: 'YouTube video download via yt-dlp · <strong>1,200+ sites</strong> · format selection · subtitle extraction',
+      tags: [{ text: '1.2k sites', modifier: 'accent' }, { text: 'Python', modifier: 'info' }],
+      links: [] },
+    { name: '🎙️ WhisperX', badge: 'Core', desc: 'Word-level subtitle recognition · <strong>low-illusion</strong> output · speaker diarization · multi-language',
+      tags: [{ text: 'word-level', modifier: 'accent' }, { text: 'diarization', modifier: 'info' }],
+      links: [] },
+    { name: '📝 NLP Split', badge: 'Core', desc: 'NLP and AI-powered subtitle segmentation · <strong>natural reading flow</strong> · sentence-boundary detection',
+      tags: [{ text: 'AI-driven', modifier: 'purple' }, { text: 'sentence-aware', modifier: 'info' }],
+      links: [] },
+    { name: '📚 Term Base', badge: 'Core', desc: 'Custom + AI-generated terminology · <strong>translation consistency</strong> · domain-specific glossaries',
+      tags: [{ text: 'AI + Custom', modifier: 'purple' }, { text: 'glossary', modifier: 'info' }],
+      links: [] }
 ]
 ```
+
+> **Standard compliance**: Each card has tags with semantic modifiers, `desc` uses `·` + `<strong>`, and `badge` marks only genuinely core features.
 
 ### Example 3: Project → Scene Card
 
@@ -219,7 +314,7 @@ When generating i18n data:
     name: 'VideoLingo',
     nameHref: 'https://github.com/Huanshere/VideoLingo',
     badge: 'OSS',
-    desc: 'All-in-one video translation, localization & dubbing tool — <strong>Netflix-quality subtitles</strong> with AI dubbing, spanning download → transcription → translation →配音',
+    desc: 'All-in-one video translation, localization & dubbing — <strong>Netflix-quality subtitles</strong> · AI dubbing · multi-TTS · Streamlit UI · i18n',
     tags: [
         { text: 'Python', modifier: 'info' },
         { text: 'Streamlit', modifier: 'info' },
@@ -234,6 +329,8 @@ When generating i18n data:
 }
 ```
 
+> **Standard compliance**: Rich tier — tags with semantic modifiers, `meta` for provenance, `badge` classifies the card type, custom `links` point to the most relevant 2 destinations.
+
 ## Reference Files
 
 - `references/yry-scene-card-schema.md` — Full component API reference, including all props, tag modifiers, link conventions, and usage patterns. Read this when you need precise prop details or are debugging card rendering.
@@ -241,14 +338,31 @@ When generating i18n data:
 
 ## Output Checklist
 
-Before finalizing card data, verify:
+Before finalizing card data, verify against the Code Health Report standard:
 
+### Structural Completeness
 - [ ] Every card has `name` (required) and `desc`
-- [ ] `badge` is used sparingly — not every card needs one
-- [ ] `tags` use appropriate modifiers (not everything is `info`)
-- [ ] `desc` uses `·` separators, not commas, for feature lists
-- [ ] `links` is intentional: `null` (defaults), `[]` (hidden), or `[...]` (custom)
-- [ ] `meta` uses monospace-friendly formatting (versions, dates, paths)
+- [ ] `desc` uses `·` (U+00B7) as separator — **never commas** for feature lists
+- [ ] At least one `<strong>` in `desc` for the key takeaway (Rich and Standard tiers)
+- [ ] **`tags` present on every Rich and Standard tier card** — a card without tags is a hard fail. 2–4 tags required.
+- [ ] `tags` use semantic modifiers — **not everything is `info`** (audit each tag: does its modifier match its meaning?)
+- [ ] `badge` is a type classifier when used (`'Report'`, `'Core'`, `'Agent'`, `'OSS'`) — uppercase, scannable
+- [ ] `meta` is present on Rich tier cards (dates, versions, contexts in monospace format)
+
+### Link Hygiene
+- [ ] `links` is intentional: `null` (defaults), `[]` (hidden), or `[...]` (custom 3–5 items for external tools, max 7 for reports)
+- [ ] Feature grid cards prefer `links: null` (internal) or `links: []` (dense grid) — never duplicate 7 baseline links per card
 - [ ] Links that should open in same window have `nameTarget: ''`
-- [ ] i18n data is consistent across languages (same cards, translated content)
+- [ ] `nameHref` + `nameTarget: ''` for same-site detail pages; `_blank` for external
+
+### Standard Compliance
+- [ ] Card passes the "Code Health Report test" — placed next to the standard, does it feel like the same product?
+- [ ] Numbers are specific ("7 dimensions", "26 actions", "56h roadmap") — not vague ("multiple", "several", "improvements")
+- [ ] Tags are self-describing classifiers, not instructions ("7 dimensions" not "View details")
+- [ ] Tag text is concise (2–15 chars)
+- [ ] No two cards in the same grid have identical tag sets — each card has a distinct "fingerprint"
+
+### i18n Consistency
+- [ ] i18n data has identical structure across languages (same fields, same tag count, same links)
+- [ ] Badges and tag modifiers stay identical across languages; only text translates
 - [ ] Output is valid JavaScript — no trailing commas in arrays that would break older parsers

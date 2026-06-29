@@ -54,7 +54,7 @@ var DOC_CODE_ACTIVITY_EXTRA = {
                 })
                 .then(function (data) {
                     clearTimeout(self._timer); self._timer = null;
-                    if (!Array.isArray(data) || data.length === 0) throw new Error('Empty payload');
+                    if (!Array.isArray(data)) throw new Error('Invalid payload');
                     self._renderChart(data);
                     self.loading = false; self.error = false;
                 })

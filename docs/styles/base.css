@@ -128,9 +128,16 @@
 
 .vl-doc .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-    margin: 20px 0;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 24px 0;
+}
+
+/* 卡片挂载槽位：防止网格行塌陷重叠 + 修复 Grid item min-width:auto 导致的溢出 */
+.vl-doc .card-grid [class*="-feature-slot"],
+.vl-doc .card-grid [class*="-card-slot"] {
+    min-height: 140px;
+    min-width: 0;
 }
 
 .vl-doc .card-grid .card {
