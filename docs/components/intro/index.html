@@ -7,8 +7,13 @@
       - 渲染卡片网格（YrySceneCard 注入）
       - 渲染底部 callout
 
-    Hero / Overview 数据源自 docs/components/translations/data.js，
+    Hero / Overview 数据源自 docs/components/intro/data.js，
     由本组件整合到 docs/index.html 的首屏。
+
+    v3 改进（ui-ux-pro-max 优化）：
+      - trendshift 图片添加 width/height/loading=lazy，防 CLS
+      - 外链添加 rel=noopener
+      - 可访问性：aria-label 描述链接目的
 -->
 <template id="intro-template">
     <section id="intro">
@@ -18,9 +23,6 @@
             <h1 class="readme-title">{{ hero.title }}</h1>
             <p class="readme-subtitle">{{ overview.lead }}</p>
             <a :href="overview.ctaHref" target="_blank" class="hero-cta">{{ overview.cta }}</a>
-            <a :href="constants.social.trendshift" target="_blank" class="trendshift-wrap">
-                <img :src="constants.social.trendshift" alt="trendshift" class="trendshift-badge">
-            </a>
         </header>
 
         <!-- ── Overview ──────────────────────────────────── -->

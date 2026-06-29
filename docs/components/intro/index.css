@@ -7,13 +7,47 @@
  * 跨 section 共享的 .card / .card-grid / .badge 等已统一收敛到
  * docs/styles/base.css，不在此处重复。
  *
- * Hero / Overview 由原 translations 组件迁移至此。
+ * v3 改进（ui-ux-pro-max 优化）：
+ *   - 响应式字体使用 clamp() 流体缩放，消除硬断点跳变
+ *   - Hero 入场动画 + 特性列表 40ms 交错入场
+ *   - CTA 按钮增强 hover/active/focus-visible 三态
+ *   - trendshift 徽章添加 aspect-ratio 防 CLS
+ *   - 特性标记由 ▸ 字符改为 CSS 圆点（跨平台一致）
+ *   - 卡片插槽骨架屏 shimmer（卡片异步加载时）
+ *   - 间距对齐 4pt 韵律系统（复用 --vl-doc-space-*）
+ *   - 所有动画尊重 prefers-reduced-motion
  * ───────────────────────────────────────────────────── */
 
-/* ── Hero ──────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+ * Entrance Keyframes
+ * ═══════════════════════════════════════════════════════ */
+@keyframes introFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes introFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes introShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════════════════════
+ * Hero
+ * ═══════════════════════════════════════════════════════ */
 .vl-doc .readme-hero {
     text-align: center;
-    padding: 40px 20px 36px;
+    padding: clamp(32px, 5vw, 56px) 20px clamp(28px, 4vw, 40px);
     border-bottom: 1px solid var(--vl-doc-border);
     margin-bottom: 40px;
     background: linear-gradient(
@@ -22,13 +56,25 @@
         transparent 100%
     );
     border-radius: var(--vl-doc-radius);
+    /* 首屏入场 */
+    animation: introFadeInUp 0.5s var(--vl-doc-ease-out) both;
 }
 
+/* Hero 子元素依次入场 */
+.vl-doc .readme-hero > * {
+    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) both;
+}
+.vl-doc .readme-hero > :nth-child(1) { animation-delay: 0.06s; }
+.vl-doc .readme-hero > :nth-child(2) { animation-delay: 0.13s; }
+.vl-doc .readme-hero > :nth-child(3) { animation-delay: 0.20s; }
+.vl-doc .readme-hero > :nth-child(4) { animation-delay: 0.27s; }
+
 .vl-doc .readme-title {
-    font-size: 36px;
+    font-size: clamp(26px, 5vw, 40px);
     font-weight: 800;
     margin: 0 0 12px;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
     background: linear-gradient(
         135deg,
         var(--vl-doc-primary) 0%,
@@ -49,67 +95,129 @@
 }
 
 .vl-doc .readme-subtitle {
-    font-size: 16px;
+    font-size: clamp(14px, 2vw, 17px);
     color: var(--vl-doc-text-soft);
-    max-width: 600px;
-    margin: 0 auto 18px;
-    line-height: 1.6;
+    max-width: 640px;
+    margin: 0 auto clamp(14px, 2vw, 20px);
+    line-height: 1.65;
+    text-wrap: pretty;
 }
 
+/* ── Trendshift badge ──────────────────────────────── */
 .vl-doc .trendshift-wrap {
     display: inline-block;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s var(--vl-doc-ease-out);
+    border-radius: 6px;
 }
 .vl-doc .trendshift-wrap:hover {
     transform: translateY(-2px);
+}
+.vl-doc .trendshift-wrap:focus-visible {
+    outline: var(--vl-doc-focus-ring-width) solid var(--vl-doc-focus-ring);
+    outline-offset: 4px;
 }
 
 .vl-doc .trendshift-badge {
     width: 250px;
     height: 55px;
+    /* CLS 防护：图片加载前占据正确空间 */
+    aspect-ratio: 250 / 55;
+    object-fit: contain;
 }
 
-/* Hero 内的 CTA 按钮（指向 videolingo.io） */
+/* ── Hero CTA button ────────────────────────────────── */
 .vl-doc .hero-cta {
     display: inline-block;
     margin: 8px 0 18px;
-    padding: 10px 22px;
+    padding: 11px 26px;
     border-radius: var(--vl-doc-radius);
     background: var(--vl-doc-primary);
     color: #fff;
     font-weight: 600;
-    font-size: 15px;
+    font-size: clamp(14px, 1.5vw, 15px);
     text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.15s var(--vl-doc-ease-out),
+                box-shadow 0.15s var(--vl-doc-ease-out),
+                opacity 0.1s var(--vl-doc-ease-out);
+    touch-action: manipulation;
+    user-select: none;
 }
 .vl-doc .hero-cta:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--vl-doc-primary) 40%, transparent);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--vl-doc-primary) 40%, transparent);
     color: #fff;
+    text-decoration: none;
+}
+.vl-doc .hero-cta:active {
+    transform: translateY(0);
+    opacity: 0.85;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--vl-doc-primary) 30%, transparent);
+    transition-duration: 0.05s;
+}
+.vl-doc .hero-cta:focus-visible {
+    outline: var(--vl-doc-focus-ring-width) solid var(--vl-doc-focus-ring);
+    outline-offset: 3px;
 }
 
-/* ── Overview ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+ * Overview
+ * ═══════════════════════════════════════════════════════ */
+.vl-doc #intro > h2 {
+    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) 0.32s both;
+}
+
+/* ═══════════════════════════════════════════════════════
+ * Feature List
+ * ═══════════════════════════════════════════════════════ */
 .vl-doc .feature-list {
     list-style: none;
     padding: 0;
     margin: 20px 0;
+    animation: introFadeIn 0.4s var(--vl-doc-ease-out) 0.36s both;
 }
 
 .vl-doc .feature-list li {
-    padding: 8px 0 8px 28px;
+    padding: 9px 0 9px 28px;
     line-height: 1.7;
     position: relative;
+    opacity: 0;
+    animation: introFadeInUp 0.35s var(--vl-doc-ease-out) forwards;
 }
 
+/* 40ms 交错入场（ui-ux-pro-max §7: stagger 30-50ms per item） */
+.vl-doc .feature-list li:nth-child(1)  { animation-delay: 0.40s; }
+.vl-doc .feature-list li:nth-child(2)  { animation-delay: 0.44s; }
+.vl-doc .feature-list li:nth-child(3)  { animation-delay: 0.48s; }
+.vl-doc .feature-list li:nth-child(4)  { animation-delay: 0.52s; }
+.vl-doc .feature-list li:nth-child(5)  { animation-delay: 0.56s; }
+.vl-doc .feature-list li:nth-child(6)  { animation-delay: 0.60s; }
+.vl-doc .feature-list li:nth-child(7)  { animation-delay: 0.64s; }
+.vl-doc .feature-list li:nth-child(8)  { animation-delay: 0.68s; }
+.vl-doc .feature-list li:nth-child(9)  { animation-delay: 0.72s; }
+.vl-doc .feature-list li:nth-child(10) { animation-delay: 0.76s; }
+.vl-doc .feature-list li:nth-child(11) { animation-delay: 0.80s; }
+.vl-doc .feature-list li:nth-child(12) { animation-delay: 0.84s; }
+
+/* CSS 圆点标记替代 ▸ Unicode 字符 — 跨平台渲染一致 */
 .vl-doc .feature-list li::before {
-    content: '▸';
+    content: '';
     position: absolute;
     left: 4px;
-    color: var(--vl-doc-primary);
-    font-size: 14px;
-    font-weight: 700;
+    top: 15px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--vl-doc-primary);
 }
 
+/* 特性列表 strong 颜色提升层级 */
+.vl-doc .feature-list li strong {
+    color: var(--vl-doc-text);
+}
+
+/* ═══════════════════════════════════════════════════════
+ * Tagline
+ * ═══════════════════════════════════════════════════════ */
 .vl-doc .tagline {
     background: var(--vl-doc-bg-soft);
     padding: 16px 22px;
@@ -117,21 +225,90 @@
     border-left: 4px solid var(--vl-doc-primary);
     margin: 24px 0;
     line-height: 1.7;
+    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) 0.88s both;
 }
 
-/* ── Responsive ────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+ * Card Grid
+ * ═══════════════════════════════════════════════════════ */
+.vl-doc #intro .card-grid {
+    animation: introFadeIn 0.4s var(--vl-doc-ease-out) 0.92s both;
+}
+
+/* 卡片插槽骨架屏 — 卡片异步加载时显示 shimmer */
+.vl-doc .intro-card-slot:empty {
+    min-height: 160px;
+    border-radius: var(--vl-doc-radius);
+    background: linear-gradient(
+        90deg,
+        var(--vl-doc-bg-soft) 25%,
+        var(--vl-doc-bg) 50%,
+        var(--vl-doc-bg-soft) 75%
+    );
+    background-size: 200% 100%;
+    animation: introShimmer 1.5s infinite;
+}
+
+/* ═══════════════════════════════════════════════════════
+ * Callout
+ * ═══════════════════════════════════════════════════════ */
+.vl-doc #intro .callout {
+    animation: introFadeInUp 0.4s var(--vl-doc-ease-out) 0.96s both;
+}
+
+/* ═══════════════════════════════════════════════════════
+ * Reduced Motion
+ * 尊重系统偏好，关闭所有非必要动画
+ * ═══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    .vl-doc .readme-hero,
+    .vl-doc .readme-hero > *,
+    .vl-doc #intro > h2,
+    .vl-doc .feature-list,
+    .vl-doc .feature-list li,
+    .vl-doc .tagline,
+    .vl-doc #intro .card-grid,
+    .vl-doc #intro .callout {
+        animation: none;
+        opacity: 1;
+    }
+    .vl-doc .intro-card-slot:empty {
+        animation: none;
+        background: var(--vl-doc-bg-soft);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+ * Responsive
+ * ═══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
     .vl-doc .readme-hero {
-        padding: 28px 16px 24px;
+        padding: clamp(24px, 6vw, 32px) 16px clamp(20px, 5vw, 28px);
     }
     .vl-doc .readme-title {
-        font-size: 26px;
+        font-size: clamp(22px, 6vw, 28px);
     }
     .vl-doc .readme-subtitle {
-        font-size: 14px;
+        font-size: clamp(13px, 3.5vw, 15px);
     }
     .vl-doc .trendshift-badge {
-        width: 200px;
-        height: 44px;
+        width: clamp(180px, 40vw, 220px);
+        height: auto;
+    }
+}
+
+/* 极小屏 (< 375px) */
+@media (max-width: 374px) {
+    .vl-doc .readme-hero {
+        padding: 20px 12px 18px;
+    }
+    .vl-doc .readme-title {
+        font-size: 20px;
+    }
+    .vl-doc .hero-cta {
+        padding: 10px 20px;
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
     }
 }
