@@ -82,11 +82,11 @@
 
             <!-- YouTube → Streamlit UI -->
             <line x1="190" y1="95" x2="256" y2="95" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead-amber)"/>
-            <text x="223" y="89" fill="#94a3b8" font-size="9" text-anchor="middle">URL</text>
+            <text x="223" y="89" fill="#94a3b8" font-size="9" text-anchor="middle">{{ svg.arrows.url }}</text>
 
             <!-- Streamlit UI → yt-dlp Engine -->
             <line x1="510" y1="125" x2="568" y2="125" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-            <text x="539" y="118" fill="#94a3b8" font-size="8" text-anchor="middle">invoke</text>
+            <text x="539" y="118" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.arrows.invoke }}</text>
 
             <!-- yt-dlp Engine ↔ ydl_opts (bidirectional) -->
             <line x1="770" y1="155" x2="788" y2="155" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
@@ -109,19 +109,19 @@
 
             <!-- YouTube Region — amber / Cloud Service -->
             <rect x="20" y="30" width="200" height="160" rx="12" fill="rgba(251, 191, 36, 0.04)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
-            <text x="32" y="48" fill="#fbbf24" font-size="10" font-weight="600">YouTube / 1,200+ Sites</text>
+            <text x="32" y="48" fill="#fbbf24" font-size="10" font-weight="600">{{ svg.regions.youtube }}</text>
 
             <!-- VideoLingo Application Region — cyan / Frontend -->
             <rect x="260" y="30" width="720" height="640" rx="12" fill="rgba(34, 211, 238, 0.03)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="8,4"/>
-            <text x="272" y="48" fill="#22d3ee" font-size="10" font-weight="600">VideoLingo — Download Stage (Step 1/15)</text>
+            <text x="272" y="48" fill="#22d3ee" font-size="10" font-weight="600">{{ svg.regions.videoLingo }}</text>
 
             <!-- Output Artifacts Region — violet / Data -->
             <rect x="290" y="260" width="670" height="130" rx="12" fill="rgba(167, 139, 250, 0.04)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="8,4"/>
-            <text x="302" y="278" fill="#a78bfa" font-size="10" font-weight="600">Output Directory: output/</text>
+            <text x="302" y="278" fill="#a78bfa" font-size="10" font-weight="600">{{ svg.regions.output }}</text>
 
             <!-- Downstream Pipeline Region — emerald / Backend -->
             <rect x="290" y="420" width="670" height="130" rx="12" fill="rgba(6, 78, 59, 0.04)" stroke="#34d399" stroke-width="1" stroke-dasharray="8,4"/>
-            <text x="302" y="438" fill="#34d399" font-size="10" font-weight="600">VideoLingo Pipeline (Steps 2–12) — downstream consumers of output/</text>
+            <text x="302" y="438" fill="#34d399" font-size="10" font-weight="600">{{ svg.regions.pipeline }}</text>
 
             <!-- ============================================================
                  COMPONENT BOXES — opaque #0f172a mask behind each
@@ -130,154 +130,146 @@
             <!-- ── YouTube URL — Cloud Service / amber ── -->
             <rect x="50" y="70" width="140" height="50" rx="6" fill="#0f172a"/>
             <rect x="50" y="70" width="140" height="50" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
-            <text x="120" y="90" fill="white" font-size="11" font-weight="600" text-anchor="middle">YouTube URL</text>
-            <text x="120" y="108" fill="#94a3b8" font-size="9" text-anchor="middle">watch?v= / shorts / live</text>
+            <text x="120" y="90" fill="white" font-size="11" font-weight="600" text-anchor="middle">{{ svg.youtube.title }}</text>
+            <text x="120" y="108" fill="#94a3b8" font-size="9" text-anchor="middle">{{ svg.youtube.desc }}</text>
 
             <!-- Cookie auth badge — Message Bus / orange -->
             <rect x="60" y="135" width="120" height="20" rx="4" fill="#0f172a"/>
             <rect x="60" y="135" width="120" height="20" rx="4" fill="rgba(251, 146, 60, 0.25)" stroke="#fb923c" stroke-width="1"/>
-            <text x="120" y="149" fill="#fb923c" font-size="8" text-anchor="middle">cookies + proxy support</text>
+            <text x="120" y="149" fill="#fb923c" font-size="8" text-anchor="middle">{{ svg.cookie.text }}</text>
 
             <!-- ── Streamlit UI — Frontend / cyan ── -->
             <rect x="290" y="70" width="220" height="110" rx="8" fill="#0f172a"/>
             <rect x="290" y="70" width="220" height="110" rx="8" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
-            <text x="400" y="92" fill="white" font-size="11" font-weight="600" text-anchor="middle">Streamlit UI</text>
-            <text x="400" y="108" fill="#94a3b8" font-size="8" text-anchor="middle">download_video_section.py</text>
-            <text x="400" y="122" fill="#94a3b8" font-size="8" text-anchor="middle">Input: URL / Upload file</text>
-            <text x="400" y="138" fill="#94a3b8" font-size="8" text-anchor="middle">Preview Info / Progress bar</text>
-            <text x="400" y="158" fill="#22d3ee" font-size="8" text-anchor="middle">res: 360p → 4K · fmt: video+/audio-only</text>
-            <text x="400" y="172" fill="#94a3b8" font-size="7" text-anchor="middle">Advanced: subs · cookies · proxy</text>
+            <text x="400" y="92" fill="white" font-size="11" font-weight="600" text-anchor="middle">{{ svg.streamlit.title }}</text>
+            <text x="400" y="108" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.streamlit.file }}</text>
+            <text x="400" y="122" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.streamlit.input }}</text>
+            <text x="400" y="138" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.streamlit.preview }}</text>
+            <text x="400" y="158" fill="#22d3ee" font-size="8" text-anchor="middle">{{ svg.streamlit.res }}</text>
+            <text x="400" y="172" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.streamlit.advanced }}</text>
 
             <!-- ── yt-dlp Engine — Backend / emerald ── -->
             <rect x="570" y="70" width="200" height="110" rx="8" fill="#0f172a"/>
             <rect x="570" y="70" width="200" height="110" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
-            <text x="670" y="92" fill="white" font-size="11" font-weight="600" text-anchor="middle">yt-dlp Engine</text>
-            <text x="670" y="108" fill="#94a3b8" font-size="8" text-anchor="middle">_1_ytdlp.py</text>
-            <text x="670" y="124" fill="#94a3b8" font-size="8" text-anchor="middle">YoutubeDL class · session cache</text>
-            <text x="670" y="140" fill="#94a3b8" font-size="8" text-anchor="middle">auto-update once per session</text>
-            <text x="670" y="158" fill="#34d399" font-size="8" text-anchor="middle">format_str builder · 5 retries</text>
-            <text x="670" y="172" fill="#34d399" font-size="7" text-anchor="middle">8 concurrent fragments · socket to 30s</text>
+            <text x="670" y="92" fill="white" font-size="11" font-weight="600" text-anchor="middle">{{ svg.engine.title }}</text>
+            <text x="670" y="108" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.engine.file }}</text>
+            <text x="670" y="124" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.engine.cache }}</text>
+            <text x="670" y="140" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.engine.update }}</text>
+            <text x="670" y="158" fill="#34d399" font-size="8" text-anchor="middle">{{ svg.engine.format }}</text>
+            <text x="670" y="172" fill="#34d399" font-size="7" text-anchor="middle">{{ svg.engine.concurrency }}</text>
 
             <!-- ── ydl_opts — External/Config / slate ── -->
             <rect x="790" y="70" width="170" height="170" rx="8" fill="#0f172a"/>
             <rect x="790" y="70" width="170" height="170" rx="8" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
-            <text x="875" y="90" fill="white" font-size="10" font-weight="600" text-anchor="middle">ydl_opts</text>
-            <text x="875" y="108" fill="#94a3b8" font-size="8" text-anchor="middle">• format (resolution)</text>
-            <text x="875" y="122" fill="#94a3b8" font-size="8" text-anchor="middle">• outtmpl (save path)</text>
-            <text x="875" y="136" fill="#94a3b8" font-size="8" text-anchor="middle">• noplaylist: true</text>
-            <text x="875" y="150" fill="#94a3b8" font-size="8" text-anchor="middle">• progress_hooks</text>
-            <text x="875" y="164" fill="#94a3b8" font-size="8" text-anchor="middle">• retries: 5 + backoff</text>
-            <text x="875" y="178" fill="#94a3b8" font-size="8" text-anchor="middle">• merge_output: mp4</text>
-            <text x="875" y="192" fill="#94a3b8" font-size="8" text-anchor="middle">• writethumbnail (opt)</text>
-            <text x="875" y="206" fill="#94a3b8" font-size="8" text-anchor="middle">• subtitles (opt)</text>
-            <text x="875" y="222" fill="#94a3b8" font-size="8" text-anchor="middle">• cookiefile (opt)</text>
-            <text x="875" y="236" fill="#94a3b8" font-size="8" text-anchor="middle">• proxy (opt)</text>
+            <text x="875" y="90" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.ydlOpts.title }}</text>
+            <text v-for="(item, i) in svg.ydlOpts.items" :key="i"
+                  x="875" :y="108 + i * 14" fill="#94a3b8" font-size="8" text-anchor="middle">{{ item }}</text>
 
             <!-- ── Progress Hook — Message Bus / orange ── -->
             <rect x="570" y="195" width="200" height="30" rx="4" fill="#0f172a"/>
             <rect x="570" y="195" width="200" height="30" rx="4" fill="rgba(251, 146, 60, 0.25)" stroke="#fb923c" stroke-width="1"/>
-            <text x="670" y="214" fill="#fb923c" font-size="8" text-anchor="middle">progress_hook → status_callback</text>
+            <text x="670" y="214" fill="#fb923c" font-size="8" text-anchor="middle">{{ svg.progressHook.text }}</text>
 
             <!-- ── Output: video.mp4 — Data / violet ── -->
             <rect x="310" y="295" width="150" height="55" rx="6" fill="#0f172a"/>
             <rect x="310" y="295" width="150" height="55" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
-            <text x="385" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">🎬 video.mp4</text>
-            <text x="385" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">sanitized filename</text>
-            <text x="385" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">→ Step 2: ASR pipeline</text>
+            <text x="385" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.outputs.video.title }}</text>
+            <text x="385" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.outputs.video.desc1 }}</text>
+            <text x="385" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">{{ svg.outputs.video.desc2 }}</text>
 
             <!-- ── Output: thumbnail.jpg — Data / violet ── -->
             <rect x="480" y="295" width="140" height="55" rx="6" fill="#0f172a"/>
             <rect x="480" y="295" width="140" height="55" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
-            <text x="550" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">🖼️ thumbnail.jpg</text>
-            <text x="550" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">FFmpeg post-process</text>
-            <text x="550" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">optional</text>
+            <text x="550" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.outputs.thumbnail.title }}</text>
+            <text x="550" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.outputs.thumbnail.desc1 }}</text>
+            <text x="550" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">{{ svg.outputs.thumbnail.desc2 }}</text>
 
             <!-- ── Output: subtitles.vtt — Data / violet ── -->
             <rect x="640" y="295" width="140" height="55" rx="6" fill="#0f172a"/>
             <rect x="640" y="295" width="140" height="55" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
-            <text x="710" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">📝 subtitles.vtt</text>
-            <text x="710" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">manual + auto subs</text>
-            <text x="710" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">en, zh-CN, ja, …</text>
+            <text x="710" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.outputs.subtitles.title }}</text>
+            <text x="710" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.outputs.subtitles.desc1 }}</text>
+            <text x="710" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">{{ svg.outputs.subtitles.desc2 }}</text>
 
             <!-- ── Output: audio.m4a — Data / violet ── -->
             <rect x="800" y="295" width="140" height="55" rx="6" fill="#0f172a"/>
             <rect x="800" y="295" width="140" height="55" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
-            <text x="870" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">🎵 audio.m4a</text>
-            <text x="870" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">audio-only mode</text>
-            <text x="870" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">black_screen.mp4 fallback</text>
+            <text x="870" y="316" fill="white" font-size="10" font-weight="600" text-anchor="middle">{{ svg.outputs.audio.title }}</text>
+            <text x="870" y="332" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.outputs.audio.desc1 }}</text>
+            <text x="870" y="344" fill="#a78bfa" font-size="7" text-anchor="middle">{{ svg.outputs.audio.desc2 }}</text>
 
             <!-- ── Metadata bar — External / slate ── -->
             <rect x="310" y="360" width="630" height="22" rx="4" fill="#0f172a"/>
             <rect x="310" y="360" width="630" height="22" rx="4" fill="rgba(30, 41, 59, 0.5)" stroke="#475569" stroke-width="1"/>
-            <text x="625" y="375" fill="#94a3b8" font-size="8" text-anchor="middle">Metadata (Preview): title · uploader · duration · view_count · formats_available</text>
+            <text x="625" y="375" fill="#94a3b8" font-size="8" text-anchor="middle">{{ svg.metadata.text }}</text>
 
             <!-- ── Pipeline Steps — Backend / emerald ── -->
 
             <!-- Step 2 -->
             <rect x="310" y="450" width="95" height="40" rx="6" fill="#0f172a"/>
             <rect x="310" y="450" width="95" height="40" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
-            <text x="357" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">Step 2</text>
-            <text x="357" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">ASR · WhisperX</text>
+            <text x="357" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">{{ svg.pipeline.step2.title }}</text>
+            <text x="357" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.pipeline.step2.desc }}</text>
 
             <!-- Step 3 -->
             <rect x="420" y="450" width="95" height="40" rx="6" fill="#0f172a"/>
             <rect x="420" y="450" width="95" height="40" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
-            <text x="467" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">Step 3</text>
-            <text x="467" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">NLP / Split</text>
+            <text x="467" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">{{ svg.pipeline.step3.title }}</text>
+            <text x="467" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.pipeline.step3.desc }}</text>
 
             <!-- Step 4 -->
             <rect x="530" y="450" width="95" height="40" rx="6" fill="#0f172a"/>
             <rect x="530" y="450" width="95" height="40" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
-            <text x="577" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">Step 4</text>
-            <text x="577" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">Translate</text>
+            <text x="577" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">{{ svg.pipeline.step4.title }}</text>
+            <text x="577" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.pipeline.step4.desc }}</text>
 
             <!-- Step 5-7 -->
             <rect x="640" y="450" width="95" height="40" rx="6" fill="#0f172a"/>
             <rect x="640" y="450" width="95" height="40" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
-            <text x="687" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">Step 5-7</text>
-            <text x="687" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">Sub → Embed</text>
+            <text x="687" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">{{ svg.pipeline.step57.title }}</text>
+            <text x="687" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.pipeline.step57.desc }}</text>
 
             <!-- Step 8-12 -->
             <rect x="750" y="450" width="95" height="40" rx="6" fill="#0f172a"/>
             <rect x="750" y="450" width="95" height="40" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
-            <text x="797" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">Step 8-12</text>
-            <text x="797" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">TTS → Dub</text>
+            <text x="797" y="466" fill="white" font-size="9" font-weight="600" text-anchor="middle">{{ svg.pipeline.step812.title }}</text>
+            <text x="797" y="482" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.pipeline.step812.desc }}</text>
 
             <!-- ── find_video_files gateway — Frontend / cyan ── -->
             <rect x="310" y="500" width="630" height="40" rx="6" fill="#0f172a"/>
             <rect x="310" y="500" width="630" height="40" rx="6" fill="rgba(8, 51, 68, 0.3)" stroke="#22d3ee" stroke-width="1"/>
-            <text x="625" y="518" fill="#22d3ee" font-size="9" font-weight="600" text-anchor="middle">find_video_files() → single .mp4 → input to Step 2</text>
-            <text x="625" y="534" fill="#94a3b8" font-size="7" text-anchor="middle">allowed_video_formats filter · exactly 1 file required · sanitize_filename() cleanup</text>
+            <text x="625" y="518" fill="#22d3ee" font-size="9" font-weight="600" text-anchor="middle">{{ svg.gateway.line1 }}</text>
+            <text x="625" y="534" fill="#94a3b8" font-size="7" text-anchor="middle">{{ svg.gateway.line2 }}</text>
 
             <!-- ============================================================
                  LEGEND — outside all boundary boxes, 20px+ below lowest
                  Lowest boundary: Pipeline y=420+130=550 → legend y=572
                  ============================================================ -->
-            <text x="290" y="572" fill="white" font-size="10" font-weight="600">Legend</text>
+            <text x="290" y="572" fill="white" font-size="10" font-weight="600">{{ svg.legend.title }}</text>
 
             <rect x="290" y="584" width="16" height="10" rx="2" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
-            <text x="312" y="593" fill="#94a3b8" font-size="8">YouTube / Cloud Source</text>
+            <text x="312" y="593" fill="#94a3b8" font-size="8">{{ svg.legend.youtube }}</text>
 
             <rect x="470" y="584" width="16" height="10" rx="2" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
-            <text x="492" y="593" fill="#94a3b8" font-size="8">Frontend / UI</text>
+            <text x="492" y="593" fill="#94a3b8" font-size="8">{{ svg.legend.frontend }}</text>
 
             <rect x="620" y="584" width="16" height="10" rx="2" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
-            <text x="642" y="593" fill="#94a3b8" font-size="8">Backend / Engine</text>
+            <text x="642" y="593" fill="#94a3b8" font-size="8">{{ svg.legend.backend }}</text>
 
             <rect x="790" y="584" width="16" height="10" rx="2" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1"/>
-            <text x="812" y="593" fill="#94a3b8" font-size="8">Output / Data</text>
+            <text x="812" y="593" fill="#94a3b8" font-size="8">{{ svg.legend.output }}</text>
 
             <rect x="290" y="602" width="16" height="10" rx="2" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
-            <text x="312" y="611" fill="#94a3b8" font-size="8">Options / Config</text>
+            <text x="312" y="611" fill="#94a3b8" font-size="8">{{ svg.legend.options }}</text>
 
             <rect x="470" y="602" width="16" height="10" rx="2" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1"/>
-            <text x="492" y="611" fill="#94a3b8" font-size="8">Hooks / Auth</text>
+            <text x="492" y="611" fill="#94a3b8" font-size="8">{{ svg.legend.hooks }}</text>
 
             <rect x="620" y="602" width="16" height="10" rx="2" fill="transparent" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,4"/>
-            <text x="642" y="611" fill="#94a3b8" font-size="8">Region Boundary</text>
+            <text x="642" y="611" fill="#94a3b8" font-size="8">{{ svg.legend.boundary }}</text>
 
             <!-- Tech stack row -->
-            <text x="500" y="650" fill="#475569" font-size="8" text-anchor="middle">Python · yt-dlp · FFmpeg · Streamlit · VideoLingo v3.x</text>
+            <text x="500" y="650" fill="#475569" font-size="8" text-anchor="middle">{{ svg.techStack }}</text>
         </svg>
     </div>
 
