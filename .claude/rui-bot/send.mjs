@@ -2,6 +2,10 @@
 /**
  * rui-bot — 企业微信消息通知发送
  * 用法: node .claude/rui-bot/send.mjs [options]
+ *
+ * 支持两种模式:
+ *   1. 原始模式 (--content / --contentFile): 发送纯文本
+ *   2. 模板模式 (--template / --level): 使用 format.mjs 生成结构化消息
  */
 
 import { join } from "node:path";
@@ -9,6 +13,11 @@ import { appendFileSync, mkdirSync, existsSync, readFileSync } from "node:fs";
 
 import { NODE_ARGV_OFFSET } from "../../lib/constants.mjs";
 import { findProjectRoot, readProjectName, isMain } from "../../lib/fs.mjs";
+import {
+  formatAlert, formatPipelineReport, formatHealthReport,
+  formatDailyIntrospect, formatDeployReport, formatSummary,
+  ALERT_LEVELS, truncateForWecom
+} from "./format.mjs";
 
 const CONFIG_PATH = ".claude/rui-bot/config.json";
 const API_URL_DEFAULT = "https://api.effiy.cn/wework/send-message";
@@ -33,7 +42,21 @@ function parseArgs() {
     process.exit(0);
   }
 
-  const opts = { story: "", project: "", content: "", contentFile: "", noSend: false };
+  const opts = {
+    story: "", project: "", content: "", contentFile: "", noSend: false,
+    // Template mode
+    template: "", level: "", title: "", detail: "",
+    // Pipeline report
+    pipelineName: "", status: "", total: "", success: "", failed: "", skipped: "", durationSec: "",
+    // Health report
+    score: "", passCount: "", failCount: "", warnCount: "",
+    // Daily introspect
+    goods: "", bads: "", actions: "", date: "",
+    // Deploy
+    version: "", env: "", changes: "",
+    // Summary
+    summaryTitle: "", items: "",
+  };
 
   for (const arg of args) {
     if (arg === "--no-send" || arg.startsWith("--no-send=")) { opts.noSend = true; continue; }
@@ -53,12 +76,32 @@ rui-bot — 企业微信消息通知发送
 用法:
   node .claude/rui-bot/send.mjs [options]
 
-选项:
+== 原始模式 ==
   --story=<name>        故事名（用于日志路径）
   --project=<name>      项目名（默认从 CLAUDE.md 读取）
   --content=<text>      消息正文
   --contentFile=<path>  从文件读取消息正文（相对于项目根目录）
   --no-send             仅追加日志，不发送 HTTP
+
+== 模板模式 (使用 format.mjs) ==
+  --template=<name>     报告模板: alert | pipeline | health | daily | deploy | summary
+  --level=<level>       告警级别: info | success | warning | error | fatal
+  --title=<text>        告警/报告标题
+
+  Pipeline 模板 (--template=pipeline):
+    --pipelineName=<n> --status=<s|w|e> --total=<n> --success=<n> --failed=<n> --durationSec=<n>
+
+  Health 模板 (--template=health):
+    --score=<n> --passCount=<n> --failCount=<n> --warnCount=<n>
+
+  Daily 模板 (--template=daily):
+    --date=<YYYY-MM-DD> --goods=<g1,g2,g3> --bads=<b1,b2,b3> --actions=<a1,a2>
+
+  Deploy 模板 (--template=deploy):
+    --version=<v> --env=<production|staging|dev> --status=<s|w|e> --changes=<c1,c2>
+
+  Summary 模板 (--template=summary):
+    --summaryTitle=<t> --items=<i1|i2|i3>
 
 环境变量:
   API_X_TOKEN            网关认证令牌（必填）
@@ -69,6 +112,12 @@ rui-bot — 企业微信消息通知发送
 // --- message building ----------------------------------------------------------
 
 function buildMessage(opts, projectName) {
+  // ── Template mode: use format.mjs ──────────────────────────────────────────
+  if (opts.template) {
+    return buildFromTemplate(opts, projectName);
+  }
+
+  // ── Raw mode ────────────────────────────────────────────────────────────────
   let msg = opts.content || "";
 
   if (!msg && opts.contentFile) {
@@ -91,6 +140,105 @@ function buildMessage(opts, projectName) {
   }
 
   return msg;
+}
+
+function buildFromTemplate(opts, projectName) {
+  const tpl = opts.template;
+  const level = opts.level || 'info';
+
+  switch (tpl) {
+    case 'alert': {
+      const msg = formatAlert({
+        project: projectName,
+        level,
+        title: opts.title || 'Notification',
+        detail: opts.detail || undefined,
+        suggestion: opts.suggestion || undefined,
+        link: opts.link || undefined,
+      });
+      return truncateForWecom(msg);
+    }
+
+    case 'pipeline': {
+      const msg = formatPipelineReport({
+        project: projectName,
+        pipelineName: opts.pipelineName || 'Pipeline',
+        status: opts.status || 'success',
+        stats: {
+          total: parseInt(opts.total) || 0,
+          success: parseInt(opts.success) || 0,
+          failed: parseInt(opts.failed) || 0,
+          skipped: parseInt(opts.skipped) || 0,
+        },
+        durationSec: parseFloat(opts.durationSec) || 0,
+        logUrl: opts.logUrl || undefined,
+      });
+      return truncateForWecom(msg);
+    }
+
+    case 'health': {
+      const msg = formatHealthReport({
+        project: projectName,
+        health: {
+          score: parseInt(opts.score) || 0,
+          passCount: parseInt(opts.passCount) || 0,
+          failCount: parseInt(opts.failCount) || 0,
+          warnCount: parseInt(opts.warnCount) || 0,
+          pendingCount: parseInt(opts.pendingCount) || 0,
+        },
+        topIssues: parseIssues(opts.topIssues),
+        reportUrl: opts.reportUrl || undefined,
+      });
+      return truncateForWecom(msg);
+    }
+
+    case 'daily': {
+      const msg = formatDailyIntrospect({
+        project: projectName,
+        date: opts.date || new Date().toISOString().slice(0, 10),
+        goods: (opts.goods || '').split(',').filter(Boolean),
+        bads: (opts.bads || '').split(',').filter(Boolean),
+        actions: (opts.actions || '').split(',').filter(Boolean),
+      });
+      return truncateForWecom(msg);
+    }
+
+    case 'deploy': {
+      const msg = formatDeployReport({
+        project: projectName,
+        version: opts.version || 'unknown',
+        env: opts.env || 'production',
+        status: opts.status || 'success',
+        changes: (opts.changes || '').split(',').filter(Boolean),
+        durationSec: parseFloat(opts.durationSec) || undefined,
+      });
+      return truncateForWecom(msg);
+    }
+
+    case 'summary': {
+      const items = (opts.items || '').split('|').filter(Boolean).map(text => ({ icon: '•', text }));
+      const msg = formatSummary({
+        project: projectName,
+        title: opts.summaryTitle || 'Summary',
+        items,
+      });
+      return truncateForWecom(msg);
+    }
+
+    default: {
+      console.error(`[rui-bot] 未知模板: ${tpl}，可用: alert, pipeline, health, daily, deploy, summary`);
+      return null;
+    }
+  }
+}
+
+function parseIssues(str) {
+  if (!str) return [];
+  // Format: "name1:status1:note1|name2:status2:note2"
+  return str.split('|').filter(Boolean).map(part => {
+    const [name, status, note] = part.split(':');
+    return { name, status, note };
+  });
 }
 
 // --- notification log ---------------------------------------------------------

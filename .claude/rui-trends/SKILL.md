@@ -39,6 +39,8 @@ node <this-skill-dir>/rui-trends.mjs [options]
 
 ## Output Format
 
+### Standard Markdown Table
+
 ```markdown
 ## rui-trends — GitHub Trending
 
@@ -48,6 +50,65 @@ node <this-skill-dir>/rui-trends.mjs [options]
 | 排名 | 仓库 | Stars | 语言 | 今日 | 描述 |
 |------|------|-------|------|------|------|
 | 1 | owner/repo | 12.3k | TypeScript | +156 | Short description |
+```
+
+### Rich Report Format (--format rich)
+
+当需要更丰富的趋势分析时，使用 `--format rich` 生成结构化报告：
+
+```markdown
+## 🔥 GitHub Trending — 2026-06-29
+
+📊 今日概览: 25 repositories | 语言: TypeScript | 窗口: daily
+
+### 🏆 Top 3
+
+1. **[owner/repo](https://github.com/owner/repo)** ⭐ 12.3k (+156 today)
+   > A next-generation build tool for modern JavaScript projects
+   🏷️ TypeScript · Build Tool · Monorepo
+
+2. **[owner2/repo2](https://github.com/owner2/repo2)** ⭐ 8.1k (+203 today)
+   > LLM-powered code review agent with multi-provider support
+   🏷️ Python · LLM · Code Review
+
+3. **[owner3/repo3](https://github.com/owner3/repo3)** ⭐ 5.2k (+98 today)
+   > Reactive state management library for Vue 3
+   🏷️ TypeScript · Vue · State
+
+### 📈 趋势分析
+
+| 类别 | 仓库数 | Top Repo |
+|------|--------|----------|
+| AI/LLM | 8 | owner2/repo2 (+203) |
+| Developer Tools | 6 | owner/repo (+156) |
+| Web Framework | 4 | owner3/repo3 (+98) |
+| Infrastructure | 3 | ... |
+| Other | 4 | ... |
+
+### 🆕 新进入 Top 10
+- owner4/repo4 — First appearance, +312 stars today
+
+💡 本周趋势: AI/LLM 类别持续增长(+32%)，Developer Tools 保持稳定
+
+—— rui-trends · 2026-06-29 14:30 CST
+```
+
+### rui-bot 通知集成
+
+将趋势摘要通过 [[rui-bot]] 发送到企业微信：
+
+```javascript
+import { formatSummary } from '../rui-bot/format.mjs';
+
+const msg = formatSummary({
+  project: 'VideoLingo',
+  title: 'GitHub Trending 日报',
+  items: [
+    { icon: '🔥', text: 'owner/repo — Build tool, +156⭐' },
+    { icon: '🤖', text: 'owner2/repo2 — LLM code review, +203⭐' },
+    { icon: '📊', text: 'AI/LLM 类别占 32%, 持续增长' },
+  ],
+});
 ```
 
 ## Degradation

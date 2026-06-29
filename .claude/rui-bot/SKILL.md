@@ -207,6 +207,41 @@ node <this-skill-dir>/send.mjs --story=user-login --content="管线完成" --no-
 node <this-skill-dir>/send.mjs --story=user-login --contentFile=message.txt
 ```
 
+### Formatted Message Examples
+
+```bash
+# Pipeline completion report (via Node.js script using format.mjs)
+node <this-skill-dir>/send.mjs --story=subtitle-pipeline \
+  --content="✅ 【VideoLingo】成功: 管线完成: yt-dlp 字幕提取
+
+📊 总计: 120 | ✅ 成功: 118 | ❌ 失败: 2 | ⏭️ 跳过: 0
+⏱️ 耗时: 2m 34s
+
+💡 管线已完成，可查看日志了解详情。
+
+—— 2026/6/29 14:30:00"
+
+# Daily introspection
+node <this-skill-dir>/send.mjs --story=daily-check \
+  --contentFile=.claude/rui-checklist/daily-introspect.txt
+
+# Health check alert (warning level)
+node <this-skill-dir>/send.mjs --story=health-check \
+  --content="⚠️ 【VideoLingo】警告: 项目健康度: 72/100 🟡
+
+📋 检查项: 83
+✅ 通过: 68 | ❌ 失败: 8 | ⚠️ 警告: 4 | 👤 待审: 3
+
+🔍 重点关注:
+  1. ❌ struct-desc-dot — 3 cards 使用逗号而非 · 分隔符
+  2. ❌ tag-semantic — 2 cards modifier 与语义不匹配
+  3. ⚠️ link-grid — 1 card 在 grid 中使用了默认7链接集
+
+💡 建议立即处理 fail 项，查看详细报告了解改进建议。
+
+—— 2026/6/29 09:00:00"
+```
+
 ## 规则
 
 - [notification-contracts.md](./rules/notification-contracts.md) — WeCom webhook 通知的输入 / 输出 / 路径所有权 / 失败降级契约。
@@ -239,6 +274,9 @@ node <this-skill-dir>/send.mjs --story=user-login --contentFile=message.txt
 | Skill | Direction | See |
 |-------|-----------|-----|
 | any pipeline rui-* | calls → rui-bot | `[IF-011](../INTERFACES.md#if-011)` |
+| [[rui-checklist]] | calls → rui-bot | Health reports, daily introspection → rui-bot for delivery |
+| [[rui-demos]] | calls → rui-bot | Pipeline completion reports |
+| [[rui-diagram]] | calls → rui-bot | Analysis completion notifications |
 | [[rui-skill]] | can target | rui-skill may add evals around rui-bot |
 
 ### Output ownership

@@ -1,14 +1,196 @@
 ---
 name: rui-html
-description: Generate and refactor documentation pages using the VideoLingo docs tech stack — Vue 3 CDN, zero-build 4-file component architecture, token-bridged theme system, and vanilla-JS i18n. Use for creating doc pages, refactoring static pages, adding sections, or setting up i18n. Also use when the user wants doc sites, documentation pages, Vue CDN pages, or pages following the docs/ pattern. Takes a Knowledge Graph from [[rui-diagram]] as optional input.
+description: >
+  Generate and refactor documentation pages using the standard 4-file
+  component pattern — index.html (template + script includes), index.css
+  (scoped styles), index.js (Vue 3 mountDocComponent), data.js (i18n-ready
+  config). Vue 3 CDN, zero-build architecture, token-bridged theme system,
+  vanilla-JS i18n. Use for creating doc pages, refactoring static pages,
+  adding sections, or setting up i18n. "组件化 HTML", "4-file pattern",
+  "doc page", "component template", "文档页面".
 lifecycle: default-pipeline
 ---
 
 # Rui HTML
 
-Generate and refactor documentation pages: Vue 3 CDN + vanilla JS infrastructure + CSS token bridge + zero-build component architecture.
+Generate and refactor documentation pages using the **标准 4 文件组件化模式**: Vue 3 CDN + vanilla JS infrastructure + CSS token bridge + zero-build component architecture.
 
 For architecture diagrams, see **[[rui-diagram]]**. For the full design pipeline (Phase 1–3), see the pipeline section below.
+
+## 标准 4 文件组件化模式
+
+rui-html 的核心是 **一个组件 = 四个文件** 的组件化模式。这是整个 VideoLingo 文档体系的基础约定，rui-demos, rui-checklist, rui-graph 等都遵循同一模式。
+
+```
+components/<name>/
+├── index.html    # ① 结构 — <template> + <script src="data.js"> + <script src="index.js">
+├── index.css     # ② 样式 — .vl-doc 作用域，全部用 var(--yry-*) token
+├── index.js      # ③ 逻辑 — mountDocComponent({name, templateId, dataKey, i18n, extra})
+└── data.js       # ④ 数据 — window.XXX_CONFIG = { constants, en, 'zh-CN' }
+```
+
+### 为什么是 4 文件而不是 1 文件？
+
+| 维度 | 1 文件 | 4 文件 |
+|------|--------|--------|
+| **可维护性** | 结构/样式/逻辑/数据混在一起，改一处要读全部 | 各司其职，改样式只动 CSS，改数据只动 JS |
+| **可复用性** | 难以提取复用 | data.js 可被其他组件引用；CSS 可被覆盖 |
+| **可审查性** | Git diff 一团乱 | 每个文件独立 diff，改动一目了然 |
+| **团队协作** | 一人改全局锁 | 结构/样式/逻辑/数据可并行修改 |
+| **工具兼容** | 无法用 prettier/eslint 分别处理 | HTML/CSS/JS 各自用标准工具 |
+
+### 标准组件模板（Quick Copy）
+
+#### index.html — 结构模板
+
+```html
+<!-- <ComponentName> — <用途描述> -->
+<template id="<name>-template">
+    <section id="<name>">
+        <h2>{{ sectionTitle }}</h2>
+        <p>{{ sectionDescription }}</p>
+        <div v-if="items.length">
+            <div v-for="(item, i) in items" :key="i" class="item-card">
+                <h3>{{ item.name }}</h3>
+                <p v-html="item.desc"></p>
+            </div>
+        </div>
+    </section>
+</template>
+
+<script src="data.js"></script>
+<script src="index.js"></script>
+```
+
+**关键规则**:
+- `<template id>` 全局唯一
+- `<section id>` 匹配 sidebar `href`
+- `data.js` 必须在 `index.js` 之前
+- 内容含 HTML 用 `v-html`，纯文本用 `{{ }}`
+
+#### index.css — 样式模板
+
+```css
+/* <ComponentName> — Scoped Styles
+   ALL colors use var(--yry-*) tokens. No hardcoded hex. */
+
+.vl-doc .<name>-section {
+    /* layout */
+}
+
+.vl-doc .<name>-section .item-card {
+    background: var(--yry-bg-card);
+    border: var(--yry-border);
+    border-radius: var(--yry-radius);
+    padding: 1.25rem;
+}
+
+.vl-doc .<name>-section .item-card:hover {
+    border-color: var(--yry-accent);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .vl-doc .<name>-section {
+        padding: 0.5rem;
+    }
+}
+```
+
+**关键规则**:
+- 全部样式用 `var(--yry-*)` — 零硬编码颜色
+- `.vl-doc` 作用域防止泄漏
+- 响应式断点: 768px, 375px
+
+#### index.js — 逻辑模板
+
+```javascript
+/**
+ * <ComponentName> Vue 3 组件
+ * 由 assets/mount-component.js 公共工具挂载。
+ */
+mountDocComponent({
+    name: 'Doc<ComponentName>',
+    templateId: '<name>-template',
+    dataKey: '<NAME>_CONFIG',
+    i18n: true,
+
+    extra: {
+        methods: {
+            handleClick: function(id) { /* ... */ }
+        },
+        computed: {
+            filteredItems: function() {
+                return this.items.filter(/* ... */);
+            }
+        },
+        mounted: function() {
+            // DOM 依赖的初始化
+        },
+        beforeUnmount: function() {
+            // 清理定时器、事件监听、子 Vue 实例
+        }
+    }
+});
+```
+
+**关键规则**:
+- 永远用 `mountDocComponent()` — 不直接调 `Vue.createApp()`
+- `i18n: true` → 自动处理语言切换
+- 子 Vue 实例必须在 `beforeUnmount` 中 `unmount()`
+
+#### data.js — 数据模板
+
+```javascript
+/**
+ * <ComponentName> 数据源
+ * i18n 就绪 — 语言切片结构完全一致。
+ */
+window.<NAME>_CONFIG = {
+    /* ── 跨语言常量 ───────────────── */
+    constants: {
+        repoUrl: 'https://github.com/user/repo'
+    },
+
+    /* ── 英文 ──────────────────────── */
+    en: {
+        sectionTitle: 'Section Title',
+        sectionDescription: 'Description text.',
+        items: [
+            { name: 'Item 1', desc: 'Description with <strong>highlight</strong>.' },
+        ]
+    },
+
+    /* ── 中文 ──────────────────────── */
+    'zh-CN': {
+        sectionTitle: '章节标题',
+        sectionDescription: '描述文本。',
+        items: [
+            { name: '项目 1', desc: '带<strong>高亮</strong>的描述。' },
+        ]
+    }
+};
+```
+
+**关键规则**:
+- `constants` 在顶层（非语言切片内）
+- 所有语言切片**结构完全相同**（同 key，同嵌套）
+- `window.XXX_CONFIG` key 全局唯一
+- 不要在属性名中用语言代码 (`en`, `zh-CN`)
+
+### 组件目录名注册
+
+如果组件有 `index.css`，必须在 `mount-component.js` 注册：
+
+```javascript
+var _COMPONENTS_WITH_CSS = new Set([
+    'sidebar',
+    'intro',
+    '<your-component-name>',  // ← 添加这行
+]);
+```
+
+`mountDocComponent()` 会自动注入 CSS `<link>`（幂等）。
 
 ## Tech Stack
 
@@ -205,7 +387,9 @@ CDN Vue → CDN Chart.js → CDN theme CSS → docs/index.css
 
 **Key principle**: All 10 CDN themes define identical `--yry-*` variable names. Changing the theme `<link>` instantly switches colors — zero other file changes.
 
-## Component 4-File Pattern
+## Component 4-File Pattern (详细规格)
+
+以下为每个文件的详细规格和规则。快速复制模板见上方「标准组件模板」。
 
 ### `index.html` — Template + Script Includes
 

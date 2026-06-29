@@ -668,7 +668,80 @@ Follow the existing report CSS patterns (`docs/views/健康报告/index.css`):
 - Responsive: collapse before/after to stacked at 768px, single-column at 500px
 - Target ~200-350 lines
 
-### Step 4: Present and Explain
+### Step 4: Progress Notifications (via rui-bot)
+
+rui-checkout 通过 [[rui-bot]] 发送进度通知，追踪改进执行情况：
+
+#### 关键路径完成告警
+
+当用户完成一个 critical path 上的 action 时，自动发送通知：
+
+```
+✅ 【VideoLingo】关键路径进展: A7.1 已完成
+
+📋 Action: Phase A: Remove star import from 12 pipeline files
+🔓 解锁 5 个后续 Actions: A7.4, ARCH-5, ARCH-6, ARCH-7, ARCH-8
+
+📊 整体进度: 3/36 done (8%)
+🎯 Phase 1: 2/4 done — 50% complete
+
+💡 所有关键路径阻塞已清除，可推进 Phase 2
+
+—— 2026/6/29 14:30:00
+```
+
+#### 阶段里程碑
+
+```
+✅ 【VideoLingo】阶段里程碑: Phase 1 完成
+
+📊 Phase 1 (止血): 4/4 actions done — 100%
+⏱️ 实际耗时: 18h / 预估 22h
+
+📈 进入 Phase 2 (修复): 5 actions, 预估 16h
+
+💡 关键路径已清除，后续 actions 无阻塞依赖
+
+—— 2026/6/30 09:00:00
+```
+
+#### 停滞告警
+
+```
+⚠️ 【VideoLingo】改进停滞警告
+
+📊 7 天无进度更新
+   待处理: 12 actions (4 blocked, 8 todo)
+   上次完成: 2026-06-22 (A3.2)
+
+💡 建议检查是否有阻塞项需要优先解决
+
+—— 2026/6/29 09:00:00
+```
+
+**构建方式**: 使用 rui-bot `format.mjs`:
+
+```javascript
+import { formatAlert } from '../rui-bot/format.mjs';
+
+// Critical path completion
+const msg = formatAlert({
+  project: 'VideoLingo',
+  level: 'success',
+  title: `关键路径进展: ${actionId} 已完成`,
+  detail: `📋 Action: ${action.title}\n🔓 解锁 ${unblockedCount} 个后续 Actions: ${unblockedIds}`,
+});
+
+// Phase milestone
+const msg = formatAlert({
+  project: 'VideoLingo',
+  level: 'success',
+  title: `阶段里程碑: ${phase.label} 完成`,
+  detail: `📊 ${phase.id}: ${doneCount}/${totalCount} actions done\n📈 进入 Phase ${nextPhase}`,
+});
+```
+
+### Step 5: Present and Explain
 
 After generating the files, tell the user:
 - Where the files were created (`docs/views/checkout/`)
@@ -745,6 +818,7 @@ Output follows the same 4-file pattern as all other doc components: `data.js` + 
 | Architecture Report (架构报告) | upstream — provides the 8-dimension architecture data with 10 actions + KPIs | `docs/views/架构报告/data.js` |
 | [[rui-checklist]] | sibling — both generate tracking pages; rui-checklist for card quality, rui-checkout for code actions | rui-checklist audit pattern |
 | [[rui-html]] | sibling — shares the Vue 3 CDN + 4-file component pattern | docs component conventions |
+| [[rui-bot]] | calls → rui-bot | Progress alerts for critical path completion, phase milestones, and staleness warnings |
 
 ### Output ownership
 

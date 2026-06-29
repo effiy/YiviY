@@ -1,6 +1,16 @@
 ---
 name: rui-graph
-description: Generate interactive code dependency graphs from Python source code using Cytoscape.js. Analyze .py files to extract import relationships, class hierarchies, function call graphs, and module structures, producing self-contained dark-theme HTML with interactive graph visualization. Use when the user wants to visualize code dependencies, import graphs, call graphs, class hierarchies, or module structures. Also use when the user mentions 源码图谱, dependency graph, code graph, import map, function-level dependencies, or wants to see how source files connect. **Do not use for multi-language architecture diagrams** — see [[rui-diagram]].
+description: >
+  Generate interactive code dependency graphs from Python source code using
+  Cytoscape.js. Deep dependency analysis: transitive deps (2-hop/3-hop),
+  circular dependency detection, fan-in/fan-out metrics, impact analysis
+  visualization. Shows file import relationships, class hierarchies, function
+  call graphs, and module structures with rich detail panels. Use when the
+  user wants code dependency graphs, import analysis, call graphs, class
+  hierarchies, deep dependency chains, or circular import detection. "源码图谱",
+  "dependency graph", "deep dependencies", "模块依赖关系", "circular deps",
+  "import analysis".
+  **Do not use for multi-language architecture diagrams** — see [[rui-diagram]].
 lifecycle: default-pipeline
 ---
 
@@ -441,6 +451,211 @@ Only file + module nodes with `imports` and `exports` edges. No class/function n
 
 Focus on one package: show the focal file + all its contained classes/functions + all files it imports + all files that import it. Use for code review or understanding a specific module.
 
+### Mode D: Impact Analysis (New)
+
+Show the blast radius of a change: select a file/function/class → highlight all direct + transitive dependents. Use for code review, refactoring risk assessment.
+
+## Deep Dependency Analysis
+
+rui-graph 不仅展示直接依赖，还能分析更深层的依赖关系。
+
+### Transitive Dependencies (传递依赖)
+
+**1-hop**: 直接 import（A → B）
+**2-hop**: A → B → C（A 间接依赖 C）
+**3-hop**: A → B → C → D（深层传递）
+
+在 Detail Panel 中，每个依赖项标注 hop 深度：
+
+```
+→ Imports (5)
+  utils/__init__.py                    [1-hop]   ← 直接依赖
+  utils/networking.py                  [1-hop]
+  └─ networking/__init__.py            [2-hop]   ← 通过 utils 间接依赖
+     └─ networking/sockets.py           [3-hop]
+```
+
+### Circular Dependency Detection (循环依赖检测)
+
+自动检测文件间的循环引用：
+
+```
+🔴 Circular Dependency Detected:
+  YoutubeDL.py → utils/__init__.py → downloader/__init__.py → YoutubeDL.py
+  Cycle length: 3 nodes
+  Risk: HIGH — refactoring any of these files may break others
+```
+
+检测算法：
+1. 遍历所有 `imports` 边构建有向图
+2. DFS 检测 back-edge（Tarjan SCC 算法）
+3. 报告所有环及其长度和风险等级
+
+| 环长度 | 风险 | 建议 |
+|--------|------|------|
+| 2 | MEDIUM | 考虑提取共同依赖到独立模块 |
+| 3-4 | HIGH | 建议重构 — 引入接口或抽象层 |
+| 5+ | CRITICAL | 必须重构 — 模块边界严重模糊 |
+
+### Fan-In / Fan-Out 分析
+
+每个文件节点显示被依赖和依赖他人的度量：
+
+```
+📄 YoutubeDL.py
+   Fan-Out (依赖别人): 12  ← 导入了12个其他模块
+   Fan-In  (被人依赖):  8  ← 被8个其他模块导入
+   Instability: 0.60     ← Fan-Out / (Fan-In + Fan-Out)
+                           0 = 完全稳定, 1 = 完全不稳定
+```
+
+在侧边栏按 Instability 排序，一眼识别系统的稳定核心和易变边缘。
+
+### Impact Analysis View (影响面分析)
+
+选择任一节点 → 高亮所有传递依赖链：
+
+```
+🔍 Impact of changing YoutubeDL.py:
+
+Direct dependents (1-hop):  8 files
+  ├─ __init__.py
+  ├─ options.py
+  └─ ... (5 more)
+
+Indirect dependents (2-hop): 15 files
+  ├─ downloader/__init__.py  (via __init__.py)
+  ├─ extractor/common.py     (via options.py)
+  └─ ... (12 more)
+
+Total blast radius: 23 files (35% of codebase)
+Risk Level: HIGH — change with caution
+```
+
+**建议**: 修改高 Fan-In 文件前（如 YoutubeDL.py），先运行 Impact Analysis 了解影响面。
+
+## Deep Detail Descriptions
+
+rui-graph 的 Detail Panel 不仅显示基本元数据，还为每个节点类型提供深度描述：
+
+### File Detail — 代码复杂度画像
+
+```
+📄 YoutubeDL.py
+Path: yt_dlp/YoutubeDL.py · Lines: 4,542 · Module: yt_dlp
+
+📊 代码复杂度:
+  Lines:      4,542 ████████████████████ (Core tier — largest file)
+  Classes:    1     (YoutubeDL — 69 methods)
+  Functions:  0     (all logic in class methods)
+  Imports:    12    (from 8 modules)
+  ImportedBy: 8     (high fan-in — hub node)
+
+🔍 依赖健康:
+  Fan-Out: 12 · Fan-In: 8 · Instability: 0.60 (moderate)
+  Risk: MEDIUM — high fan-out means this file is hard to isolate for testing
+  Circular Deps: 1 detected (3-node cycle with utils → downloader)
+
+💡 Refactoring Suggestion:
+  Consider splitting into YoutubeDL_core.py (orchestration) +
+  YoutubeDL_formats.py (format handling) to reduce complexity below 2,000 lines.
+```
+
+### Class Detail — 继承层次与职责
+
+```
+⬡ YoutubeDL
+File: YoutubeDL.py · Category: orchestrator · 69 methods
+
+📊 类职责分析:
+  Methods:     69 ████████████████████ (orchestrator — central controller)
+  Public API:  12 methods (extract_info, download, urlopen, ...)
+  Internal:    57 methods (_setup_opener, _handle_format, ...)
+  Inheritance: No base class (root of hierarchy)
+
+⬆ Extended By: None
+⬇ Extends: None (standalone orchestrator)
+
+🔍 Design Notes:
+  God class pattern — 69 methods spanning extraction, downloading,
+  post-processing, and format selection. High coupling to utils module.
+  Recommended: extract format-handling methods into FormatManager class.
+
+⚙ Key Methods:
+  extract_info()     — Entry point for video info extraction
+  download()         — Main download orchestrator
+  process_video()    — Post-processing pipeline entry
+  urlopen()          — Network request handler with retry logic
+```
+
+### Function Detail — 调用链与影响面
+
+```
+○ extract_info()
+File: YoutubeDL.py · Class: YoutubeDL · Role: entry point
+
+📊 调用关系:
+  → Calls (4): urlopen(), process_video_result(), sanitize_url(), check_deprecated()
+  ← Called By (3): download(), run_pipeline(), main()
+  Depth: 3 (max call chain: main → download → extract_info → urlopen)
+
+🔍 影响面分析:
+  直接调用者: 3 functions
+  传递调用者: 8 functions (2-hop)
+  Blast Radius: if extract_info signature changes, 11 callers need update
+
+💡 Notes:
+  Entry point for all video data extraction. High test coverage recommended.
+  Handle error states from urlopen() — currently propagates uncaught exceptions.
+```
+
+### Module Detail — 包结构分析
+
+```
+◇ yt_dlp
+Path: yt_dlp/ · Sub-packages: 3 (utils, downloader, extractor)
+
+📊 包结构:
+  Total Files: 22 (5 core, 12 library, 5 utility)
+  __init__.py: Re-exports 8 public symbols
+  Public API: YoutubeDL, Downloader, Extractor, parse_options, ...
+
+📄 Core Files (5):
+  YoutubeDL.py       — Main orchestrator (4,542 lines)
+  options.py          — CLI option definitions (890 lines)
+  ...
+
+🔍 包健康:
+  Circular Deps: 2 cycles detected (total 5 nodes involved)
+  Abstraction: Good — 8 public symbols vs 22 internal files (0.36 ratio)
+  Cohesion: File imports mostly internal (15/18 internal, 3 external)
+
+💡 Suggestion: utils sub-package has 1 cycle with downloader.
+  Consider extracting shared types to yt_dlp/types.py.
+```
+
+### Edge Detail — 关系深度
+
+点击任意边时，显示关系详情：
+
+```
+Edge: YoutubeDL.py → utils/__init__.py
+Type: imports · Weight: 1.0
+
+📊 导入详情:
+  Imported symbols: sanitize_url, check_deprecated, format_bytes, ...
+  Import type: from ..utils import sanitize_url, ...
+  Used in: 12 methods across YoutubeDL class
+
+🔍 依赖健康:
+  Coupling: HIGH — used in 12 of 69 methods (17%)
+  Risk: MEDIUM — utils is stable (Instability: 0.15), low chance of breaking changes
+
+💡 If this import changes, 12 YoutubeDL methods need verification.
+```
+
+These deep descriptions are generated from the graph data and displayed in the detail panel when a user clicks a node or edge. They provide actionable insights beyond raw metadata — complexity metrics, refactoring suggestions, impact analysis, and architectural recommendations.
+
 ## Graph Features (All Modes)
 
 ### Layouts
@@ -588,6 +803,28 @@ Update existing `graph-data.json` when source code changes.
 4. Merge changes into existing `graph-data.json` (Phase 2)
 5. Recompute shared edges (imports, exports) (Phase 2)
 6. Validate, generate HTML, save (Phases 3-5)
+
+### W5: Circular Dependency Detection
+
+专门检测和报告循环依赖。
+
+1. Phase 0: 解析源码目录，构建文件清单
+2. Phase 1: AST 解析，只提取 `imports` 边（跳过 calls/inherits）
+3. Phase 2: 构建有向依赖图，运行 Tarjan SCC 算法
+4. Generate: 生成循环依赖报告页面 — 每个环一张卡（环长、风险、建议），带 graph 链接可下钻
+5. 通过 rui-bot 发送高风险循环依赖告警
+
+**输出**: `docs/views/<name>/graph/circular-deps.html` — 循环依赖专题报告
+
+### W6: Impact Analysis Report
+
+分析变更影响面。
+
+1. 用户指定目标文件/类/函数
+2. 计算 1-hop + 2-hop + 3-hop 传递依赖
+3. 按文件分组，标注 Instability 分数
+4. 生成影响面报告: blast radius 文件列表 + 风险等级
+5. 在 graph 中高亮影响链（红色渐变色边）
 
 ---
 
@@ -764,6 +1001,11 @@ class Processor:
 - Generate an interactive **Cytoscape.js** graph embedded in a 4-file page (`index.html` + `index.js` + `index.css` + `data.js`)
 - Tier files (core / library / utility), categorize classes (orchestrator / abstract / data / handler), classify functions (entry / core / utility)
 - Run a 5-phase pipeline (Pre-flight → Parse → Build → Validate → Generate)
+- **Detect circular dependencies** with Tarjan SCC — risk ratings + refactoring suggestions
+- **Compute transitive dependencies** (2-hop, 3-hop) — deep dependency chains
+- **Analyze fan-in/fan-out** per file — Instability metric, identify stable core vs. volatile edge
+- **Visualize change impact** — select a node → highlight all transitive dependents ("blast radius")
+- **Generate impact analysis reports** and circular dependency reports
 
 ### What this skill does NOT do
 

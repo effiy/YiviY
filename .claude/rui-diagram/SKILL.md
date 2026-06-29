@@ -1,6 +1,14 @@
 ---
 name: rui-diagram
-description: Create architecture diagrams (HTML+SVG, dark theme) and run multi-agent codebase analysis producing structured Knowledge Graphs. Use for system diagrams, infrastructure diagrams, cloud architecture, network topology, or codebase understanding. Also handles incremental analysis, diff impact, and subdomain merging. **Do not use for Python interactive code graphs** — see [[rui-graph]].
+description: >
+  Create architecture diagrams (HTML+SVG, dark theme) and run multi-agent
+  codebase analysis producing structured Knowledge Graphs. Supports system
+  overview (panoramic whole-project view), cross-project merge, diff impact
+  analysis, and incremental updates. Use for system diagrams, infrastructure
+  diagrams, cloud architecture, network topology, codebase understanding,
+  or project panoramic views. "总揽全局", "全景视图", "架构图", "系统图",
+  "全景", "panorama", "overview diagram".
+  **Do not use for Python interactive code graphs** — see [[rui-graph]].
 lifecycle: default-pipeline
 ---
 
@@ -21,6 +29,10 @@ User asks for...
 ├─ Architecture diagram (system/infra/network/cloud)
 │  → Mode A: build SVG diagram (copy template → draw → verify)
 │     If based on real code → run Phase 0 first
+│
+├─ System overview / panorama ("总揽全局", "全景视图")
+│  → W7: Panorama Mode — cross-project panoramic view
+│     Phase 0 across all sub-projects → merge → unified KG → SVG panorama
 │
 ├─ Codebase understanding / analysis
 │  → Phase 0 only (produce knowledge-graph.json)
@@ -279,6 +291,28 @@ Detect wiki structure (index.md + wikilinks) → extract articles, sources, topi
 
 After any KG-producing workflow, launch interactive dashboard: hierarchical (dagre) for codebase, force-directed for knowledge, diff overlay, layer filtering, tour navigation.
 
+### W7: System Panorama (总揽全局)
+
+生成**全项目全景视图** — 一张图看懂整个项目的架构、模块关系、数据流向。
+
+**触发**: "总揽全局", "全景视图", "panorama", "big picture", "系统全景"
+
+**流程**:
+1. **Phase 0 广度优先** — 扫描所有子目录（不只是源码），识别所有组件
+2. **分层概览** — Layer classifier 只分 3-5 个大层（表示层 / 业务层 / 数据层 / 基础设施 / 外部依赖）
+3. **关键路径提取** — 只保留高 fan-in/fan-out 的 hub 节点 + 跨层边界的关键边
+4. **全景 SVG 渲染** — 单页 SVG，所有层在一屏内可见，不需要滚动
+5. **导航标注** — 每个节点标注所属子项目（`.claude/rui-*/`, `docs/`, `src/`），可下钻到详细图
+
+**全景 SVG 规则**（区别于常规架构图）:
+- 最大 800×600 视口 — 一屏内总览
+- 节点精简到 15-30 个 — 只保留枢纽和跨层节点
+- 层边界用粗虚线 (`stroke-width: 3`)，层标签左上角
+- 跨层边用渐变色箭头（从源层颜色渐变到目标层颜色）
+- 底部 summary bar: 节点总数、层数、子项目数、分析时间
+
+**输出**: `.diagram/panorama.svg` + `.diagram/panorama.html`（带导出工具栏）
+
 ## Critical Rules
 
 - **Deterministic edges first, LLM semantics second** — structure from tree-sitter/grep, meaning from LLM
@@ -324,6 +358,7 @@ After any KG-producing workflow, launch interactive dashboard: hierarchical (dag
 
 - Run multi-agent codebase analysis (Phase 0) → Knowledge Graph (21 node types, 35 edge types across 8 categories)
 - Produce **SVG architecture diagrams** (dark theme, `--yry-*` tokens) from the KG
+- **Generate system panoramas** (总揽全局) — one-screen overview of entire project architecture
 - Support incremental updates via fingerprint diff (SKIP / PARTIAL / ARCHITECTURE / FULL)
 - Handle dashboard launch (React app) for interactive KG exploration
 - Cover knowledge/wiki mode (article detection, wikilinks)

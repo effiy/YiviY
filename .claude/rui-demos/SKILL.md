@@ -1,6 +1,14 @@
 ---
 name: rui-demos
-description: Generate interactive scene demonstration pages from rui-scene card data. Analyze YrySceneCard data structures from INTRO_CONFIG, data.js card arrays, or inline card definitions, and produce self-contained dark-theme HTML demo pages — one 4-file directory per card — that showcase each feature in action. Use when the user wants to create demo pages, feature showcases, interactive demonstrations, or scene HTML pages from cards. Also use when the user mentions 演示页面, demo pages, scene demos, card demonstrations, feature demos,... or wants to generate visual showcases from rui-scene card data.
+description: >
+  Generate interactive scene demonstration pages from rui-scene card data.
+  Direct scenario→demo mapping for 15+ project types. Analyze YrySceneCard
+  data structures and produce self-contained 4-file demo pages — each
+  showcasing a feature in action with type-specific interactivity (Tool
+  Interface, Pipeline, Comparison, State Machine, Dashboard, Walkthrough).
+  Use when the user wants demo pages, feature showcases, interactive
+  demonstrations, or scene HTML pages from cards. "演示页面", "demo pages",
+  "场景效果", "feature demos", "交互演示".
 lifecycle: default-pipeline
 ---
 
@@ -110,6 +118,28 @@ User has card data and wants to generate demo pages...
 └─ Mixed batch (multiple types in one generation run)
    → Group by type → parallel subagents → per-scene index page
 ```
+
+## Scenario → Demo 快速映射
+
+**"我的项目里有什么 → 应该生成什么演示"** — 按项目场景直接找到对应 Demo 类型。
+
+| 项目场景 | 卡片特征 | Demo 类型 | 演示效果 | 一句话描述 |
+|----------|----------|-----------|----------|-----------|
+| 🎬 视频下载工具 | ext links 3+, badge: OSS | **Type A** 工具界面 | 输入URL→进度条→结果 | "让用户'试用'这个工具" |
+| 🔊 语音转文字 | ext links 3+, desc 含 "transcribe" | **Type A** 工具界面 | 上传模拟→转录进度→文本输出 | "模拟工具的实际使用流程" |
+| 🧠 AI 分句管线 | purple tag, desc 含 "pipeline/steps" | **Type B** 管线可视化 | 步骤节点→自动播放→中间态 | "展示数据流经各阶段的动画" |
+| 🔄 三步骤翻译 | purple tag, desc 含 "3-Step" | **Type B** 管线可视化 | 3步流→每步展开→翻译对比 | "每步可点击查看细节" |
+| 🎙️ 多引擎 TTS | count tags ("6 engines"), desc 列引擎 | **Type C** 对比展示 | 引擎标签页→对比表→高亮最优 | "并排对比各引擎效果" |
+| 🌍 多语言翻译 | count tags ("4 languages"), 语言列表 | **Type C** 对比展示 | 语言切换→翻译对比→质量评分 | "一键切换语言看翻译质量" |
+| ⏯️ 任务控制 | tags "real-time"/"3 states" | **Type D** 状态机 | 状态图→点击转换→操作日志 | "模拟状态流转和操作" |
+| 🔍 智能搜索 | desc 含 "auto-fetch"/"实时" | **Type D** 状态机 | 搜索框→状态变化→结果面板 | "展示搜索的实时状态变化" |
+| 📊 代码健康报告 | badge: 'Report', tags 含分数 | **Type E** 仪表盘 | 评分卡→雷达图→改进建议 | "可视化报告的所有指标" |
+| 🏗️ 架构评估 | badge: 'Report', meta 含 ATAM | **Type E** 仪表盘 | 维度分→对比基准→建议展开 | "架构评估一目了然" |
+| 🚀 快速开始指南 | badge: 'Guide', tags "5 min" | **Type F** 引导教程 | 步骤点→代码块→复制按钮 | "3-5步带用户走完入门" |
+| ⚙️ 配置指南 | badge: 'Guide', nameHref #config | **Type F** 引导教程 | 配置步骤→代码块→预期结果 | "可复制的配置代码" |
+| 🔌 插件/扩展 | ext links 1-2, 技术标签 | **Type A** 工具界面 | 配置面板→启用开关→效果预览 | "展示插件的功能和配置" |
+| 📈 性能基准 | count tags "10 benchmarks" | **Type C** 对比展示 | 基准表格→排序→高亮 | "交互式查看性能数据" |
+| 🔐 认证流程 | desc 含 "OAuth"/"JWT"/"login" | **Type B** 管线可视化 | 认证步骤流→每步说明→代码 | "展示认证的完整流程" |
 
 ## Demo Types Reference
 

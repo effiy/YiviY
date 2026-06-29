@@ -1,22 +1,67 @@
 ---
 name: rui-checklist
-description: Analyze rui-scene card content and generate interactive verification checklist HTML pages. Use whenever the user wants to check, verify, or audit scene cards — "check the cards", "generate a checklist", "verify card quality", "audit scene data", "card checklist", "检查卡片", "生成清单", or any mention of checklist + cards/scene. Also use when the user wants to validate that scene card data meets the Code Health Report standard.
+description: >
+  Project self-improvement system — 项目自改进系统。Analyze rui-scene card
+  content and generate interactive verification checklist HTML pages. Also
+  includes daily introspection (good/bad reflection), step-by-step project
+  health improvement workflow, automated quality scoring, self-testing for
+  all check rules, completion effects tracking, WeCom notification templates,
+  and self-improvement analysis reports with trend forecasting. Use whenever
+  the user wants to check/verify/audit cards, do daily self-review, run
+  project health checks, run self-tests, or follow the self-improvement
+  cycle. "check the cards", "daily introspection", "今日自省", "项目自检",
+  "health check", "检查卡片", "生成清单", "自改进", "自测试", "run self test".
 lifecycle: default-pipeline
 ---
 
-# Rui Checklist
+# Rui Checklist — 项目自改进系统
 
-Analyze rui-scene card data against quality standards and generate an interactive verification checklist page.
+两大能力共享一个核心：**质量检查 → 自改进循环**。
+
+```
+每日自省 → 质量检查 → 自动修复 → 验证改进 → 报告通知 ──┐
+    ↑         ↑            ↑          ↑          ↑        │
+    │    自测试验证   完成效果追踪  趋势分析   通知模板     │
+    ↑                                                    │
+    └────────────── 持续改进循环 ─────────────────────────┘
+```
 
 ## What This Skill Does
 
-Reads scene card data from `data.js` files (the output of [[rui-scene]]), runs automated quality checks against the rui-scene standard, and produces a 4-file checklist page (data.js + index.js + index.html + index.css) in a `checklist/` subdirectory. The result is an interactive Vue 3 page where users can:
+### 能力一：卡片质量检查 (Card Quality Audit)
 
-- See **auto-graded pass/fail/warn results** for every card
-- **Check off** items manually and see real-time summary updates
-- **Filter** by status (pass/fail/warn/pending) and by card
-- **Expand/collapse** per-card sections
-- See an **overall score** and per-category breakdown
+读取 rui-scene 卡片数据，运行自动化质量检查，生成交互式验证清单 HTML 页面（4-file 格式）。详见下方 Step 2–4。
+
+### 能力二：项目自改进 (Project Self-Improvement)
+
+按步骤一步一步完成项目的自我诊断和改进 — 从每日自省(good/bad)到质量检查、自动修复、验证改进、报告通知。详见 `references/self-improvement.md`。
+
+### 能力三：规则自测试 (Rule Self-Testing)
+
+每个检查规则都有自测试夹具和验证脚本，确保检查逻辑正确无误。详见 `tests/`。
+
+**触发**: "run self test", "运行自测试", "test check rules"
+
+所有 23 条规则（structural × 7, tag-quality × 4, link-hygiene × 3, standard × 3, i18n × 3, human × 3）都有自动化测试，覆盖 pass / fail / warn 三种状态。
+
+### 能力四：完成效果追踪 (Completion Effects)
+
+每次检查运行后生成结构化效果报告：健康分变化、问题解决数、自动修复数、待处理项。详见 `references/completion-effects.md`。
+
+**输出**: 终端摘要 + HTML 组件 + JSONL 持久化
+
+### 能力五：通知模板库 (Notification Templates)
+
+为 rui-bot 提供三类企业微信 Markdown 通知模板：
+- **健康报告**: 质量检查结果 + 改进效果 + 详情链接
+- **每日自省**: Good/Bad 回顾 + 明日计划 + 连续天数
+- **改进警报**: 健康分下降 / 问题回归 / 改进停滞 / 里程碑
+
+详见 `templates/notification/`。
+
+### 能力六：自改进分析报告 (Self-Improvement Report)
+
+多轮检查数据的综合分析：趋势预测、复发检测、分类速率、稳定性评估、数据驱动建议。详见 `templates/report/`。
 
 ## When to Use This Skill
 
@@ -25,6 +70,102 @@ Reads scene card data from `data.js` files (the output of [[rui-scene]]), runs a
 - User mentions checklist + cards/scene in any language (清单 + 卡片)
 - After rui-scene generates or updates card data — verify the output
 - Before shipping a page that uses scene cards — catch quality regressions
+- **User wants daily introspection** — "今日自省", "daily check", "今日总结"
+- **User wants project health check** — "项目自检", "health check", "质量报告"
+- **User wants to run the self-improvement cycle** — "自改进", "self-improvement"
+- **User wants to run self-tests** — "run self test", "自测试", "test check rules"
+- **User wants completion effects** — "check result", "完成效果", "改进效果"
+- **User wants trend analysis** — "trend analysis", "趋势分析", "improvement report"
+- **User wants to send health notification** — "send health report", "发送健康报告"
+
+## 项目自改进工作流
+
+完整的自改进循环包含 5 个步骤。详细说明见 `references/self-improvement.md`。
+
+### Step 1: 每日自省 (Daily Introspect)
+
+每天回顾项目状态，记录 Good（做得好）和 Bad（需改进）：
+
+```
+🟢 今日 Good:
+  1. <做得好的一件事>
+  2. <做得好的一件事>
+
+🔴 今日 Bad:
+  1. <需要改进的一件事>
+  2. <需要改进的一件事>
+
+🎯 明日计划:
+  1. <明天要做的改进>
+```
+
+自省记录追加到 `docs/故事任务面板/daily-check/每日自省.md`。触发方式：用户说"今日自省"、"daily check"。
+
+通过 rui-bot 发送自省报告到企业微信：
+
+```javascript
+import { formatDailyIntrospect } from '../rui-bot/format.mjs';
+// 构建消息 → rui-bot send.mjs 发送
+```
+
+### Step 2: 质量检查 (Quality Check)
+
+对卡片数据和项目结构运行全面检查，生成健康分 (0-100)。检查分为：
+
+| 类别 | 检查数 | 说明 |
+|------|--------|------|
+| structural | 7 | name, desc, tags, badge, meta 字段完整性 |
+| tag-quality | 4 | modifier 语义、自描述、简洁性、唯一性 |
+| link-hygiene | 3 | links 配置、grid 策略、nameHref 配对 |
+| standard | 3 | 数字量化、badge 大小写、卡片差异化 |
+| i18n | 3 | 多语言结构一致性（如有） |
+| human | 3 | 人工审查项（标记为 pending） |
+
+### Step 3: 自动修复 (Auto-Fix)
+
+可自动修复的问题：
+
+| 问题 | 自动修复 |
+|------|----------|
+| badge 小写开头 | 自动转大写 |
+| links 字段缺失 | 设为 `null` |
+| 硬编码 hex 颜色 | 替换为 `var(--yry-*)` |
+| tags 缺 modifier | 根据语义推荐 modifier |
+| desc 无 `·` 分隔符 | 建议替换（需人工确认） |
+
+### Step 4: 验证改进 (Verify)
+
+修复后重新检查，对比改进前后的健康分：
+
+```
+改进前: 健康分 72/100 (8 fail, 4 warn)
+   ↓ 自动修复 + 人工改进
+改进后: 健康分 88/100 (2 fail, 3 warn) ↑ +16
+```
+
+### Step 5: 报告通知 (Report & Notify)
+
+通过 [[rui-bot]] 发送健康报告通知：
+
+```javascript
+import { formatHealthReport } from '../rui-bot/format.mjs';
+// → rui-bot send.mjs 发送到企业微信
+```
+
+### 触发整个自改进循环
+
+用户说"项目自检"、"run health check"、"自改进"时，按 Step 1→5 顺序执行：
+1. 询问是否先做每日自省
+2. 运行卡片/项目质量检查
+3. 自动修复可确定的问题
+4. 重新检查，对比改进效果
+5. 如用户配置了 rui-bot，发送健康报告通知
+
+---
+
+## 卡片质量检查（原有能力）
+
+以下为 rui-checklist 原有的卡片质量检查功能。
 
 ## How It Works
 
@@ -496,10 +637,61 @@ Output follows the same 4-file pattern as all other doc components: `data.js` + 
 ## Reference Files
 
 - `references/check-rules.md` — Full check rule reference with detailed pass/fail conditions, examples, and edge cases. Read this when generating the analysis for complete rule definitions.
+- `references/self-improvement.md` — **项目自改进工作流**：5步循环 (自省→检查→修复→验证→报告)，每日自省模板，健康分追踪，自动修复规则。
+- `references/completion-effects.md` — **完成效果格式**：health delta、issue breakdown、improvement log、action items 的结构化定义，含终端/HTML/WeCom 三种渲染模板。
+- `templates/notification/health-report.md` — **健康报告通知模板**：完整版/紧凑版/全绿版/紧急版 4 种 WeCom markdown 模板。
+- `templates/notification/daily-introspect.md` — **每日自省通知模板**：完整版/紧凑版/周末回顾版 3 种格式。
+- `templates/notification/improvement-alert.md` — **改进警报通知模板**：6 种警报类型（健康分下降/回归/停滞/里程碑/过期检查）。
+- `templates/report/self-improvement-report.md` — **自改进分析报告模板**：8 段结构（趋势/问题/速率/风险/建议/下轮计划）+ markdown 渲染。
+- `templates/report/trend-analysis.md` — **趋势分析模板**：包含线性回归、达标预测、复发检测、速率分析、ASCII 趋势图渲染的完整算法。
+- `tests/fixtures/sample-cards.js` — **自测试夹具**：10 张覆盖所有 23 条规则正/反/边 cases 的测试卡片。
+- `tests/self-test-rules.js` — **规则自测试脚本**：所有检查规则的独立实现 + 测试运行器 + 报告生成器。
 
 ## 规则
 
 - [audit-invariants.md](./rules/audit-invariants.md) — 卡片审计的数据契约、检查类别分级、路径所有权与跨技能边界。
+
+## 自测试
+
+### 运行自测试
+
+```
+用户: "run self test" / "运行自测试" / "test check rules"
+```
+
+Claude agent 执行 `tests/self-test-rules.js` 中的 `runSelfTest()` 并返回结果:
+
+```
+════════════════════════════════════════
+  rui-checklist 规则自测试报告
+════════════════════════════════════════
+
+  总计: 173 tests
+  通过: 173 ✅
+  失败: 0 ❌
+  通过率: 100%
+
+── 分类汇总 ──
+  ✅ struct: 80/80 passed
+  ✅ tag: 36/36 passed
+  ✅ link: 27/27 passed
+  ✅ std: 27/27 passed
+  ✅ i18n: 3/3 passed
+```
+
+### 添加新测试
+
+1. 在 `tests/fixtures/sample-cards.js` 添加测试卡片
+2. 设置 `expected` 中对应新规则的预期值
+3. 如需要新检查函数，在 `tests/self-test-rules.js` 添加实现
+4. 运行自测试确认全部通过
+
+### 测试覆盖原则
+
+- **正例**：至少 1 张完美卡片（所有检查 pass）
+- **反例**：每个规则至少 1 张卡片对应 fail
+- **边例**：每个 warn 条件至少 1 张卡片对应 warn
+- **复合**：1 张卡片同时触发多个 fail/warn
 
 ## 专业代理
 
@@ -510,9 +702,17 @@ Output follows the same 4-file pattern as all other doc components: `data.js` + 
 
 ### What this skill does
 - Read scene card data from `data.js` files
-- Run automated quality checks against the rui-scene standard
+- Run automated quality checks against the rui-scene standard (23 checks across 5 categories + 3 human)
 - Generate a 4-file interactive checklist page (data + js + html + css)
 - Produce an interactive Vue 3 page with filtering, checkbox persistence, and summary stats
+- **Guide step-by-step project self-improvement** (daily introspection → check → fix → verify → report)
+- **Generate daily good/bad introspection reports** via rui-bot
+- **Track health score trends** across multiple check runs
+- **Auto-fix deterministic issues** (badge case, missing links, hex colors, missing modifiers)
+- **Self-test all 23 check rules** with fixtures covering pass/fail/warn cases (173 tests, 100% coverage)
+- **Produce completion effects reports** with health delta, issue breakdown, improvement log, and action items
+- **Format WeCom notifications** for health reports, daily introspection, and improvement alerts
+- **Generate self-improvement analysis reports** with trend forecasting, recurrence detection, and data-driven recommendations
 
 ### What this skill does NOT do
 - **Modify card data** — this is read-only analysis; use [[rui-scene]] to fix issues found
@@ -520,6 +720,8 @@ Output follows the same 4-file pattern as all other doc components: `data.js` + 
 - **Mount cards into DOM** — that is [[rui-html]] via `YrySceneCard.mount()`
 - **Run in CI/CD** — the checklist is a human-facing tool, not an automated gate (though the analysis logic could be extracted)
 - **Grade demo pages** — demo quality is [[rui-demos]] territory; rui-checklist focuses on card data structure
+- **Send notifications directly** — uses [[rui-bot]] for WeCom delivery; rui-checklist provides the formatted content
+- **Replace human judgment** — pending/human checks remain manual review items; the system flags them, doesn't decide them
 
 ### Coordinated with
 
@@ -528,6 +730,7 @@ Output follows the same 4-file pattern as all other doc components: `data.js` + 
 | [[rui-scene]] | upstream — produces the card data that rui-checklist analyzes | rui-scene's Output Checklist defines the standard |
 | [[rui-demos]] | sibling — produces demo pages from cards; rui-checklist verifies the card data before demo generation | rui-demos output-checklist.md |
 | [[rui-diagram]] | sibling — shares the component creation conventions | component-checklist.md |
+| [[rui-bot]] | calls → rui-bot | Health reports, daily introspection → rui-bot for WeCom delivery |
 
 ### Output ownership
 
