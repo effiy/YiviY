@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[GRAPH_TITLE] — Source Graph</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Cytoscape.js + Layout Plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #020617;
+      --surface: #0f172a;
+      --border: #1e293b;
+      --text: #f8fafc;
+      --text-soft: #94a3b8;
+      --text-muted: #64748b;
+      --font: 'JetBrains Mono', monospace;
+
+      /* Badge colors */
+      --core: #34d399;      --core-bg: rgba(6, 78, 59, 0.4);
+      --report: #fb7185;    --report-bg: rgba(136, 19, 55, 0.4);
+      --guide: #38bdf8;     --guide-bg: rgba(8, 51, 68, 0.4);
+      --oss: #fbbf24;       --oss-bg: rgba(120, 53, 15, 0.3);
+      --agent: #a78bfa;     --agent-bg: rgba(76, 29, 149, 0.4);
+      --default: #22d3ee;   --default-bg: rgba(8, 51, 68, 0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ──────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .pulse-dot {
+      width: 10px; height: 10px;
+      background: var(--default);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .header h1 { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+    .header .subtitle { color: var(--text-soft); font-size: 0.75rem; margin-left: 0.25rem; }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── Toolbar ─────────────────────────── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .toolbar-label {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .toolbar select, .toolbar input {
+      font-family: var(--font);
+      font-size: 0.75rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: 0.375rem;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+    .toolbar select:focus, .toolbar input:focus {
+      border-color: var(--default);
+    }
+    .toolbar input[type="search"] {
+      width: 160px;
+    }
+    .filter-btn {
+      font-family: var(--font);
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.375rem;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .filter-btn:hover { color: var(--text); border-color: var(--text-soft); }
+    .filter-btn.active { color: var(--text); border-color: var(--default); background: var(--default-bg); }
+
+    /* Action buttons */
+    .btn {
+      font-family: var(--font);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 0.375rem;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { color: var(--text); border-color: var(--text-soft); background: rgba(30, 41, 59, 0.5); }
+    .btn.primary { border-color: var(--default); color: var(--default); }
+    .btn.primary:hover { background: var(--default-bg); }
+
+    /* ── Main Layout ─────────────────────── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ────────────────────────── */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-section h3 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.7rem;
+      color: var(--text-soft);
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .legend-line {
+      width: 20px; height: 1.5px;
+      flex-shrink: 0;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      margin-bottom: 0.25rem;
+    }
+    .stat-val { color: var(--text); font-weight: 600; }
+    .stat-label { color: var(--text-muted); }
+
+    /* ── Graph Container ─────────────────── */
+    .graph-container {
+      flex: 1;
+      position: relative;
+      background: var(--bg);
+    }
+    #cy {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Detail Panel ────────────────────── */
+    .detail-panel {
+      width: 320px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: width 0.3s;
+    }
+    .detail-panel.collapsed { width: 40px; }
+    .detail-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      user-select: none;
+    }
+    .detail-toggle:hover { color: var(--text); }
+    .detail-content { padding: 1rem; flex: 1; overflow-y: auto; }
+    .detail-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 1rem;
+    }
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .detail-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .detail-badge {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.25rem;
+      border: 1px solid;
+      letter-spacing: 0.05em;
+    }
+    .detail-badge.badge-core { color: var(--core); border-color: var(--core); background: var(--core-bg); }
+    .detail-badge.badge-report { color: var(--report); border-color: var(--report); background: var(--report-bg); }
+    .detail-badge.badge-guide { color: var(--guide); border-color: var(--guide); background: var(--guide-bg); }
+    .detail-badge.badge-oss { color: var(--oss); border-color: var(--oss); background: var(--oss-bg); }
+    .detail-badge.badge-agent { color: var(--agent); border-color: var(--agent); background: var(--agent-bg); }
+    .detail-desc {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--text-soft);
+      margin-bottom: 0.75rem;
+    }
+    .detail-desc strong { color: var(--text); }
+    .detail-desc code { color: var(--default); }
+    .detail-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+    .detail-tag {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 0.25rem;
+      border: 1px solid;
+    }
+    .tag-warn { color: #f59e0b; border-color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
+    .tag-accent { color: #eab308; border-color: #eab308; background: rgba(234, 179, 8, 0.15); }
+    .tag-info { color: #3b82f6; border-color: #3b82f6; background: rgba(59, 130, 246, 0.15); }
+    .tag-red { color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+    .tag-purple { color: #8b5cf6; border-color: #8b5cf6; background: rgba(139, 92, 246, 0.15); }
+    .tag-cyan { color: #06b6d4; border-color: #06b6d4; background: rgba(6, 182, 212, 0.15); }
+    .tag-pass, .tag-green { color: #22c55e; border-color: #22c55e; background: rgba(34, 197, 94, 0.15); }
+    .detail-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .detail-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+    .detail-link {
+      font-size: 0.7rem;
+      color: var(--default);
+      text-decoration: none;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: color 0.15s;
+    }
+    .detail-link:hover { color: #67e8f9; }
+    .detail-stats {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+    .detail-section-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      margin-top: 0.5rem;
+    }
+    .detail-conn-list {
+      list-style: none;
+      font-size: 0.7rem;
+      color: var(--text-soft);
+    }
+    .detail-conn-list li {
+      padding: 0.2rem 0;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .detail-conn-list li:hover { color: var(--default); }
+
+    /* ── Toast ──────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text);
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── Responsive ──────────────────────── */
+    @media (max-width: 1024px) {
+      .sidebar { width: 220px; }
+      .detail-panel { width: 260px; }
+    }
+    @media (max-width: 768px) {
+      .main { flex-direction: column; }
+      .sidebar { width: 100%; max-height: 150px; flex-shrink: 0; }
+      .graph-container { height: 55vh; }
+      .detail-panel { width: 100%; max-height: 30vh; }
+    }
+    @media (max-width: 480px) {
+      .toolbar { gap: 0.35rem; padding: 0.4rem 0.75rem; }
+      .toolbar input[type="search"] { width: 100px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="pulse-dot"></div>
+    <h1>[GRAPH_TITLE]</h1>
+    <span class="subtitle">[GRAPH_SUBTITLE]</span>
+    <div class="header-right">
+      <button class="btn primary" onclick="downloadPNG()" title="Download PNG">📥 PNG</button>
+      <button class="btn" onclick="resetView()" title="Reset view">↺ Reset</button>
+      <button class="btn" onclick="fitGraph()" title="Fit to screen">⊞ Fit</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">Layout</span>
+      <select id="layout-select" onchange="switchLayout(this.value)">
+        <option value="cose-bilkent">cose-bilkent</option>
+        <option value="dagre">dagre (LR)</option>
+        <option value="dagre-tb">dagre (TB)</option>
+        <option value="breadthfirst">breadthfirst</option>
+        <option value="concentric">concentric</option>
+        <option value="grid">grid</option>
+        <option value="circle">circle</option>
+      </select>
+    </div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Search</span>
+      <input type="search" id="search-input" placeholder="Card name or tag..." oninput="doSearch(this.value)">
+    </div>
+    <div class="toolbar-group" id="badge-filters">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <h3>Stats</h3>
+        <div id="stats-content">Loading...</div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Legend · Nodes</h3>
+        <div id="legend-nodes"></div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Legend · Edges</h3>
+        <div id="legend-edges"></div>
+      </div>
+    </div>
+
+    <!-- Cytoscape Container -->
+    <div class="graph-container" id="graph-container">
+      <div id="cy"></div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-toggle" onclick="toggleDetail()" title="Toggle detail panel">◀</div>
+      <div class="detail-content" id="detail-content">
+        <div class="detail-empty">Click a node<br>to see details</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ════════════════════════════════════════════════════════════════════════
+     * GRAPH DATA — Generated from rui-scene card analysis
+     * Replace with actual card data below
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    const GRAPH_ELEMENTS = [
+      // ── PLACEHOLDER: Replace with generated elements ──
+      // Card nodes:   { data: { id, type:'card', label, badge, desc, tags:[], meta, richness, href } }
+      // Tag nodes:    { data: { id, type:'tag', label, modifier } }
+      // Badge nodes:  { data: { id, type:'badge', label, badgeColor } }
+      // Link nodes:   { data: { id, type:'link_dest', label, url } }
+      // Edges:        { data: { id, source, target, type, ... } }
+    ];
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * METADATA — Set per graph
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    const GRAPH_META = {
+      nodeCount: 0,
+      edgeCount: 0,
+      cardCount: 0,
+      tagCount: 0,
+      badges: [],
+      source: '',  // e.g. "docs/components/intro/data.js → INTRO_CONFIG.en.features"
+    };
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * CY INIT
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    const cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: GRAPH_ELEMENTS,
+      style: getGraphStyle(),
+      layout: {
+        name: 'cose-bilkent',
+        animate: true,
+        animationDuration: 800,
+        nodeRepulsion: 8000,
+        idealEdgeLength: 120,
+        gravity: 0.3,
+        numIter: 2000,
+        tile: true,
+      },
+      wheelSensitivity: 0.3,
+      minZoom: 0.15,
+      maxZoom: 4,
+    });
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * GRAPH STYLE
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function getGraphStyle() {
+      return [
+        // ── Node defaults ──
+        {
+          selector: 'node',
+          style: {
+            'font-family': 'JetBrains Mono, monospace',
+            'font-size': '10px',
+            'color': '#f8fafc',
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': '120px',
+            'background-opacity': 0.85,
+            'border-width': 1.5,
+            'label': 'data(label)',
+            'transition-property': 'background-color, border-color, width, height, opacity',
+            'transition-duration': '0.2s',
+          }
+        },
+        // ── Edge defaults ──
+        {
+          selector: 'edge',
+          style: {
+            'width': 1,
+            'line-color': '#475569',
+            'target-arrow-color': '#475569',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'opacity': 0.6,
+          }
+        },
+        // ── Card nodes by badge ──
+        { selector: 'node[type="card"]',
+          style: { 'shape': 'round-rectangle', 'width': 140, 'height': 60, 'font-size': '11px', 'font-weight': '600' } },
+        { selector: 'node[badge="Core"], node[badge="核心"]',
+          style: { 'background-color': 'rgba(6, 78, 59, 0.85)', 'border-color': '#34d399' } },
+        { selector: 'node[badge="Report"], node[badge="报告"]',
+          style: { 'background-color': 'rgba(136, 19, 55, 0.85)', 'border-color': '#fb7185' } },
+        { selector: 'node[badge="Guide"], node[badge="指南"]',
+          style: { 'background-color': 'rgba(8, 51, 68, 0.85)', 'border-color': '#38bdf8' } },
+        { selector: 'node[badge="OSS"]',
+          style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fbbf24' } },
+        { selector: 'node[badge="Agent"]',
+          style: { 'background-color': 'rgba(76, 29, 149, 0.85)', 'border-color': '#a78bfa' } },
+        { selector: 'node[badge="Beta"]',
+          style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fb923c' } },
+        // ── Tag nodes ──
+        { selector: 'node[type="tag"]',
+          style: { 'shape': 'ellipse', 'width': 90, 'height': 36, 'font-size': '9px', 'font-weight': '500' } },
+        { selector: 'node[modifier="warn"]',  style: { 'background-color': 'rgba(245, 158, 11, 0.2)', 'border-color': '#f59e0b' } },
+        { selector: 'node[modifier="accent"]',style: { 'background-color': 'rgba(234, 179, 8, 0.2)', 'border-color': '#eab308' } },
+        { selector: 'node[modifier="info"]',  style: { 'background-color': 'rgba(59, 130, 246, 0.2)', 'border-color': '#3b82f6' } },
+        { selector: 'node[modifier="red"]',   style: { 'background-color': 'rgba(239, 68, 68, 0.2)', 'border-color': '#ef4444' } },
+        { selector: 'node[modifier="purple"]',style: { 'background-color': 'rgba(139, 92, 246, 0.2)', 'border-color': '#8b5cf6' } },
+        { selector: 'node[modifier="cyan"]',  style: { 'background-color': 'rgba(6, 182, 212, 0.2)', 'border-color': '#06b6d4' } },
+        { selector: 'node[modifier="pass"], node[modifier="green"]',
+          style: { 'background-color': 'rgba(34, 197, 94, 0.2)', 'border-color': '#22c55e' } },
+        // ── Link destination nodes ──
+        { selector: 'node[type="link_dest"]',
+          style: { 'shape': 'diamond', 'width': 60, 'height': 60, 'font-size': '8px', 'background-color': 'rgba(71, 85, 105, 0.4)', 'border-color': '#64748b' } },
+        // ── Badge nodes ──
+        { selector: 'node[type="badge"]',
+          style: { 'shape': 'triangle', 'width': 40, 'height': 40, 'font-size': '8px' } },
+        // ── Edges ──
+        { selector: 'edge[type="has_tag"]',
+          style: { 'line-style': 'solid', 'width': 1, 'target-arrow-shape': 'none', 'curve-style': 'unbundled-bezier' } },
+        { selector: 'edge[type="shares_tag"]',
+          style: { 'line-style': 'dashed', 'width': 0.5, 'line-color': '#94a3b8', 'target-arrow-shape': 'none', 'opacity': 0.3 } },
+        { selector: 'edge[type="has_badge"]',
+          style: { 'line-style': 'solid', 'width': 2, 'opacity': 0.8 } },
+        { selector: 'edge[type="shares_badge"]',
+          style: { 'line-style': 'dashed', 'width': 1, 'target-arrow-shape': 'none', 'opacity': 0.4 } },
+        { selector: 'edge[type="links_to"]',
+          style: { 'line-style': 'dotted', 'width': 1, 'line-color': '#475569', 'opacity': 0.5 } },
+        { selector: 'edge[type="shares_link"]',
+          style: { 'line-style': 'dotted', 'width': 0.5, 'line-color': '#334155', 'target-arrow-shape': 'none', 'opacity': 0.2 } },
+        // ── Interaction states ──
+        { selector: 'node:selected',
+          style: { 'border-width': 3, 'border-color': '#f8fafc', 'shadow-blur': 12, 'shadow-color': '#22d3ee', 'shadow-opacity': 0.4 } },
+        { selector: 'node.highlight', style: { 'border-width': 2.5, 'border-color': '#f8fafc', 'opacity': 1 } },
+        { selector: 'edge.highlight', style: { 'opacity': 1, 'width': 2 } },
+        { selector: 'node.dimmed', style: { 'opacity': 0.12 } },
+        { selector: 'edge.dimmed', style: { 'opacity': 0.04 } },
+        { selector: 'node.search-hit',
+          style: { 'border-width': 3, 'border-color': '#fbbf24', 'shadow-blur': 16, 'shadow-color': '#fbbf24', 'shadow-opacity': 0.6 } },
+      ];
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * LAYOUT SWITCHER
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function switchLayout(name) {
+      let opts = { animate: true, animationDuration: 600 };
+      if (name === 'cose-bilkent') {
+        opts = { ...opts, name: 'cose-bilkent', nodeRepulsion: 8000, idealEdgeLength: 120, gravity: 0.3, numIter: 2000, tile: true };
+      } else if (name === 'dagre') {
+        opts = { ...opts, name: 'dagre', rankDir: 'LR', nodeSep: 60, edgeSep: 20, rankSep: 100 };
+      } else if (name === 'dagre-tb') {
+        opts = { ...opts, name: 'dagre', rankDir: 'TB', nodeSep: 60, edgeSep: 20, rankSep: 100 };
+      } else if (name === 'breadthfirst') {
+        opts = { ...opts, name: 'breadthfirst', directed: true, spacingFactor: 1.5 };
+      } else if (name === 'concentric') {
+        opts = { ...opts, name: 'concentric', concentric: function(n) { return n.data('richness') || 1; }, minNodeSpacing: 40 };
+      } else if (name === 'grid') {
+        opts = { ...opts, name: 'grid', cols: Math.ceil(Math.sqrt(cy.nodes().length)) };
+      } else if (name === 'circle') {
+        opts = { ...opts, name: 'circle', radius: Math.max(200, cy.nodes().length * 15) };
+      }
+      cy.layout(opts).run();
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * SEARCH
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    let searchTimeout;
+    function doSearch(query) {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        cy.nodes().removeClass('search-hit dimmed');
+        if (!query || query.length < 1) { fitGraph(); return; }
+        const q = query.toLowerCase();
+        let found = false;
+        cy.nodes().forEach(n => {
+          const label = (n.data('label') || '').toLowerCase();
+          const tags = (n.data('tags') || []).join(' ').toLowerCase();
+          const desc = (n.data('desc') || '').toLowerCase();
+          if (label.includes(q) || tags.includes(q) || desc.includes(q)) {
+            n.addClass('search-hit').removeClass('dimmed');
+            found = true;
+          } else {
+            n.addClass('dimmed');
+          }
+        });
+        if (found) {
+          cy.fit(cy.nodes('.search-hit'), 80);
+        }
+      }, 250);
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * FILTER BY BADGE
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function filterByBadge(badge, btn) {
+      // Toggle active state
+      document.querySelectorAll('#badge-filters .filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      if (badge === 'all') {
+        cy.nodes().style('display', 'element');
+        cy.edges().style('display', 'element');
+        fitGraph();
+        return;
+      }
+
+      cy.nodes().forEach(n => {
+        if (n.data('type') === 'card') {
+          n.style('display', n.data('badge') === badge ? 'element' : 'none');
+        } else if (n.data('type') === 'tag' || n.data('type') === 'link_dest' || n.data('type') === 'badge') {
+          // Show if any connected card is visible
+          const connected = n.connectedEdges().some(e => e.source().style('display') !== 'none' && e.target().style('display') !== 'none');
+          n.style('display', connected ? 'element' : 'none');
+        }
+      });
+      cy.edges().forEach(e => {
+        e.style('display', e.source().style('display') !== 'none' && e.target().style('display') !== 'none' ? 'element' : 'none');
+      });
+      fitGraph();
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * CLICK → DETAIL PANEL
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    cy.on('tap', 'node', function(evt) {
+      const node = evt.target;
+      const data = node.data();
+      updateDetail(data);
+    });
+
+    cy.on('tap', function(evt) {
+      if (evt.target === cy) {
+        document.getElementById('detail-content').innerHTML = '<div class="detail-empty">Click a node<br>to see details</div>';
+      }
+    });
+
+    function updateDetail(data) {
+      const container = document.getElementById('detail-content');
+      const node = cy.getElementById(data.id);
+      const type = data.type;
+
+      if (type === 'card') {
+        const connectedTags = node.connectedEdges('[type="has_tag"]').length;
+        const connectedCards = node.connectedEdges('[type="shares_tag"]').length;
+        const connectedLinks = node.connectedEdges('[type="links_to"]').length;
+
+        let html = '<div class="detail-header">';
+        html += '<h3>' + escHtml(data.label || data.id) + '</h3>';
+        if (data.badge) {
+          html += '<span class="detail-badge badge-' + badgeClass(data.badge) + '">' + escHtml(data.badge) + '</span>';
+        }
+        html += '</div>';
+
+        if (data.desc) {
+          html += '<div class="detail-desc">' + data.desc + '</div>';
+        }
+        if (data.tags && data.tags.length) {
+          html += '<div class="detail-section-title">Tags</div>';
+          html += '<div class="detail-tags">';
+          data.tags.forEach(t => {
+            const mod = t.modifier || 'info';
+            html += '<span class="detail-tag tag-' + mod + '">' + escHtml(t.text || t) + '</span>';
+          });
+          html += '</div>';
+        }
+        if (data.meta) {
+          html += '<div class="detail-meta">' + escHtml(data.meta) + '</div>';
+        }
+        if (data.links && data.links.length) {
+          html += '<div class="detail-section-title">Links (' + data.links.length + ')</div>';
+          html += '<div class="detail-links">';
+          data.links.forEach(l => {
+            html += '<a class="detail-link" href="' + escHtml(l.href) + '" target="_blank" rel="noopener">' + (l.label || l.href) + '</a>';
+          });
+          html += '</div>';
+        }
+        html += '<div class="detail-stats">';
+        html += connectedTags + ' tags · ' + connectedCards + ' related cards · ' + connectedLinks + ' links';
+        if (data.richness) html += ' · Richness: ' + data.richness;
+        html += '</div>';
+
+        // Connected cards list
+        const relatedCards = node.connectedEdges('[type="shares_tag"], [type="shares_badge"]').map(e => {
+          const other = e.source().id() === data.id ? e.target() : e.source();
+          return { id: other.id(), label: other.data('label') };
+        });
+        if (relatedCards.length) {
+          html += '<div class="detail-section-title">Related Cards (' + relatedCards.length + ')</div>';
+          html += '<ul class="detail-conn-list">';
+          relatedCards.forEach(c => {
+            html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>';
+          });
+          html += '</ul>';
+        }
+
+        container.innerHTML = html;
+      } else if (type === 'tag') {
+        const cards = node.connectedEdges('[type="has_tag"]').map(e => {
+          const c = e.source().data('type') === 'card' ? e.source() : e.target();
+          return { id: c.id(), label: c.data('label') };
+        });
+        let html = '<div class="detail-header"><h3>🏷️ ' + escHtml(data.label) + '</h3></div>';
+        html += '<div class="detail-meta">Modifier: ' + escHtml(data.modifier || 'info') + ' · Used by ' + cards.length + ' cards</div>';
+        if (cards.length) {
+          html += '<div class="detail-section-title">Cards with this tag</div>';
+          html += '<ul class="detail-conn-list">';
+          cards.forEach(c => {
+            html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>';
+          });
+          html += '</ul>';
+        }
+        container.innerHTML = html;
+      } else if (type === 'badge') {
+        const cards = node.connectedEdges('[type="has_badge"]').map(e => {
+          const c = e.source().data('type') === 'card' ? e.source() : e.target();
+          return { id: c.id(), label: c.data('label') };
+        });
+        let html = '<div class="detail-header"><h3>🔖 ' + escHtml(data.label) + '</h3></div>';
+        html += '<div class="detail-meta">' + cards.length + ' cards</div>';
+        if (cards.length) {
+          html += '<ul class="detail-conn-list">';
+          cards.forEach(c => {
+            html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>';
+          });
+          html += '</ul>';
+        }
+        container.innerHTML = html;
+      } else if (type === 'link_dest') {
+        const cards = node.connectedEdges('[type="links_to"]').map(e => {
+          const c = e.source().data('type') === 'card' ? e.source() : e.target();
+          return { id: c.id(), label: c.data('label') };
+        });
+        let html = '<div class="detail-header"><h3>🔗 ' + escHtml(data.label) + '</h3></div>';
+        if (data.url) {
+          html += '<a class="detail-link" href="' + escHtml(data.url) + '" target="_blank" rel="noopener">' + escHtml(data.url) + '</a>';
+        }
+        html += '<div class="detail-meta">Referenced by ' + cards.length + ' cards</div>';
+        if (cards.length) {
+          html += '<ul class="detail-conn-list">';
+          cards.forEach(c => {
+            html += '<li onclick="focusNode(\'' + c.id + '\')">' + escHtml(c.label) + '</li>';
+          });
+          html += '</ul>';
+        }
+        container.innerHTML = html;
+      }
+    }
+
+    function focusNode(id) {
+      const node = cy.getElementById(id);
+      if (node.length) {
+        cy.nodes().removeClass('search-hit dimmed');
+        node.addClass('search-hit');
+        cy.animate({ center: { eles: node }, zoom: 1.5 }, { duration: 400 });
+        updateDetail(node.data());
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * HOVER → NEIGHBOR HIGHLIGHT
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    cy.on('mouseover', 'node', function(evt) {
+      const node = evt.target;
+      const neighborhood = node.closedNeighborhood();
+      cy.nodes().not(neighborhood).addClass('dimmed');
+      cy.edges().not(neighborhood.edges()).addClass('dimmed');
+      neighborhood.nodes().addClass('highlight');
+      neighborhood.edges().addClass('highlight');
+    });
+
+    cy.on('mouseout', 'node', function() {
+      cy.nodes().removeClass('highlight dimmed');
+      cy.edges().removeClass('highlight dimmed');
+    });
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * VIEW CONTROLS
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function resetView() {
+      cy.nodes().removeClass('search-hit dimmed');
+      cy.edges().removeClass('dimmed');
+      document.getElementById('search-input').value = '';
+      filterByBadge('all', null);
+      fitGraph();
+    }
+
+    function fitGraph() {
+      cy.fit(undefined, 60);
+      cy.center();
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * EXPORT
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function downloadPNG() {
+      try {
+        const png = cy.png({ full: true, scale: 2, bg: '#020617' });
+        const link = document.createElement('a');
+        link.download = 'graph.png';
+        link.href = png;
+        link.click();
+        showToast('PNG downloaded ✓');
+      } catch(e) {
+        showToast('Export failed: ' + e.message);
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * DETAIL PANEL TOGGLE
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    let detailOpen = true;
+    function toggleDetail() {
+      const panel = document.getElementById('detail-panel');
+      detailOpen = !detailOpen;
+      panel.classList.toggle('collapsed', !detailOpen);
+      document.querySelector('.detail-toggle').textContent = detailOpen ? '◀' : '▶';
+      setTimeout(() => cy.resize(), 350);
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * HELPERS
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function escHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function badgeClass(badge) {
+      if (!badge) return '';
+      const b = badge.toLowerCase();
+      if (b.includes('core') || b.includes('核心')) return 'badge-core';
+      if (b.includes('report') || b.includes('报告')) return 'badge-report';
+      if (b.includes('guide') || b.includes('指南')) return 'badge-guide';
+      if (b.includes('oss')) return 'badge-oss';
+      if (b.includes('agent')) return 'badge-agent';
+      return '';
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function escapeCss(s) {
+      return (s || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * INIT — Populate sidebar stats, legend, badge filters
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function initUI() {
+      // Stats
+      const cards = cy.nodes('[type="card"]');
+      const tags = cy.nodes('[type="tag"]');
+      const badges = cy.nodes('[type="badge"]');
+      const linkDests = cy.nodes('[type="link_dest"]');
+
+      document.getElementById('stats-content').innerHTML =
+        '<div class="stat-row"><span class="stat-label">Cards</span><span class="stat-val">' + cards.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Tags</span><span class="stat-val">' + tags.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Badges</span><span class="stat-val">' + badges.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Links</span><span class="stat-val">' + linkDests.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Edges</span><span class="stat-val">' + cy.edges().length + '</span></div>';
+
+      // Legend nodes
+      let nodeLegend = '';
+      const nodeColors = [
+        ['Core/核心', '#34d399', 'rgba(6, 78, 59, 0.85)'],
+        ['Report/报告', '#fb7185', 'rgba(136, 19, 55, 0.85)'],
+        ['Guide/指南', '#38bdf8', 'rgba(8, 51, 68, 0.85)'],
+        ['OSS', '#fbbf24', 'rgba(120, 53, 15, 0.85)'],
+        ['Agent', '#a78bfa', 'rgba(76, 29, 149, 0.85)'],
+        ['Tag', '#64748b', 'rgba(100, 116, 139, 0.2)'],
+        ['Link Dest', '#64748b', 'rgba(71, 85, 105, 0.4)'],
+      ];
+      nodeColors.forEach(([label, border, bg]) => {
+        nodeLegend += '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid ' + border + ';background:' + bg + '"></span>' + label + '</div>';
+      });
+      document.getElementById('legend-nodes').innerHTML = nodeLegend;
+
+      // Legend edges
+      document.getElementById('legend-edges').innerHTML =
+        '<div class="legend-item"><span class="legend-line" style="background:#475569"></span> has_tag (solid)</div>' +
+        '<div class="legend-item"><span class="legend-line" style="background:#94a3b8;border:dashed"></span> shares_tag (dashed)</div>' +
+        '<div class="legend-item"><span class="legend-line" style="background:#475569;border:dotted"></span> links_to (dotted)</div>';
+
+      // Badge filter buttons
+      const uniqueBadges = new Set();
+      cards.forEach(c => { if (c.data('badge')) uniqueBadges.add(c.data('badge')); });
+      let filterHtml = '<span class="toolbar-label">Filter</span>';
+      filterHtml += '<button class="filter-btn active" onclick="filterByBadge(\'all\', this)">All</button>';
+      uniqueBadges.forEach(b => {
+        filterHtml += '<button class="filter-btn" onclick="filterByBadge(\'' + escHtml(b) + '\', this)">' + escHtml(b) + '</button>';
+      });
+      document.getElementById('badge-filters').innerHTML = filterHtml;
+    }
+
+    cy.ready(function() {
+      initUI();
+      fitGraph();
+    });
+
+    // Handle resize
+    window.addEventListener('resize', () => cy.resize());
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        document.getElementById('search-input').focus();
+      }
+      if (e.key === 'Escape') {
+        cy.nodes().removeClass('search-hit dimmed');
+        cy.edges().removeClass('dimmed');
+        document.getElementById('search-input').value = '';
+        fitGraph();
+      }
+    });
+  </script>
+</body>
+</html>

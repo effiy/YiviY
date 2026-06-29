@@ -1,177 +1,306 @@
 ---
 name: rui-diagram
-description: Create polished dark-themed architecture diagrams as self-contained HTML+SVG files. Use when the user asks for system, infrastructure, cloud, security, or network topology diagrams.
+description: Create architecture diagrams (HTML+SVG, dark theme) and run multi-agent codebase analysis producing structured Knowledge Graphs. Use for system diagrams, infrastructure diagrams, cloud architecture, network topology, or codebase understanding. Also handles incremental analysis, diff impact, and subdomain merging.
 ---
 
-# Rui Diagram Skill
+# Rui Diagram
 
-Create professional technical architecture diagrams as self-contained HTML files with inline SVG graphics and CSS styling.
+Two capabilities sharing one abstraction: **Knowledge Graph → Diagram**. For documentation pages from a KG, see [[rui-html]].
 
-> **Version 1.1** · MIT License · Authored by [Cocoon AI](mailto:hello@cocoon-ai.com)
-
-## Design System
-
-### Color Palette
-
-Use these semantic colors for component types:
-
-| Component Type | Fill (rgba) | Stroke |
-|---------------|-------------|--------|
-| Frontend | `rgba(8, 51, 68, 0.4)` | `#22d3ee` (cyan-400) |
-| Backend | `rgba(6, 78, 59, 0.4)` | `#34d399` (emerald-400) |
-| Database | `rgba(76, 29, 149, 0.4)` | `#a78bfa` (violet-400) |
-| AWS/Cloud | `rgba(120, 53, 15, 0.3)` | `#fbbf24` (amber-400) |
-| Security | `rgba(136, 19, 55, 0.4)` | `#fb7185` (rose-400) |
-| Message Bus | `rgba(251, 146, 60, 0.3)` | `#fb923c` (orange-400) |
-| External/Generic | `rgba(30, 41, 59, 0.5)` | `#94a3b8` (slate-400) |
-
-### Typography
-
-Use JetBrains Mono for all text (monospace, technical aesthetic):
-```html
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+```
+Source Code → Multi-Agent Pipeline → Knowledge Graph → SVG Diagram
+                                        │
+                                        └──→ rui-html (doc pages)
 ```
 
-Font sizes: 12px for component names, 9px for sublabels, 8px for annotations, 7px for tiny labels.
+## Decision Tree
 
-### Visual Elements
-
-**Background:** `#020617` (slate-950) with subtle grid pattern:
-```svg
-<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
-</pattern>
+```
+User asks for...
+├─ Architecture diagram (system/infra/network/cloud)
+│  → Mode A: build SVG diagram (copy template → draw → verify)
+│     If based on real code → run Phase 0 first
+│
+├─ Codebase understanding / analysis
+│  → Phase 0 only (produce knowledge-graph.json)
+│
+├─ Diagram based on existing codebase
+│  → Phase 0 → Mode A
+│
+├─ Incremental update (code changed)
+│  → Phase 0 fingerprint diff → re-analyze changed only
+│
+├─ Impact analysis ("what does this change affect?")
+│  → Phase 0 diff impact — blast radius via 1-hop + 2-hop dependents
+│
+├─ Interactive exploration (dashboard)
+│  → Phase 0 → Dashboard (React app reading knowledge-graph.json)
+│
+├─ Knowledge base / wiki analysis
+│  → Phase 0 (knowledge mode — article detection, wikilinks, entity extraction)
+│
+├─ Subdomain / multi-project merge
+│  → Phase 0 across subdomains → merge → reconcile cross-domain edges
+│
+└─ Documentation page for a project
+   → Phase 0 → hand off to [[rui-html]] Phase 1–3
 ```
 
-**Component boxes:** Rounded rectangles (`rx="6"`) with 1.5px stroke, semi-transparent fills.
+## Knowledge Graph
 
-**Security groups:** Dashed stroke (`stroke-dasharray="4,4"`), transparent fill, rose color.
+All codebase-informed output is driven by a typed **Knowledge Graph** — structured JSON with deterministic structure (edges from imports/calls) + LLM semantics (summaries, tags, layers). Produced by Phase 0.
 
-**Region boundaries:** Larger dashed stroke (`stroke-dasharray="8,4"`), amber color, `rx="12"`.
+### Node Types (21)
 
-**Arrows:** Use SVG marker for arrowheads:
-```svg
-<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-  <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
-</marker>
+| Family | Types |
+|--------|-------|
+| **Code** | `file`, `function`, `class`, `module`, `concept` |
+| **Non-Code** | `config`, `document`, `service`, `table`, `endpoint`, `pipeline`, `schema`, `resource` |
+| **Domain** | `domain`, `flow`, `step` |
+| **Knowledge** | `article`, `entity`, `topic`, `claim`, `source` |
+
+Full taxonomy with ID conventions and creation rules → `references/codebase-analysis.md`.
+
+### Edge Types (35, across 8 categories)
+
+| Category | Types | Weight |
+|----------|-------|--------|
+| **Structural** | `imports`, `exports`, `contains`, `inherits`, `implements` | 0.7–1.0 |
+| **Behavioral** | `calls`, `subscribes`, `publishes`, `middleware` | 0.8 |
+| **Data Flow** | `reads_from`, `writes_to`, `transforms`, `validates` | 0.5 |
+| **Dependencies** | `depends_on`, `tested_by`, `configures` | 0.5–0.7 |
+| **Semantic** | `related`, `similar_to` | 0.5 |
+| **Infrastructure** | `deploys`, `serves`, `provisions`, `triggers` | 0.5–0.7 |
+| **Schema/Data** | `migrates`, `documents`, `routes`, `defines_schema` | 0.5 |
+| **Domain/Knowledge** | `contains_flow`, `flow_step`, `cross_domain`, `cites`, `contradicts`, `builds_on`, `exemplifies`, `categorized_under`, `authored_by` | 0.5 |
+
+### GraphNode Shape
+
+```typescript
+GraphNode {
+  id: string              // typed: "file:<path>", "function:<path>:<name>", etc.
+  type: NodeType          // one of 21 types
+  name: string            // display name
+  filePath?: string       // repo-relative
+  lineRange?: [number, number]
+  summary: string         // LLM: 1–2 sentences
+  tags: string[]          // LLM: 3–5 lowercase-hyphenated
+  complexity: "simple" | "moderate" | "complex"
+  // Optional extended metadata
+  domainMeta?: { entities?, businessRules?, crossDomainInteractions?, entryPoint?, entryType? }
+  knowledgeMeta?: { wikilinks?, backlinks?, category?, content? }
+}
 ```
 
-**Arrow z-order:** Draw connection arrows early in the SVG (after the background grid) so they render behind component boxes. SVG elements are painted in document order, so arrows drawn first will appear behind shapes drawn later.
+### KnowledgeGraph Shape
 
-**Masking arrows behind transparent fills:** Since component boxes use semi-transparent fills (`rgba(..., 0.4)`), arrows behind them will show through. To fully mask arrows, draw an opaque background rect (e.g., `fill="#0f172a"`) at the same position before drawing the semi-transparent styled rect on top:
-```svg
-<!-- Opaque background to mask arrows -->
-<rect x="X" y="Y" width="W" height="H" rx="6" fill="#0f172a"/>
-<!-- Styled component on top -->
-<rect x="X" y="Y" width="W" height="H" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+```typescript
+KnowledgeGraph {
+  version: string          // "1.0.0"
+  kind?: "codebase" | "knowledge"
+  project: { name, languages, frameworks, description, analyzedAt, gitCommitHash }
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+  layers: Layer[]          // { id, name, description, nodeIds[] }
+  tour: TourStep[]         // { order, title, description, nodeIds[], languageLesson? }
+  diffImpact?: DiffImpact  // change-aware runs only
+}
 ```
 
-**Auth/security flows:** Dashed lines in rose color (`#fb7185`).
+### Validation (4-Tier)
 
-**Message buses / Event buses:** Small connector elements between services. Use orange color (`#fb923c` stroke, `rgba(251, 146, 60, 0.3)` fill):
-```svg
-<rect x="X" y="Y" width="120" height="20" rx="4" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1"/>
-<text x="CENTER_X" y="Y+14" fill="#fb923c" font-size="7" text-anchor="middle">Kafka / RabbitMQ</text>
+| Tier | Action | Example |
+|------|--------|---------|
+| **Sanitize** | Null→`[]`, lowercase enums, strip null optionals | `tour: null` → `tour: []` |
+| **Auto-Fix** | Fill missing fields, coerce types | missing `complexity` → `"moderate"` |
+| **Validate** | Zod schema per node/edge, drop invalid, report | bad node type → dropped + logged |
+| **Referential** | Drop edges with dangling refs, filter layer/tour nodeIds | missing node → edge removed |
+
+Alias maps handle LLM variations: 60+ node type aliases (`func`→`function`, `interface`→`class`), 50+ edge type aliases (`extends`→`inherits`, `uses`→`depends_on`). Full validation → `references/codebase-analysis.md`.
+
+## Phase 0: Codebase Analysis Pipeline
+
+Multi-agent pipeline: **deterministic extraction first, LLM semantics second.**
+
+### Phase 0.0 — Pre-flight
+
+1. Resolve project root; detect git worktrees (redirect output to main repo)
+2. Language directive (`--language <lang>`) for i18n content generation
+3. Fingerprint check — compare structural hashes against stored baseline:
+
+| Condition | Action |
+|-----------|--------|
+| All NONE/COSMETIC | **SKIP** |
+| <10 structural, same directories | **PARTIAL_UPDATE** |
+| New/deleted dirs OR >10 structural | **ARCHITECTURE_UPDATE** |
+| >30 structural OR >50% changed | **FULL_UPDATE** |
+
+4. Subdomain merge check (if multiple `*knowledge-graph*.json` exist)
+5. `.diagramignore` — generate from `.gitignore` + defaults if missing
+
+### Phase 0.1 — SCAN (Deterministic)
+
+`scan-project.mjs` + `extract-import-map.mjs`: file enumeration, language detection, category assignment, import resolution for 12+ languages. Output: `scan-result.json`.
+
+### Phase 0.2 — BATCH & ANALYZE (Deterministic + LLM)
+
+Files grouped by directory cohesion. Up to 5 concurrent subagents per batch:
+1. **Structural**: `extract-structure.mjs` — tree-sitter for 10 code languages + specialized parsers for non-code
+2. **LLM semantic**: summaries, tags, complexity, semantic edges (using structural as foundation)
+
+Node creation by `fileCategory`:
+
+| Category | Node Type | Key Edges |
+|----------|-----------|-----------|
+| `code` | `file` (+ `function`/`class` sub-nodes) | `imports`, `contains`, `calls`, `inherits`, `exports`, `tested_by` |
+| `config` | `config` | `configures` → code it affects |
+| `docs` | `document` | `documents` → described components |
+| `infra` (Dockerfile, K8s) | `service` | `deploys`, `serves` |
+| `infra` (CI/CD) | `pipeline` | `triggers` |
+| `infra` (Terraform) | `resource` | `provisions` |
+| `data` (SQL) | `table` | `migrates`, `defines_schema` |
+| `data` (GraphQL/Proto) | `schema` | `defines_schema` |
+| `data` (OpenAPI) | `endpoint` | `routes` |
+
+**Import edge rule**: 1:1 — one `imports` edge per import map entry. No aggregation.
+
+### Phase 0.3 — ASSEMBLE & REVIEW
+
+`merge-batch-graphs.py`: combine → normalize IDs → deduplicate by `(source, target, type)` → drop dangling edges → canonicalize `tested_by`. Assemble-reviewer subagent validates completeness against import map.
+
+### Phase 0.4 — ARCHITECTURE (LLM)
+
+Classify nodes into 3–10 logical layers using: directory signals, import adjacency (fan-in/out), cross-category edges, language/framework context. Every node in exactly one layer.
+
+### Phase 0.5 — TOUR (LLM)
+
+5–15 dependency-ordered learning steps: BFS from entry points, fan-in ranking for keystones, cluster detection, bottom-up ordering (foundational → consumers).
+
+### Phase 0.6 — VALIDATE
+
+4-tier validation pipeline. Auto-fix what can be fixed. Report all issues. Save partial results.
+
+### Phase 0.7 — SAVE
+
+Write `knowledge-graph.json` + `meta.json` + fingerprint baseline to `.diagram/`. Clean intermediates. Report summary.
+
+### Quick Path (Manual)
+
+For projects under ~20 files: read README, scan key directories, read 3–5 files, sketch manually, verify with user.
+
+## Mode A: Architecture Diagrams
+
+Self-contained HTML+SVG — dark theme (`#020617`), JetBrains Mono, export toolbar (Copy PNG / Download PNG / Download PDF).
+
+### Quick Start
+
+1. Copy `resources/template.html`
+2. Build SVG. **Read `references/diagram-system.md`** for color palette, spacing, arrow z-order, masking, legend rules
+3. Update summary cards and footer
+4. Verify: open in browser, test export toolbar
+
+### SVG Construction Rules
+
+| Rule | Detail |
+|------|--------|
+| **Arrow z-order** | Draw arrows after grid, before component boxes |
+| **Masking** | Opaque `#0f172a` background rect behind every semi-transparent box |
+| **Legend** | Outside all boundary boxes, ≥20px below lowest boundary |
+| **Spacing** | ≥40px vertical gap between components; message buses in the gap |
+| **Grid** | 40×40 pattern, `#1e293b` stroke, 0.5 width |
+| **SRI hashes** | Don't modify html2canvas/jsPDF integrity hashes without recomputing |
+
+### Color Palette — Layer → SVG
+
+| Layer | Color | Hex | Node Types | Directory Signals |
+|-------|-------|-----|-----------|-------------------|
+| **UI** | Cyan | `#22d3ee` | `file` (frontend), `class` (component) | `frontend/`, `ui/`, `pages/`, `views/`, `components/`, `app/` |
+| **API** | Sky | `#38bdf8` | `file` (routes), `endpoint` | `api/`, `routes/`, `handlers/`, `controllers/`, `gateway/` |
+| **Service** | Emerald | `#34d399` | `file` (logic), `function`, `module` | `services/`, `logic/`, `domain/`, `core/`, `engine/`, `pipeline/` |
+| **Data** | Violet | `#a78bfa` | `table`, `schema`, `file` (models) | `models/`, `entities/`, `db/`, `repositories/`, `store/`, `schemas/` |
+| **Infrastructure** | Amber | `#fbbf24` | `service`, `pipeline`, `resource` | `infra/`, `deploy/`, `k8s/`, `terraform/`, `docker/`, `ci/` |
+| **Config** | Slate | `#94a3b8` | `config` | `config/`, `env/`, `settings/`, `.env` |
+| **Auth** | Rose | `#fb7185` | `file` (auth), `function` (middleware) | `auth/`, `security/`, `guard/`, `oauth/`, `jwt/` |
+| **Events** | Orange | `#fb923c` | `file` (events), `function` (pub/sub) | `queue/`, `events/`, `messages/`, `pubsub/`, `bus/`, `kafka/` |
+| **Utility** | Slate-muted | `#64748b` | `file` (utils), `function` (helpers) | `utils/`, `lib/`, `helpers/`, `common/`, `shared/` |
+| **External** | Slate-dark | `#475569` | `module` (external), `service` (3rd-party) | Marked `isExternal: true` |
+
+### KG → SVG Mapping
+
+| KG Element | SVG Element |
+|------------|-------------|
+| `GraphNode.type` → layer | Component fill/stroke color |
+| `GraphNode.name` | `<text font-size="11" font-weight="600">` |
+| `GraphNode.summary` | `<text font-size="9" fill="#94a3b8">` sublabel |
+| `GraphNode.tags` | `<text font-size="8">` annotation tags |
+| Internal `GraphEdge[]` | Arrows between components (drawn before boxes) |
+| External `GraphEdge[]` | Dashed arrows to External boxes |
+| Layers | Region boundaries (`stroke-dasharray="8,4"`) |
+| Auth/security groups | Security boundaries (`stroke-dasharray="4,4"`, rose) |
+| Hub nodes (high fan-in/out) | Larger boxes, bold labels |
+| `DiffImpact.changedNodes` | Dashed border or `*` marker |
+
+### Plugin Architecture
+
+```
+plugins/
+├── extractors/     # Language-specific structural extractors (tree-sitter grammars)
+├── parsers/        # Non-code parsers (Markdown, YAML, Dockerfile, SQL, GraphQL, etc.)
+├── languages/      # Language config: patterns, idioms, edge conventions
+├── frameworks/     # Framework config: directory signals, layer mappings
+└── locales/        # Output language guides for i18n content generation
 ```
 
-### Spacing Rules
+## Workflows
 
-**CRITICAL:** When stacking components vertically, ensure proper spacing to avoid overlaps:
+### W1: Generate Architecture Diagram
 
-- **Standard component height:** 60px for services, 80-120px for larger components
-- **Minimum vertical gap between components:** 40px
-- **Inline connectors (message buses):** Place IN the gap between components, not overlapping
+Copy template → build SVG (`references/diagram-system.md`) → update cards/footer → verify. If based on code: Phase 0 first.
 
-**Example vertical layout:**
-```
-Component A: y=70,  height=60  → ends at y=130
-Gap:         y=130 to y=170   → 40px gap, place bus at y=140 (20px tall)
-Component B: y=170, height=60  → ends at y=230
-```
+### W2: Incremental Update (Code Changed)
 
-**Wrong:** Placing a message bus at y=160 when Component B starts at y=170 (causes overlap)
-**Right:** Placing a message bus at y=140, centered in the 40px gap (y=130 to y=170)
+Phase 0.0 fingerprint check → classify update level → re-run affected passes → update diagram sections → update baseline → verify.
 
-### Legend Placement
+### W3: Diff Impact Analysis
 
-**CRITICAL:** Place legends OUTSIDE all boundary boxes (region boundaries, cluster boundaries, security groups).
+`git diff --name-only` → map to node IDs → compute 1-hop + 2-hop dependents → classify risk (hub-node impact, layer criticality, fan-out) → `DiffImpact` report.
 
-- Calculate where all boundaries end (y position + height)
-- Place legend at least 20px below the lowest boundary
-- Expand SVG viewBox height if needed to accommodate
+### W4: Subdomain Merge (Multi-Project)
 
-**Example:**
-```
-Kubernetes Cluster: y=30, height=460 → ends at y=490
-Legend should start at: y=510 or below
-SVG viewBox height: at least 560 to fit legend
-```
+Run Phase 0 per subdomain → merge → reconcile `cross_domain` edges → deduplicate → normalize → unified KG.
 
-**Wrong:** Legend at y=470 inside a cluster boundary that ends at y=490
-**Right:** Legend at y=510, below the cluster boundary, with viewBox height extended
+### W5: Knowledge Base Analysis (Wiki Mode)
 
-### Layout Structure
+Detect wiki structure (index.md + wikilinks) → extract articles, sources, topics → LLM for implicit relationships → KG with `kind: "knowledge"`.
 
-1. **Header** - Title with pulsing dot indicator, subtitle, and export toolbar
-2. **Main SVG diagram** - Contained in rounded border card
-3. **Summary cards** - Grid of 3 cards below diagram with key details
-4. **Footer** - Minimal metadata line
+### W6: Dashboard Launch
 
-### Export Toolbar (built-in)
+After any KG-producing workflow, launch interactive dashboard: hierarchical (dagre) for codebase, force-directed for knowledge, diff overlay, layer filtering, tour navigation.
 
-Every diagram ships with a single unobtrusive `⋯` toggle in the header. Click it to reveal three buttons — 📋 Copy (high-DPI PNG to clipboard, scale: 2), 🖼️ PNG (high-DPI PNG download), 📄 PDF (PNG embedded in a one-page PDF via jsPDF). The toolbar collapses back to the icon by default so it doesn't clutter the diagram. All three formats use the same html2canvas capture (with the toolbar excluded and 32px padding around the content), so PDF preserves the dark theme without going through the browser's print dialog.
+## Critical Rules
 
-When generating a new diagram, keep these intact in the template:
-- The two CDN scripts in `<head>` (pinned versions, with Subresource Integrity hashes and `crossorigin="anonymous"`):
-  - `https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js` — `integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H"`
-  - `https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js` — `integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/"`
-  - SRI ensures generated diagrams are tamper-resistant against CDN compromise. Do not modify the hashes; if the version is bumped, the new hash must be computed fresh.
-- `id="report-container"` on the outermost `.container` div (this is what gets captured)
-- `.toolbar` markup with `.toolbar-actions` (collapsed by default) and `.toolbar-toggle` (the `⋯` button)
-- `.toolbar` CSS + `@media print { .toolbar { display: none !important; } }`
-- `copyAsImage()`, `downloadPNG()`, and `downloadPDF()` script before `</body>`, all using `getBoundingClientRect()` + `html2canvas(document.body, { x, y, width, height, ignoreElements })` to capture a precise rect with breathing room and no toolbar
+- **Deterministic edges first, LLM semantics second** — structure from tree-sitter/grep, meaning from LLM
+- **Every node in exactly one layer** — no orphaned or duplicate classifications
+- **Arrow z-order** — arrows before boxes in SVG
+- **Masking** — opaque bg rect behind every semi-transparent component box
+- **Legend outside boundaries** — ≥20px below lowest boundary
+- **SRI hashes** — don't modify without recomputing
+- **Save partial results** — partial KG > no KG
+- **Worktree awareness** — redirect `.diagram/` output to main repo root
+- **`.diagramignore`** — generate from `.gitignore` + defaults if missing
+- **Import edges 1:1** — one edge per import, no aggregation
+- **Alias maps** — handle LLM output variability (60+ node aliases, 50+ edge aliases)
 
-Caveats: clipboard API needs a user gesture and a secure context (https/file/localhost). SVG `<foreignObject>` renders inconsistently in html2canvas — stick to plain `<svg>` shapes and `<text>`. Bump `scale: 2` to `3` or `4` for higher-res output.
+## Reference Files
 
-### Component Box Pattern
+| File | When to Read |
+|------|-------------|
+| `references/codebase-analysis.md` | Phase 0 — full pipeline: scanner, analyzer, classifier, reviewer, tour builder, plugin docs, fingerprint system, incremental analysis, KG schema, validation |
+| `references/diagram-system.md` | Building diagrams — color palette, spacing, arrow rules, masking, export toolbar, legend placement |
+| `.claude/understand-anything/packages/core/src/types.ts` | Canonical type definitions |
+| `.claude/understand-anything/packages/core/src/schema.ts` | Validation pipeline (Zod schemas, alias maps, auto-fix) |
+| `.claude/understand-anything/packages/core/src/fingerprint.ts` | Fingerprint system (structural hashing, change detection) |
+| `.claude/understand-anything/packages/core/src/change-classifier.ts` | Update decision matrix (SKIP/PARTIAL/ARCHITECTURE/FULL) |
+| `resources/template.html` | Diagram HTML template |
 
-```svg
-<rect x="X" y="Y" width="W" height="H" rx="6" fill="FILL_COLOR" stroke="STROKE_COLOR" stroke-width="1.5"/>
-<text x="CENTER_X" y="Y+20" fill="white" font-size="11" font-weight="600" text-anchor="middle">LABEL</text>
-<text x="CENTER_X" y="Y+36" fill="#94a3b8" font-size="9" text-anchor="middle">sublabel</text>
-```
-
-### Info Card Pattern
-
-```html
-<div class="card">
-  <div class="card-header">
-    <div class="card-dot COLOR"></div>
-    <h3>Title</h3>
-  </div>
-  <ul>
-    <li>• Item one</li>
-    <li>• Item two</li>
-  </ul>
-</div>
-```
-
-## Template
-
-Copy and customize the template at `resources/template.html`. Key customization points:
-
-1. Update the `<title>` and header text
-2. Modify SVG viewBox dimensions if needed (default: `1000 x 680`)
-3. Add/remove/reposition component boxes
-4. Draw connection arrows between components
-5. Update the three summary cards
-6. Update footer metadata
-
-## Output
-
-Always produce a single self-contained `.html` file with:
-- Embedded CSS (no external stylesheets except Google Fonts)
-- Inline SVG (no external images)
-- No JavaScript required (pure CSS animations)
-
-The file should render correctly when opened directly in any modern browser. The export toolbar uses two CDN scripts (html2canvas and jsPDF) — no other JavaScript dependencies.
+For documentation pages from a KG, see **[[rui-html]]** — takes the KG produced here through Phases 1–3 (design intelligence → theme selection → verification).

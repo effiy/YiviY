@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VideoLingo Card Graph — Source Graph</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #020617; --surface: #0f172a; --border: #1e293b;
+      --text: #f8fafc; --text-soft: #94a3b8; --text-muted: #64748b;
+      --font: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .pulse-dot { width: 10px; height: 10px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .header h1 { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+    .header .subtitle { color: var(--text-soft); font-size: 0.75rem; margin-left: 0.25rem; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+    .toolbar { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; flex-wrap: wrap; }
+    .toolbar-group { display: flex; align-items: center; gap: 0.375rem; }
+    .toolbar-label { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .toolbar select, .toolbar input { font-family: var(--font); font-size: 0.75rem; padding: 0.3rem 0.5rem; border-radius: 0.375rem; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+    .toolbar select:focus, .toolbar input:focus { border-color: #22d3ee; }
+    .toolbar input[type="search"] { width: 160px; }
+    .filter-btn { font-family: var(--font); font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 0.375rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .filter-btn:hover { color: var(--text); border-color: var(--text-soft); }
+    .filter-btn.active { color: var(--text); border-color: #22d3ee; background: rgba(8, 51, 68, 0.4); }
+    .btn { font-family: var(--font); font-size: 0.7rem; padding: 0.3rem 0.6rem; border-radius: 0.375rem; border: 1px solid var(--border); background: var(--bg); color: var(--text-soft); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn:hover { color: var(--text); border-color: var(--text-soft); background: rgba(30, 41, 59, 0.5); }
+    .btn.primary { border-color: #22d3ee; color: #22d3ee; }
+    .btn.primary:hover { background: rgba(8, 51, 68, 0.4); }
+    .main { display: flex; flex: 1; overflow: hidden; }
+    .sidebar { width: 260px; flex-shrink: 0; border-right: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-section { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); }
+    .sidebar-section h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; font-size: 0.7rem; color: var(--text-soft); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .legend-line { width: 20px; height: 1.5px; flex-shrink: 0; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 0.25rem; }
+    .stat-val { color: var(--text); font-weight: 600; }
+    .stat-label { color: var(--text-muted); }
+    .graph-container { flex: 1; position: relative; background: var(--bg); }
+    #cy { width: 100%; height: 100%; }
+    .detail-panel { width: 320px; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; transition: width 0.3s; }
+    .detail-panel.collapsed { width: 40px; }
+    .detail-toggle { display: flex; align-items: center; justify-content: center; padding: 0.5rem; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text-muted); font-size: 0.8rem; user-select: none; }
+    .detail-toggle:hover { color: var(--text); }
+    .detail-content { padding: 1rem; flex: 1; overflow-y: auto; }
+    .detail-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1rem; }
+    .detail-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .detail-header h3 { font-size: 1rem; font-weight: 600; }
+    .detail-badge { font-size: 0.6rem; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 0.25rem; border: 1px solid; letter-spacing: 0.05em; }
+    .badge-core { color: #34d399; border-color: #34d399; background: rgba(6, 78, 59, 0.4); }
+    .badge-report { color: #fb7185; border-color: #fb7185; background: rgba(136, 19, 55, 0.4); }
+    .badge-guide { color: #38bdf8; border-color: #38bdf8; background: rgba(8, 51, 68, 0.4); }
+    .badge-oss { color: #fbbf24; border-color: #fbbf24; background: rgba(120, 53, 15, 0.3); }
+    .badge-agent { color: #a78bfa; border-color: #a78bfa; background: rgba(76, 29, 149, 0.4); }
+    .detail-desc { font-size: 0.78rem; line-height: 1.5; color: var(--text-soft); margin-bottom: 0.75rem; }
+    .detail-desc strong { color: var(--text); }
+    .detail-desc code { color: #22d3ee; }
+    .detail-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
+    .detail-tag { font-size: 0.65rem; padding: 0.15rem 0.45rem; border-radius: 0.25rem; border: 1px solid; }
+    .tag-warn { color: #f59e0b; border-color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
+    .tag-accent { color: #eab308; border-color: #eab308; background: rgba(234, 179, 8, 0.15); }
+    .tag-info { color: #3b82f6; border-color: #3b82f6; background: rgba(59, 130, 246, 0.15); }
+    .tag-red { color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+    .tag-purple { color: #8b5cf6; border-color: #8b5cf6; background: rgba(139, 92, 246, 0.15); }
+    .tag-cyan { color: #06b6d4; border-color: #06b6d4; background: rgba(6, 182, 212, 0.15); }
+    .tag-pass, .tag-green { color: #22c55e; border-color: #22c55e; background: rgba(34, 197, 94, 0.15); }
+    .detail-meta { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .detail-links { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.75rem; }
+    .detail-link { font-size: 0.7rem; color: #22d3ee; text-decoration: none; padding: 0.25rem 0; border-bottom: 1px solid var(--border); transition: color 0.15s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .detail-link:hover { color: #67e8f9; }
+    .detail-stats { font-size: 0.65rem; color: var(--text-muted); }
+    .detail-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.35rem; margin-top: 0.5rem; }
+    .detail-conn-list { list-style: none; font-size: 0.7rem; color: var(--text-soft); }
+    .detail-conn-list li { padding: 0.2rem 0; cursor: pointer; transition: color 0.15s; }
+    .detail-conn-list li:hover { color: #22d3ee; }
+    .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem; color: var(--text); z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    @media (max-width: 1024px) { .sidebar { width: 220px; } .detail-panel { width: 260px; } }
+    @media (max-width: 768px) { .main { flex-direction: column; } .sidebar { width: 100%; max-height: 150px; } .graph-container { height: 55vh; } .detail-panel { width: 100%; max-height: 30vh; } }
+    @media (max-width: 480px) { .toolbar { gap: 0.35rem; padding: 0.4rem 0.75rem; } .toolbar input[type="search"] { width: 100px; } }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="header">
+    <div class="pulse-dot"></div>
+    <h1>VideoLingo Card Graph</h1>
+    <span class="subtitle">features + cards · INTRO_CONFIG.en · auto-generated</span>
+    <div class="header-right">
+      <button class="btn primary" onclick="downloadPNG()" title="Download PNG">📥 PNG</button>
+      <button class="btn" onclick="resetView()" title="Reset view">↺ Reset</button>
+      <button class="btn" onclick="fitGraph()" title="Fit to screen">⊞ Fit</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">Layout</span>
+      <select id="layout-select" onchange="switchLayout(this.value)">
+        <option value="cose-bilkent">cose-bilkent</option>
+        <option value="dagre">dagre (LR)</option>
+        <option value="dagre-tb">dagre (TB)</option>
+        <option value="breadthfirst">breadthfirst</option>
+        <option value="concentric">concentric</option>
+        <option value="grid">grid</option>
+        <option value="circle">circle</option>
+      </select>
+    </div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Search</span>
+      <input type="search" id="search-input" placeholder="Card name or tag..." oninput="doSearch(this.value)">
+    </div>
+    <div class="toolbar-group" id="badge-filters">
+      <span class="toolbar-label">Filter</span>
+      <button class="filter-btn active" onclick="filterByBadge('all', this)">All</button>
+      <button class="filter-btn" onclick="filterByBadge('Core', this)">Core</button>
+      <button class="filter-btn" onclick="filterByBadge('OSS', this)">OSS</button>
+      <button class="filter-btn" onclick="filterByBadge('Guide', this)">Guide</button>
+      <button class="filter-btn" onclick="filterByBadge('Report', this)">Report</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-section"><h3>Stats</h3><div id="stats-content">Loading...</div></div>
+      <div class="sidebar-section"><h3>Legend · Nodes</h3><div id="legend-nodes"></div></div>
+      <div class="sidebar-section"><h3>Legend · Edges</h3><div id="legend-edges"></div></div>
+    </div>
+
+    <div class="graph-container"><div id="cy"></div></div>
+
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-toggle" onclick="toggleDetail()" title="Toggle detail panel">◀</div>
+      <div class="detail-content" id="detail-content">
+        <div class="detail-empty">Click a node<br>to see details</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ════════════════════════════════════════════════════════════════════════
+     * GRAPH DATA — Generated from INTRO_CONFIG.en (features + cards)
+     * Source: docs/components/intro/data.js
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    const CARDS = [
+      // ── features ──
+      { id: 'card:0', name: '🎥 yt-dlp', badge: 'OSS', desc: 'YouTube video download via yt-dlp · <strong>1,200+ sites</strong> · format selection · subtitle extraction',
+        tags: [{text:'1.2k sites',modifier:'accent'},{text:'Python',modifier:'info'}],
+        links: [{label:'图解',href:'views/yt-dlp/diagram/index.html',target:''},{label:'源码',href:'https://github.com/yt-dlp/yt-dlp',target:'_blank'},{label:'文档',href:'https://github.com/yt-dlp/yt-dlp#readme',target:'_blank'},{label:'Wiki',href:'https://github.com/yt-dlp/yt-dlp/wiki',target:'_blank'},{label:'Issues',href:'https://github.com/yt-dlp/yt-dlp/issues',target:'_blank'}],
+        tier: 'Standard' },
+      { id: 'card:1', name: '🎙️ WhisperX', badge: 'Core', desc: 'Word-level subtitle recognition · <strong>low-illusion</strong> output · speaker diarization · multi-language',
+        tags: [{text:'word-level',modifier:'accent'},{text:'diarization',modifier:'info'}],
+        links: [{label:'源码',href:'https://github.com/m-bain/whisperX',target:'_blank'},{label:'论文',href:'https://arxiv.org/abs/2303.00747',target:'_blank'},{label:'文档',href:'https://github.com/m-bain/whisperX#readme',target:'_blank'},{label:'Issues',href:'https://github.com/m-bain/whisperX/issues',target:'_blank'}],
+        tier: 'Standard' },
+      { id: 'card:2', name: '📝 NLP Split', badge: 'Core', desc: 'NLP and AI-powered subtitle segmentation · <strong>natural reading flow</strong> · sentence-boundary detection · context-aware splitting',
+        tags: [{text:'AI-driven',modifier:'purple'},{text:'sentence-aware',modifier:'info'}], links: null, tier: 'Standard' },
+      { id: 'card:3', name: '📚 Term Base', badge: 'Core', desc: 'Custom + AI-generated terminology database · <strong>translation consistency</strong> · domain-specific glossaries · auto-term extraction',
+        tags: [{text:'AI + Custom',modifier:'purple'},{text:'glossary',modifier:'info'}], links: null, tier: 'Standard' },
+      { id: 'card:4', name: '🔄 3-Step T-R-A', badge: 'Core', desc: 'Translate → Reflect → Adapt pipeline · <strong>cinematic-quality</strong> translation · self-critique loop · context-aware refinement',
+        tags: [{text:'3-stage',modifier:'purple'},{text:'self-critique',modifier:'accent'}], links: null, tier: 'Standard' },
+      { id: 'card:5', name: '✅ Netflix 1-Line', badge: 'Core', desc: 'Netflix-standard single-line subtitles only · <strong>no multi-line clutter</strong> · character-length check · reading-speed compliance',
+        tags: [{text:'Netflix',modifier:'accent'},{text:'1-line',modifier:'info'}], links: null, tier: 'Standard' },
+      { id: 'card:6', name: '🗣️ Multi-TTS', badge: 'Core', desc: 'Multi-engine TTS dubbing · <strong>GPT-SoVITS</strong> · Azure · OpenAI · Edge · F5-TTS · voice cloning support',
+        tags: [{text:'6 engines',modifier:'cyan'},{text:'voice-clone',modifier:'accent'}], links: null, tier: 'Standard' },
+      { id: 'card:7', name: '🚀 Streamlit UI', badge: '', desc: 'One-click Streamlit startup · <strong>zero-config</strong> launch · real-time progress visualization · log streaming',
+        tags: [{text:'zero-config',modifier:'accent'},{text:'Streamlit',modifier:'info'}],
+        links: [{label:'源码',href:'https://github.com/streamlit/streamlit',target:'_blank'},{label:'文档',href:'https://docs.streamlit.io/',target:'_blank'},{label:'演示',href:'https://streamlit.io/',target:'_blank'},{label:'架构',href:'https://docs.streamlit.io/develop/concepts/architecture',target:'_blank'}],
+        tier: 'Standard' },
+      { id: 'card:8', name: '🌍 i18n', badge: '', desc: 'Multi-language Streamlit UI · <strong>zh-CN · en · ja · zh-TW</strong> · auto-detect browser locale',
+        tags: [{text:'4 languages',modifier:'cyan'},{text:'auto-detect',modifier:'info'}], links: null, tier: 'Standard' },
+      { id: 'card:9', name: '📝 Resume', badge: '', desc: 'Detailed logging with checkpointing · <strong>pause and resume</strong> anytime · progress recovery · session management',
+        tags: [{text:'checkpoint',modifier:'info'},{text:'recovery',modifier:'accent'}], links: null, tier: 'Standard' },
+      { id: 'card:10', name: '🔍 Model Picker', badge: '', desc: 'Auto-fetch full model list from provider API · <strong>search and filter</strong> · model comparison · capability badges',
+        tags: [{text:'auto-fetch',modifier:'accent'},{text:'search',modifier:'info'}], links: null, tier: 'Standard' },
+      { id: 'card:11', name: '⏯️ Task Control', badge: '', desc: 'Pause, resume, or stop at any pipeline step · <strong>real-time task control</strong> · graceful state transitions · resource cleanup',
+        tags: [{text:'real-time',modifier:'accent'},{text:'3 states',modifier:'cyan'}], links: null, tier: 'Standard' },
+      // ── cards (navigation) ──
+      { id: 'card:12', name: 'Quick Start', badge: 'Guide', desc: 'Get running in 3 minutes with uv or Docker · <strong>zero to translated video</strong>',
+        tags: [{text:'5 min',modifier:'pass'},{text:'uv/Docker',modifier:'info'}],
+        links: [{label:'Demo',href:'https://videolingo.io',target:'_blank'},{label:'Config',href:'#config',target:''},{label:'Issues',href:'https://github.com/Huanshere/VideoLingo/issues',target:'_blank'}],
+        meta: '#quick-start · cross-platform', tier: 'Nav' },
+      { id: 'card:13', name: 'Configuration', badge: 'Guide', desc: 'Every knob in config.yaml explained · LLM · Whisper · TTS · output settings',
+        tags: [{text:'yaml',modifier:'info'},{text:'full ref',modifier:'cyan'}],
+        links: [{label:'API',href:'#api-config',target:''},{label:'Docs',href:'https://github.com/Huanshere/VideoLingo/blob/main/README.md',target:'_blank'},{label:'Source',href:'https://github.com/Huanshere/VideoLingo',target:'_blank'}],
+        meta: '#config · config.yaml', tier: 'Nav' },
+      { id: 'card:14', name: 'API Setup', badge: 'Guide', desc: 'LLM providers · Whisper variants · TTS engines · <strong>all APIs documented</strong>',
+        tags: [{text:'LLM/Whisper/TTS',modifier:'purple'}],
+        links: [{label:'Config',href:'#config',target:''},{label:'Docs',href:'https://github.com/Huanshere/VideoLingo/blob/main/README.md',target:'_blank'},{label:'Source',href:'https://github.com/Huanshere/VideoLingo',target:'_blank'}],
+        meta: '#api-config · multi-provider', tier: 'Nav' },
+      { id: 'card:15', name: 'Dubbing Guide', badge: 'Guide', desc: '<strong>9 TTS engines</strong> compared side-by-side · quality assessments · pro tips',
+        tags: [{text:'9 engines',modifier:'cyan'},{text:'advanced',modifier:'warn'}],
+        links: [{label:'Demo',href:'https://videolingo.io',target:'_blank'},{label:'Config',href:'#config',target:''},{label:'Source',href:'https://github.com/Huanshere/VideoLingo',target:'_blank'}],
+        meta: '#dubbing · 9 TTS engines', tier: 'Nav' },
+      { id: 'card:16', name: 'Troubleshooting', badge: 'Guide', desc: 'Common pitfalls and their fixes · dependency conflicts · API errors · CUDA issues',
+        tags: [{text:'FAQ',modifier:'warn'}],
+        links: [{label:'Config',href:'#config',target:''},{label:'Logs',href:'#config',target:''},{label:'Issues',href:'https://github.com/Huanshere/VideoLingo/issues',target:'_blank'}],
+        meta: '#troubleshooting · common issues', tier: 'Nav' },
+      { id: 'card:17', name: 'Pipeline Deep Dive', badge: 'Guide', desc: 'Step-by-step walkthrough: <strong>download · transcribe · translate · dub</strong>',
+        tags: [{text:'6 steps',modifier:'cyan'},{text:'flowchart',modifier:'purple'}],
+        links: [{label:'Demo',href:'https://videolingo.io',target:'_blank'},{label:'Source',href:'https://github.com/Huanshere/VideoLingo',target:'_blank'},{label:'Docs',href:'https://github.com/Huanshere/VideoLingo/blob/main/README.md',target:'_blank'}],
+        meta: '#workflow · download → dub', tier: 'Nav' },
+      { id: 'card:18', name: 'Code Health Report', badge: 'Report', desc: '7-dimension static analysis · quantitative scoring · <strong>26 improvements</strong> · 56h governance roadmap',
+        tags: [{text:'58 / 100',modifier:'warn'},{text:'7 dimensions',modifier:'info'},{text:'26 actions',modifier:'cyan'}],
+        meta: 'Assessment date 2026-06-28 · Technical Due Diligence', tier: 'Rich' },
+      { id: 'card:19', name: 'Architecture Report', badge: 'Report', desc: 'ATAM method · 8-dimension weighted scoring · <strong>10 action items</strong> · 5-week implementation plan',
+        tags: [{text:'5.6 → 7.9',modifier:'red'},{text:'ATAM',modifier:'purple'},{text:'10 actions',modifier:'cyan'}],
+        meta: 'v3.0.0 → v3.1.0 · Assessment date 2026-06-28', tier: 'Rich' },
+    ];
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * BUILD GRAPH ELEMENTS
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    function buildElements() {
+      const elements = [];
+      const tagIndex = new Map();   // tag_text → node id
+      const linkIndex = new Map();  // link_href → node id
+      const badgeIndex = new Map(); // badge_text → node id
+      const tagToCards = new Map(); // tag_id → Set(card_id)
+
+      // ── Card nodes ──
+      CARDS.forEach((card, i) => {
+        const richness = calcRichness(card);
+        const width = 100 + richness * 15;
+        const height = 44 + richness * 8;
+        elements.push({
+          group: 'nodes',
+          data: {
+            id: card.id,
+            type: 'card',
+            label: card.name,
+            badge: card.badge || '',
+            desc: card.desc,
+            tags: card.tags ? card.tags.map(t => ({text: t.text, modifier: t.modifier || 'info'})) : [],
+            meta: card.meta || '',
+            links: card.links || [],
+            richness: richness,
+            tier: card.tier,
+            href: card.nameHref || '',
+          },
+          style: { width: width, height: height },
+        });
+
+        // ── Tag nodes (deduped) ──
+        if (card.tags) {
+          card.tags.forEach(t => {
+            const tagKey = t.text;
+            if (!tagIndex.has(tagKey)) {
+              const tagId = 'tag:' + tagKey.replace(/[^a-zA-Z0-9一-鿿_-]/g, '_');
+              tagIndex.set(tagKey, tagId);
+              elements.push({
+                group: 'nodes',
+                data: { id: tagId, type: 'tag', label: t.text, modifier: t.modifier || 'info' },
+              });
+            }
+            const tagId = tagIndex.get(tagKey);
+            // has_tag edge
+            elements.push({
+              group: 'edges',
+              data: { id: 'e:has_tag:' + card.id + ':' + tagId, source: card.id, target: tagId, type: 'has_tag' },
+            });
+            // Track card→tag for shares_tag
+            if (!tagToCards.has(tagId)) tagToCards.set(tagId, new Set());
+            tagToCards.get(tagId).add(card.id);
+          });
+        }
+
+        // ── Badge nodes ──
+        if (card.badge) {
+          const badgeKey = card.badge;
+          if (!badgeIndex.has(badgeKey)) {
+            const badgeId = 'badge:' + badgeKey;
+            badgeIndex.set(badgeKey, badgeId);
+            elements.push({
+              group: 'nodes',
+              data: { id: badgeId, type: 'badge', label: badgeKey },
+            });
+          }
+          elements.push({
+            group: 'edges',
+            data: { id: 'e:has_badge:' + card.id + ':' + badgeIndex.get(badgeKey), source: card.id, target: badgeIndex.get(badgeKey), type: 'has_badge' },
+          });
+        }
+
+        // ── Link destination nodes (deduped) ──
+        if (card.links && Array.isArray(card.links)) {
+          card.links.forEach(l => {
+            const linkKey = l.href;
+            if (!linkIndex.has(linkKey)) {
+              const linkId = 'link:' + linkKey.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 60);
+              linkIndex.set(linkKey, linkId);
+              elements.push({
+                group: 'nodes',
+                data: { id: linkId, type: 'link_dest', label: l.label || linkKey, url: linkKey },
+              });
+            }
+            elements.push({
+              group: 'edges',
+              data: { id: 'e:links_to:' + card.id + ':' + linkIndex.get(linkKey), source: card.id, target: linkIndex.get(linkKey), type: 'links_to' },
+            });
+          });
+        }
+      });
+
+      // ── shares_tag edges (card ↔ card for each shared tag) ──
+      const sharedPairs = new Set();
+      tagToCards.forEach((cardSet, tagId) => {
+        const cardArr = [...cardSet];
+        for (let i = 0; i < cardArr.length; i++) {
+          for (let j = i + 1; j < cardArr.length; j++) {
+            const pair = [cardArr[i], cardArr[j]].sort().join('::');
+            if (!sharedPairs.has(pair)) {
+              sharedPairs.add(pair);
+              elements.push({
+                group: 'edges',
+                data: { id: 'e:shares_tag:' + cardArr[i] + ':' + cardArr[j], source: cardArr[i], target: cardArr[j], type: 'shares_tag' },
+              });
+            }
+          }
+        }
+      });
+
+      // ── shares_badge edges ──
+      const badgeToCards = new Map();
+      CARDS.forEach(card => {
+        if (card.badge) {
+          const bk = card.badge;
+          if (!badgeToCards.has(bk)) badgeToCards.set(bk, []);
+          badgeToCards.get(bk).push(card.id);
+        }
+      });
+      badgeToCards.forEach((cardArr) => {
+        for (let i = 0; i < cardArr.length; i++) {
+          for (let j = i + 1; j < cardArr.length; j++) {
+            elements.push({
+              group: 'edges',
+              data: { id: 'e:shares_badge:' + cardArr[i] + ':' + cardArr[j], source: cardArr[i], target: cardArr[j], type: 'shares_badge' },
+            });
+          }
+        }
+      });
+
+      // ── shares_link edges ──
+      const linkToCards = new Map();
+      CARDS.forEach(card => {
+        if (card.links && Array.isArray(card.links)) {
+          card.links.forEach(l => {
+            if (!linkToCards.has(l.href)) linkToCards.set(l.href, []);
+            linkToCards.get(l.href).push(card.id);
+          });
+        }
+      });
+      const sharedLinkPairs = new Set();
+      linkToCards.forEach((cardArr) => {
+        for (let i = 0; i < cardArr.length; i++) {
+          for (let j = i + 1; j < cardArr.length; j++) {
+            const pair = [cardArr[i], cardArr[j]].sort().join('::');
+            if (!sharedLinkPairs.has(pair)) {
+              sharedLinkPairs.add(pair);
+              elements.push({
+                group: 'edges',
+                data: { id: 'e:shares_link:' + cardArr[i] + ':' + cardArr[j], source: cardArr[i], target: cardArr[j], type: 'shares_link' },
+              });
+            }
+          }
+        }
+      });
+
+      return elements;
+    }
+
+    function calcRichness(card) {
+      let score = 1;
+      if (card.desc) score += Math.min(card.desc.length / 50, 3);
+      if (card.tags) score += card.tags.length * 0.5;
+      if (card.links && Array.isArray(card.links) && card.links.length) score += 1;
+      if (card.meta) score += 1;
+      if (card.badge) score += 0.5;
+      return Math.round(score);
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * CY INIT
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    const cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: buildElements(),
+      style: getStyle(),
+      layout: { name: 'cose-bilkent', animate: true, animationDuration: 800, nodeRepulsion: 8000, idealEdgeLength: 120, gravity: 0.3, numIter: 2000, tile: true },
+      wheelSensitivity: 0.3, minZoom: 0.15, maxZoom: 4,
+    });
+
+    function getStyle() {
+      return [
+        { selector: 'node', style: { 'font-family': 'JetBrains Mono, monospace', 'font-size': '10px', 'color': '#f8fafc', 'text-valign': 'center', 'text-halign': 'center', 'text-wrap': 'wrap', 'text-max-width': '120px', 'background-opacity': 0.85, 'border-width': 1.5, 'label': 'data(label)', 'transition-property': 'background-color, border-color, width, height, opacity', 'transition-duration': '0.2s' } },
+        { selector: 'edge', style: { 'width': 1, 'line-color': '#475569', 'target-arrow-color': '#475569', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'opacity': 0.6 } },
+        { selector: 'node[type="card"]', style: { 'shape': 'round-rectangle', 'font-size': '11px', 'font-weight': '600' } },
+        { selector: 'node[badge="Core"], node[badge="核心"]', style: { 'background-color': 'rgba(6, 78, 59, 0.85)', 'border-color': '#34d399' } },
+        { selector: 'node[badge="Report"], node[badge="报告"]', style: { 'background-color': 'rgba(136, 19, 55, 0.85)', 'border-color': '#fb7185' } },
+        { selector: 'node[badge="Guide"], node[badge="指南"]', style: { 'background-color': 'rgba(8, 51, 68, 0.85)', 'border-color': '#38bdf8' } },
+        { selector: 'node[badge="OSS"]', style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fbbf24' } },
+        { selector: 'node[badge="Agent"]', style: { 'background-color': 'rgba(76, 29, 149, 0.85)', 'border-color': '#a78bfa' } },
+        { selector: 'node[badge="Beta"]', style: { 'background-color': 'rgba(120, 53, 15, 0.85)', 'border-color': '#fb923c' } },
+        { selector: 'node[type="tag"]', style: { 'shape': 'ellipse', 'width': 90, 'height': 36, 'font-size': '9px', 'font-weight': '500' } },
+        { selector: 'node[modifier="warn"]',  style: { 'background-color': 'rgba(245, 158, 11, 0.2)', 'border-color': '#f59e0b' } },
+        { selector: 'node[modifier="accent"]',style: { 'background-color': 'rgba(234, 179, 8, 0.2)', 'border-color': '#eab308' } },
+        { selector: 'node[modifier="info"]',  style: { 'background-color': 'rgba(59, 130, 246, 0.2)', 'border-color': '#3b82f6' } },
+        { selector: 'node[modifier="red"]',   style: { 'background-color': 'rgba(239, 68, 68, 0.2)', 'border-color': '#ef4444' } },
+        { selector: 'node[modifier="purple"]',style: { 'background-color': 'rgba(139, 92, 246, 0.2)', 'border-color': '#8b5cf6' } },
+        { selector: 'node[modifier="cyan"]',  style: { 'background-color': 'rgba(6, 182, 212, 0.2)', 'border-color': '#06b6d4' } },
+        { selector: 'node[modifier="pass"], node[modifier="green"]', style: { 'background-color': 'rgba(34, 197, 94, 0.2)', 'border-color': '#22c55e' } },
+        { selector: 'node[type="link_dest"]', style: { 'shape': 'diamond', 'width': 60, 'height': 60, 'font-size': '8px', 'background-color': 'rgba(71, 85, 105, 0.4)', 'border-color': '#64748b' } },
+        { selector: 'node[type="badge"]', style: { 'shape': 'triangle', 'width': 40, 'height': 40, 'font-size': '8px' } },
+        { selector: 'edge[type="has_tag"]', style: { 'line-style': 'solid', 'width': 1, 'target-arrow-shape': 'none', 'curve-style': 'unbundled-bezier' } },
+        { selector: 'edge[type="shares_tag"]', style: { 'line-style': 'dashed', 'width': 0.5, 'line-color': '#94a3b8', 'target-arrow-shape': 'none', 'opacity': 0.3 } },
+        { selector: 'edge[type="has_badge"]', style: { 'line-style': 'solid', 'width': 2, 'opacity': 0.8 } },
+        { selector: 'edge[type="shares_badge"]', style: { 'line-style': 'dashed', 'width': 1, 'target-arrow-shape': 'none', 'opacity': 0.4 } },
+        { selector: 'edge[type="links_to"]', style: { 'line-style': 'dotted', 'width': 1, 'line-color': '#475569', 'opacity': 0.5 } },
+        { selector: 'edge[type="shares_link"]', style: { 'line-style': 'dotted', 'width': 0.5, 'line-color': '#334155', 'target-arrow-shape': 'none', 'opacity': 0.2 } },
+        { selector: 'node:selected', style: { 'border-width': 3, 'border-color': '#f8fafc', 'shadow-blur': 12, 'shadow-color': '#22d3ee', 'shadow-opacity': 0.4 } },
+        { selector: 'node.highlight', style: { 'border-width': 2.5, 'border-color': '#f8fafc', 'opacity': 1 } },
+        { selector: 'edge.highlight', style: { 'opacity': 1, 'width': 2 } },
+        { selector: 'node.dimmed', style: { 'opacity': 0.12 } },
+        { selector: 'edge.dimmed', style: { 'opacity': 0.04 } },
+        { selector: 'node.search-hit', style: { 'border-width': 3, 'border-color': '#fbbf24', 'shadow-blur': 16, 'shadow-color': '#fbbf24', 'shadow-opacity': 0.6 } },
+      ];
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * LAYOUT SWITCHER
+     * ════════════════════════════════════════════════════════════════════════ */
+    function switchLayout(name) {
+      let opts = { animate: true, animationDuration: 600 };
+      if (name === 'cose-bilkent') opts = { ...opts, name: 'cose-bilkent', nodeRepulsion: 8000, idealEdgeLength: 120, gravity: 0.3, numIter: 2000, tile: true };
+      else if (name === 'dagre') opts = { ...opts, name: 'dagre', rankDir: 'LR', nodeSep: 60, edgeSep: 20, rankSep: 100 };
+      else if (name === 'dagre-tb') opts = { ...opts, name: 'dagre', rankDir: 'TB', nodeSep: 60, edgeSep: 20, rankSep: 100 };
+      else if (name === 'breadthfirst') opts = { ...opts, name: 'breadthfirst', directed: true, spacingFactor: 1.5 };
+      else if (name === 'concentric') opts = { ...opts, name: 'concentric', concentric: function(n) { return n.data('richness') || 1; }, minNodeSpacing: 40 };
+      else if (name === 'grid') opts = { ...opts, name: 'grid', cols: Math.ceil(Math.sqrt(cy.nodes().length)) };
+      else if (name === 'circle') opts = { ...opts, name: 'circle', radius: Math.max(200, cy.nodes().length * 15) };
+      cy.layout(opts).run();
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * SEARCH
+     * ════════════════════════════════════════════════════════════════════════ */
+    let searchTimeout;
+    function doSearch(query) {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        cy.nodes().removeClass('search-hit dimmed');
+        if (!query || query.length < 1) { fitGraph(); return; }
+        const q = query.toLowerCase(); let found = false;
+        cy.nodes().forEach(n => {
+          const label = (n.data('label') || '').toLowerCase();
+          const tags = (n.data('tags') || []).map(t => typeof t === 'string' ? t : t.text).join(' ').toLowerCase();
+          const desc = (n.data('desc') || '').toLowerCase();
+          if (label.includes(q) || tags.includes(q) || desc.includes(q)) { n.addClass('search-hit').removeClass('dimmed'); found = true; }
+          else { n.addClass('dimmed'); }
+        });
+        if (found) cy.fit(cy.nodes('.search-hit'), 80);
+      }, 250);
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * FILTER BY BADGE
+     * ════════════════════════════════════════════════════════════════════════ */
+    function filterByBadge(badge, btn) {
+      document.querySelectorAll('#badge-filters .filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      if (badge === 'all') { cy.nodes().style('display', 'element'); cy.edges().style('display', 'element'); fitGraph(); return; }
+      cy.nodes().forEach(n => {
+        if (n.data('type') === 'card') { n.style('display', n.data('badge') === badge ? 'element' : 'none'); }
+        else if (n.data('type') === 'tag' || n.data('type') === 'link_dest' || n.data('type') === 'badge') {
+          const connected = n.connectedEdges().some(e => e.source().style('display') !== 'none' && e.target().style('display') !== 'none');
+          n.style('display', connected ? 'element' : 'none');
+        }
+      });
+      cy.edges().forEach(e => { e.style('display', e.source().style('display') !== 'none' && e.target().style('display') !== 'none' ? 'element' : 'none'); });
+      fitGraph();
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * CLICK → DETAIL PANEL
+     * ════════════════════════════════════════════════════════════════════════ */
+    cy.on('tap', 'node', function(evt) {
+      const node = evt.target, data = node.data();
+      const container = document.getElementById('detail-content');
+      const type = data.type;
+
+      if (type === 'card') {
+        const connTags = node.connectedEdges('[type="has_tag"]').length;
+        const connCards = node.connectedEdges('[type="shares_tag"]').length;
+        const connLinks = node.connectedEdges('[type="links_to"]').length;
+        let html = '<div class="detail-header"><h3>' + esc(data.label) + '</h3>';
+        if (data.badge) html += '<span class="detail-badge badge-' + bcls(data.badge) + '">' + esc(data.badge) + '</span>';
+        html += '</div>';
+        if (data.desc) html += '<div class="detail-desc">' + data.desc + '</div>';
+        if (data.tags && data.tags.length) {
+          html += '<div class="detail-section-title">Tags</div><div class="detail-tags">';
+          data.tags.forEach(t => { if (t) { const m = t.modifier || 'info'; html += '<span class="detail-tag tag-' + m + '">' + esc(t.text || t) + '</span>'; } });
+          html += '</div>';
+        }
+        if (data.meta) html += '<div class="detail-meta">' + esc(data.meta) + '</div>';
+        if (data.links && data.links.length) {
+          html += '<div class="detail-section-title">Links (' + data.links.length + ')</div><div class="detail-links">';
+          data.links.forEach(l => { if (l) html += '<a class="detail-link" href="' + esc(l.href) + '" target="_blank" rel="noopener">' + esc(l.label || l.href) + '</a>'; });
+          html += '</div>';
+        }
+        html += '<div class="detail-stats">' + connTags + ' tags · ' + connCards + ' related · ' + connLinks + ' links';
+        if (data.richness) html += ' · Richness: ' + data.richness;
+        html += '</div>';
+        const related = node.connectedEdges('[type="shares_tag"], [type="shares_badge"]').map(e => {
+          const o = e.source().id() === data.id ? e.target() : e.source();
+          return { id: o.id(), label: o.data('label') };
+        }).filter((v, i, a) => a.findIndex(x => x.id === v.id) === i);
+        if (related.length) {
+          html += '<div class="detail-section-title">Related Cards (' + related.length + ')</div><ul class="detail-conn-list">';
+          related.forEach(c => { html += '<li onclick="focusNode(\'' + c.id + '\')">' + esc(c.label) + '</li>'; });
+          html += '</ul>';
+        }
+        container.innerHTML = html;
+      } else if (type === 'tag') {
+        const cards = node.connectedEdges('[type="has_tag"]').map(e => { const c = e.source().data('type') === 'card' ? e.source() : e.target(); return {id: c.id(), label: c.data('label')}; });
+        let html = '<div class="detail-header"><h3>🏷️ ' + esc(data.label) + '</h3></div>';
+        html += '<div class="detail-meta">Modifier: ' + esc(data.modifier || 'info') + ' · ' + cards.length + ' cards</div>';
+        if (cards.length) { html += '<div class="detail-section-title">Cards</div><ul class="detail-conn-list">'; cards.forEach(c => { html += '<li onclick="focusNode(\'' + c.id + '\')">' + esc(c.label) + '</li>'; }); html += '</ul>'; }
+        container.innerHTML = html;
+      } else if (type === 'badge') {
+        const cards = node.connectedEdges('[type="has_badge"]').map(e => { const c = e.source().data('type') === 'card' ? e.source() : e.target(); return {id: c.id(), label: c.data('label')}; });
+        let html = '<div class="detail-header"><h3>🔖 ' + esc(data.label) + '</h3></div>';
+        html += '<div class="detail-meta">' + cards.length + ' cards</div>';
+        if (cards.length) { html += '<ul class="detail-conn-list">'; cards.forEach(c => { html += '<li onclick="focusNode(\'' + c.id + '\')">' + esc(c.label) + '</li>'; }); html += '</ul>'; }
+        container.innerHTML = html;
+      } else if (type === 'link_dest') {
+        const cards = node.connectedEdges('[type="links_to"]').map(e => { const c = e.source().data('type') === 'card' ? e.source() : e.target(); return {id: c.id(), label: c.data('label')}; });
+        let html = '<div class="detail-header"><h3>🔗 ' + esc(data.label) + '</h3></div>';
+        if (data.url) html += '<a class="detail-link" href="' + esc(data.url) + '" target="_blank" rel="noopener">' + esc(data.url) + '</a>';
+        html += '<div class="detail-meta">' + cards.length + ' cards</div>';
+        if (cards.length) { html += '<ul class="detail-conn-list">'; cards.forEach(c => { html += '<li onclick="focusNode(\'' + c.id + '\')">' + esc(c.label) + '</li>'; }); html += '</ul>'; }
+        container.innerHTML = html;
+      }
+    });
+
+    cy.on('tap', function(evt) { if (evt.target === cy) document.getElementById('detail-content').innerHTML = '<div class="detail-empty">Click a node<br>to see details</div>'; });
+
+    function focusNode(id) { const node = cy.getElementById(id); if (node.length) { cy.nodes().removeClass('search-hit dimmed'); node.addClass('search-hit'); cy.animate({ center: { eles: node }, zoom: 1.5 }, { duration: 400 }); updateDetailNode(node.data()); } }
+    function updateDetailNode(data) { cy.emit('tap', { target: cy.getElementById(data.id) }); } // re-trigger detail panel
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * HOVER → NEIGHBOR HIGHLIGHT
+     * ════════════════════════════════════════════════════════════════════════ */
+    cy.on('mouseover', 'node', function(evt) {
+      const node = evt.target, neighborhood = node.closedNeighborhood();
+      cy.nodes().not(neighborhood).addClass('dimmed'); cy.edges().not(neighborhood.edges()).addClass('dimmed');
+      neighborhood.nodes().addClass('highlight'); neighborhood.edges().addClass('highlight');
+    });
+    cy.on('mouseout', 'node', function() { cy.nodes().removeClass('highlight dimmed'); cy.edges().removeClass('highlight dimmed'); });
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * VIEW / EXPORT / TOGGLE
+     * ════════════════════════════════════════════════════════════════════════ */
+    function resetView() { cy.nodes().removeClass('search-hit dimmed'); cy.edges().removeClass('dimmed'); document.getElementById('search-input').value = ''; filterByBadge('all', document.querySelector('#badge-filters .filter-btn')); fitGraph(); }
+    function fitGraph() { cy.fit(undefined, 60); cy.center(); }
+    function downloadPNG() { try { const png = cy.png({ full: true, scale: 2, bg: '#020617' }); const a = document.createElement('a'); a.download = 'videolingo-graph.png'; a.href = png; a.click(); toast('PNG downloaded ✓'); } catch(e) { toast('Export failed: ' + e.message); } }
+    let detailOpen = true;
+    function toggleDetail() { detailOpen = !detailOpen; document.getElementById('detail-panel').classList.toggle('collapsed', !detailOpen); document.querySelector('.detail-toggle').textContent = detailOpen ? '◀' : '▶'; setTimeout(() => cy.resize(), 350); }
+    function esc(s) { if (!s) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function bcls(b) { if (!b) return ''; const x = b.toLowerCase(); if (x.includes('core') || x.includes('核心')) return 'badge-core'; if (x.includes('report') || x.includes('报告')) return 'badge-report'; if (x.includes('guide') || x.includes('指南')) return 'badge-guide'; if (x.includes('oss')) return 'badge-oss'; if (x.includes('agent')) return 'badge-agent'; return ''; }
+    function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     * INIT UI
+     * ════════════════════════════════════════════════════════════════════════ */
+    cy.ready(function() {
+      const cards = cy.nodes('[type="card"]'), tags = cy.nodes('[type="tag"]'), badges = cy.nodes('[type="badge"]'), links = cy.nodes('[type="link_dest"]');
+      document.getElementById('stats-content').innerHTML =
+        '<div class="stat-row"><span class="stat-label">Cards</span><span class="stat-val">' + cards.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Tags</span><span class="stat-val">' + tags.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Badges</span><span class="stat-val">' + badges.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Link Dest</span><span class="stat-val">' + links.length + '</span></div>' +
+        '<div class="stat-row"><span class="stat-label">Edges</span><span class="stat-val">' + cy.edges().length + '</span></div>';
+      document.getElementById('legend-nodes').innerHTML =
+        '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid #34d399;background:rgba(6,78,59,0.85)"></span>Core</div>' +
+        '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid #fb7185;background:rgba(136,19,55,0.85)"></span>Report</div>' +
+        '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid #38bdf8;background:rgba(8,51,68,0.85)"></span>Guide</div>' +
+        '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid #fbbf24;background:rgba(120,53,15,0.85)"></span>OSS</div>' +
+        '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid #64748b;background:rgba(100,116,139,0.2)"></span>Tag</div>' +
+        '<div class="legend-item"><span class="legend-dot" style="border:1.5px solid #64748b;background:rgba(71,85,105,0.4)"></span>Link Dest</div>';
+      document.getElementById('legend-edges').innerHTML =
+        '<div class="legend-item"><span class="legend-line" style="background:#475569"></span> has_tag (solid)</div>' +
+        '<div class="legend-item"><span class="legend-line" style="background:#94a3b8;border:1px dashed #94a3b8"></span> shares_tag (dashed)</div>' +
+        '<div class="legend-item"><span class="legend-line" style="border:1px dotted #475569"></span> links_to (dotted)</div>';
+      fitGraph();
+    });
+
+    window.addEventListener('resize', () => cy.resize());
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'f' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); document.getElementById('search-input').focus(); }
+      if (e.key === 'Escape') { cy.nodes().removeClass('search-hit dimmed'); cy.edges().removeClass('dimmed'); document.getElementById('search-input').value = ''; fitGraph(); }
+    });
+  </script>
+</body>
+</html>
