@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__CARD_NAME__ — Demo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <meta name="description" content="Interactive demo for __CARD_NAME__ — __CARD_DESC_SNIPPET__">
+
+    <!-- Theme (one line to switch) -->
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <!-- yry-scene-card component -->
+    <script src="../../../../cdn/yry-scene-card/index.js"></script>
+
+    <!-- Chart.js (Type E only, commented out for other types) -->
+    __CHARTJS_CDN__
+
+    <!-- Demo styles -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <!-- ═══════════════════════════════════ -->
+            <!-- Card Area                          -->
+            <!-- ═══════════════════════════════════ -->
+            <section class="card-area">
+                <div id="scene-card"></div>
+            </section>
+
+            <!-- ═══════════════════════════════════ -->
+            <!-- Demo Area                          -->
+            <!-- ═══════════════════════════════════ -->
+            <section class="demo-area" id="demo-app">
+                __DEMO_HTML__
+            </section>
+
+            <!-- ═══════════════════════════════════ -->
+            <!-- Info Area                          -->
+            <!-- ═══════════════════════════════════ -->
+            <section class="info-area">
+                __INFO_HTML__
+            </section>
+        </div>
+    </div>
+
+    <!-- Data -->
+    <script src="data.js"></script>
+
+    <!-- Vue Demo App -->
+    <script src="index.js"></script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__SCENE_NAME__ Demos</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <meta name="description" content="Interactive demos for __SCENE_NAME__ features">
+
+    <link rel="stylesheet" href="../../../../cdn/theme/__THEME_NAME__.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--yry-font-sans, system-ui, -apple-system, sans-serif);
+            background: var(--yry-bg-primary);
+            color: var(--yry-text-primary);
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--yry-space-8) var(--yry-space-4);
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: var(--yry-space-6);
+        }
+        .page-header h1 {
+            font-size: var(--yry-font-size-2xl);
+            margin-bottom: var(--yry-space-2);
+        }
+        .page-header p {
+            color: var(--yry-text-muted);
+            font-size: var(--yry-font-size-base);
+        }
+        .page-header .scene-link {
+            display: inline-block;
+            margin-top: var(--yry-space-2);
+            font-size: var(--yry-font-size-sm);
+            color: var(--yry-accent);
+            text-decoration: none;
+        }
+        .page-header .scene-link:hover { text-decoration: underline; }
+
+        /* Filters */
+        .demo-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--yry-space-2);
+            justify-content: center;
+            margin-bottom: var(--yry-space-6);
+        }
+        .filter-btn {
+            padding: var(--yry-space-1) var(--yry-space-4);
+            background: var(--yry-bg-secondary);
+            border: 1px solid var(--yry-border);
+            border-radius: var(--yry-radius-sm);
+            color: var(--yry-text-secondary);
+            font-size: var(--yry-font-size-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-btn:hover { border-color: var(--yry-accent); color: var(--yry-text-primary); }
+        .filter-btn.active {
+            background: var(--yry-accent);
+            border-color: var(--yry-accent);
+            color: var(--yry-accent-text);
+        }
+
+        /* Grid */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--yry-space-4);
+        }
+
+        /* Demo Card */
+        .demo-card {
+            background: var(--yry-bg-secondary);
+            border: 1px solid var(--yry-border);
+            border-radius: var(--yry-radius-lg);
+            padding: var(--yry-space-5);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .demo-card:hover {
+            border-color: var(--yry-accent);
+            transform: translateY(-2px);
+            box-shadow: var(--yry-shadow-md);
+        }
+        .demo-card .card-type {
+            display: inline-block;
+            padding: 2px var(--yry-space-2);
+            background: var(--yry-bg-tertiary);
+            border-radius: var(--yry-radius-sm);
+            font-size: var(--yry-font-size-xs);
+            color: var(--yry-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--yry-space-3);
+        }
+        .demo-card h3 {
+            font-size: var(--yry-font-size-lg);
+            margin-bottom: var(--yry-space-2);
+        }
+        .demo-card h3 a {
+            color: var(--yry-text-primary);
+            text-decoration: none;
+        }
+        .demo-card h3 a:hover { color: var(--yry-accent); }
+        .demo-card .card-desc {
+            font-size: var(--yry-font-size-sm);
+            color: var(--yry-text-secondary);
+            margin-bottom: var(--yry-space-3);
+            flex: 1;
+        }
+        .demo-card .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--yry-space-1);
+            margin-bottom: var(--yry-space-3);
+        }
+        .demo-card .card-tag {
+            display: inline-block;
+            padding: 1px var(--yry-space-2);
+            border-radius: var(--yry-radius-sm);
+            font-size: var(--yry-font-size-xs);
+            background: var(--yry-bg-tertiary);
+            color: var(--yry-text-muted);
+        }
+        .demo-card .card-action {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--yry-space-1);
+            padding: var(--yry-space-1) var(--yry-space-3);
+            background: var(--yry-accent);
+            color: var(--yry-accent-text);
+            text-decoration: none;
+            border-radius: var(--yry-radius-sm);
+            font-size: var(--yry-font-size-sm);
+            font-weight: 500;
+            transition: background 0.2s ease;
+            align-self: flex-start;
+        }
+        .demo-card .card-action:hover { background: var(--yry-accent-hover); }
+
+        /* No results */
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: var(--yry-space-8);
+            color: var(--yry-text-muted);
+        }
+
+        /* Back link */
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: var(--yry-space-8);
+            color: var(--yry-text-muted);
+            font-size: var(--yry-font-size-sm);
+        }
+        .back-link a { color: var(--yry-accent); }
+
+        @media (max-width: 768px) {
+            .page { padding: var(--yry-space-4) var(--yry-space-3); }
+            .demo-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="page">
+            <header class="page-header">
+                <h1>🎬 __SCENE_NAME__ Demos</h1>
+                <p>Interactive demonstrations of __SCENE_NAME__ features — click any card to explore</p>
+                <a href="../../index.html" class="scene-link">← Back to __SCENE_NAME__</a>
+            </header>
+
+            <!-- Type Filters -->
+            <div class="demo-filters">
+                <button v-for="type in types" :key="type.id"
+                        class="filter-btn" :class="{ active: activeType === type.id }"
+                        @click="activeType = type.id">
+                    {{ type.label }} ({{ countByType(type.id) }})
+                </button>
+            </div>
+
+            <!-- Demo Grid -->
+            <div class="demo-grid">
+                <template v-for="demo in filteredDemos" :key="demo.slug">
+                    <div class="demo-card">
+                        <span class="card-type">{{ demo.typeLabel }}</span>
+                        <h3><a :href="demo.href">{{ demo.name }}</a></h3>
+                        <p class="card-desc" v-html="demo.desc"></p>
+                        <div class="card-tags" v-if="demo.tags && demo.tags.length">
+                            <span v-for="tag in demo.tags" class="card-tag">{{ tag }}</span>
+                        </div>
+                        <a :href="demo.href" class="card-action">▶ Try Demo</a>
+                    </div>
+                </template>
+                <div v-if="filteredDemos.length === 0" class="no-results">
+                    No demos found for this category.
+                </div>
+            </div>
+
+            <div class="back-link">
+                ← <a href="../../index.html">Back to __SCENE_NAME__</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var DEMOS = __DEMOS_DATA__;
+
+        var TYPE_LABELS = {
+            A: { id: 'A', label: '🛠️ Tool Demos' },
+            B: { id: 'B', label: '🔄 Pipeline Demos' },
+            C: { id: 'C', label: '⚖️ Comparison Demos' },
+            D: { id: 'D', label: '🎮 Control Demos' },
+            E: { id: 'E', label: '📊 Dashboard Demos' },
+            F: { id: 'F', label: '📖 Walkthroughs' },
+        };
+
+        var app = Vue.createApp({
+            data: function() {
+                return {
+                    activeType: 'all',
+                    demos: DEMOS,
+                };
+            },
+            computed: {
+                types: function() {
+                    var seen = {};
+                    var result = [{ id: 'all', label: 'All' }];
+                    DEMOS.forEach(function(d) {
+                        if (!seen[d.type]) {
+                            seen[d.type] = true;
+                            result.push(TYPE_LABELS[d.type] || { id: d.type, label: d.type });
+                        }
+                    });
+                    return result;
+                },
+                filteredDemos: function() {
+                    if (this.activeType === 'all') return this.demos;
+                    return this.demos.filter(function(d) { return d.type === this.activeType; }.bind(this));
+                },
+            },
+            methods: {
+                countByType: function(typeId) {
+                    if (typeId === 'all') return this.demos.length;
+                    return this.demos.filter(function(d) { return d.type === typeId; }).length;
+                }
+            }
+        });
+        app.mount('#app');
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+/* ── Reset ─────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Base ─────────────────────────────────── */
+body {
+    font-family: var(--yry-font-sans, system-ui, -apple-system, sans-serif);
+    background: var(--yry-bg-primary);
+    color: var(--yry-text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* ── Layout ───────────────────────────────── */
+.page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--yry-space-8) var(--yry-space-4);
+}
+
+/* ── Card Area ────────────────────────────── */
+.card-area {
+    margin-bottom: var(--yry-space-8);
+    display: flex;
+    justify-content: center;
+}
+#scene-card {
+    width: 100%;
+    max-width: 640px;
+}
+
+/* ── Demo Area (base) ─────────────────────── */
+.demo-area {
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-radius: var(--yry-radius-lg);
+    padding: var(--yry-space-6);
+    margin-bottom: var(--yry-space-6);
+    min-height: 200px;
+}
+.demo-area h2 {
+    font-size: var(--yry-font-size-lg);
+    margin-bottom: var(--yry-space-2);
+    color: var(--yry-text-primary);
+}
+.demo-area .demo-subtitle {
+    font-size: var(--yry-font-size-sm);
+    color: var(--yry-text-muted);
+    margin-bottom: var(--yry-space-4);
+}
+
+/* ── Info Area ────────────────────────────── */
+.info-area {
+    background: var(--yry-bg-secondary);
+    border: 1px solid var(--yry-border);
+    border-radius: var(--yry-radius-md);
+    padding: var(--yry-space-5);
+    margin-bottom: var(--yry-space-6);
+}
+.info-area h3 {
+    font-size: var(--yry-font-size-base);
+    margin-bottom: var(--yry-space-2);
+    color: var(--yry-text-primary);
+}
+.info-area p {
+    font-size: var(--yry-font-size-sm);
+    color: var(--yry-text-secondary);
+    margin-bottom: var(--yry-space-2);
+}
+.info-area .info-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--yry-space-2);
+    margin-top: var(--yry-space-3);
+}
+.info-area .info-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--yry-space-1);
+    padding: var(--yry-space-1) var(--yry-space-3);
+    background: var(--yry-bg-tertiary);
+    border: 1px solid var(--yry-border);
+    border-radius: var(--yry-radius-sm);
+    color: var(--yry-accent);
+    text-decoration: none;
+    font-size: var(--yry-font-size-sm);
+    transition: all 0.2s ease;
+}
+.info-area .info-link:hover {
+    background: var(--yry-accent-muted);
+    border-color: var(--yry-accent);
+}
+
+/* ── Common Interactive Elements ──────────── */
+button {
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+input, textarea, select {
+    font-family: inherit;
+    background: var(--yry-bg-primary);
+    border: 1px solid var(--yry-border);
+    border-radius: var(--yry-radius-sm);
+    color: var(--yry-text-primary);
+    padding: var(--yry-space-2) var(--yry-space-3);
+    font-size: var(--yry-font-size-sm);
+}
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--yry-accent);
+    box-shadow: 0 0 0 2px var(--yry-accent-muted);
+}
+code, pre {
+    font-family: var(--yry-font-mono, 'SF Mono', 'JetBrains Mono', monospace);
+}
+
+/* ── Demo Type Specific Styles ────────────── */
+__TYPE_SPECIFIC_STYLES__
+
+/* ── Responsive ───────────────────────────── */
+@media (max-width: 768px) {
+    .page {
+        padding: var(--yry-space-4) var(--yry-space-3);
+    }
+    .demo-area {
+        padding: var(--yry-space-4);
+    }
+    __RESPONSIVE_768__
+}
+
+@media (max-width: 375px) {
+    .page {
+        padding: var(--yry-space-3) var(--yry-space-2);
+    }
+    __RESPONSIVE_375__
+}

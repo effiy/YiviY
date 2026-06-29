@@ -1,6 +1,8 @@
 # Graph System Reference — Full Design System
 
 > Color palette, layout configurations, node/edge styles, and CSS variables for rui-graph Cytoscape.js graphs.
+>
+> **See also:** [[edge-types.md]] for the expanded edge type catalog with creation rules and collision prevention. [[validation.md]] for the complete validation rules and auto-fix pipeline.
 
 ## Design Tokens
 
